@@ -1,36 +1,120 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# HAL CINEMA
 
-## Getting Started
+映画館向けWebアプリケーション「HAL CINEMA」のフロントエンドリポジトリです。
 
-First, run the development server:
+> **現在のステータス: モック制作中**
+> ページ遷移・UIデザインのみ実装済み。API通信・認証・決済などのバックエンド連携は未実装。
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## 技術スタック
+
+### フロントエンド（実装済み）
+| 技術 | バージョン | 用途 |
+|------|-----------|------|
+| Next.js | 16.x (App Router) | フレームワーク |
+| TypeScript | 5.x | 型安全 |
+| Tailwind CSS | 4.x | スタイリング |
+
+### フロントエンド（今後導入予定）
+- **React Query** — API通信・キャッシュ管理
+- **Zustand** — UI状態管理（座席選択など）
+
+### バックエンド（今後構築予定）
+| 技術 | 用途 |
+|------|------|
+| FastAPI (Python 3.12) | REST API |
+| Pydantic v2 | バリデーション |
+| SQLAlchemy 2 + Alembic | ORM・マイグレーション |
+| JWT / python-jose | 認証 |
+| PostgreSQL 16 | メインDB |
+| Redis 7 | 座席ロック・セッション |
+
+### 外部サービス（今後連携予定）
+- **Stripe** — 決済処理
+- **SendGrid** — メール送信・QRコードチケット添付
+
+---
+
+## ディレクトリ構成
+
+```
+hal-cinema/
+├── app/                        # Next.js App Router
+│   ├── page.tsx                # ホーム
+│   ├── now-showing/            # 上映中
+│   ├── coming-soon/            # 上映予定
+│   ├── campaign/               # キャンペーン・ニュース
+│   ├── tickets/                # チケット購入（座席選択・決済フロー）
+│   ├── movies/[id]/            # 映画詳細
+│   ├── login/                  # ログイン
+│   └── register/               # 新規会員登録
+├── components/
+│   ├── HalLogo.tsx             # ロゴコンポーネント
+│   ├── Header.tsx              # ナビゲーション
+│   ├── HeroSlider.tsx          # トップスライダー
+│   └── MovieCard.tsx           # 映画カード
+└── lib/
+    └── mockData.ts             # モックデータ（映画・スケジュール・キャンペーン）
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## ページ一覧
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| URL | ページ名 | 概要 |
+|-----|---------|------|
+| `/` | ホーム | スライダー・映画ランキング・上映中グリッド |
+| `/now-showing` | 上映中 | 全上映映画一覧（3列グリッド） |
+| `/coming-soon` | 上映予定 | 公開予定映画の一覧 |
+| `/campaign` | キャンペーン/ニュース | キャンペーン・割引情報 |
+| `/tickets` | チケット購入 | 映画選択 → 座席選択 → 支払い → 確認の4ステップ |
+| `/movies/[id]` | 映画詳細 | あらすじ・キャスト・上映スケジュール・日付別タイムスロット |
+| `/login` | ログイン | 会員ログインフォーム |
+| `/register` | 新規登録 | 会員登録フォーム |
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 開発環境のセットアップ
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+# 依存パッケージのインストール
+npm install
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# 開発サーバー起動
+npm run dev
+```
 
-## Deploy on Vercel
+ブラウザで [http://localhost:3000](http://localhost:3000) を開くと確認できます。
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+# プロダクションビルド
+npm run build
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# ビルド結果の起動
+npm start
+```
+
+---
+
+## 実装済み機能（モック）
+
+- [x] サイト全体のデザイン・ダークテーマ
+- [x] ページ間のルーティング・遷移
+- [x] ヒーロースライダー（9枚・クリックで切替）
+- [x] 映画一覧・詳細表示
+- [x] 上映スケジュール（日付タブ切替）
+- [x] チケット購入フロー（4ステップUI・座席インタラクション）
+- [x] ログイン・会員登録フォーム
+
+## 今後の実装予定
+
+- [ ] FastAPI バックエンド構築
+- [ ] PostgreSQL スキーマ設計・マイグレーション
+- [ ] JWT認証の実装
+- [ ] 座席リアルタイムロック（Redis）
+- [ ] Stripe 決済連携
+- [ ] QRコードチケット生成・SendGridメール送信
+- [ ] 管理者ダッシュボード
+- [ ] スタッフ向けQRコード読み取り入場管理
+- [ ] ポイント管理・割引機能

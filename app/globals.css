@@ -1,26 +1,129 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --bg-primary: #0f0f0f;
+  --bg-secondary: #1a1a1a;
+  --bg-card: #2a2a2a;
+  --text-primary: #ffffff;
+  --text-muted: #999999;
+  --border-color: #3a3a3a;
+  --accent: #4a9eff;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, "Yu Gothic", Arial, sans-serif;
+  min-height: 100vh;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  text-decoration: none;
+  color: #cccccc;
+  transition: color 0.2s;
+  padding: 4px 8px;
+}
+.nav-item:hover,
+.nav-item.active {
+  color: #ffffff;
+}
+.nav-item .nav-label-en {
+  font-size: 10px;
+  color: #888;
+}
+.nav-item .nav-label-ja {
+  font-size: 14px;
+  font-weight: 500;
+}
+.nav-item.active .nav-label-ja {
+  border-bottom: 2px solid #4a9eff;
+  padding-bottom: 2px;
+}
+
+.movie-card {
+  background: var(--bg-card);
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s, opacity 0.2s;
+}
+.movie-card:hover {
+  transform: scale(1.03);
+  opacity: 0.9;
+}
+
+.slider-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #555;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.slider-dot.active {
+  background: white;
+}
+
+.date-tab {
+  padding: 8px 16px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+  color: #ccc;
+  white-space: nowrap;
+}
+.date-tab:hover {
+  background: #333;
+}
+.date-tab.active {
+  background: #555;
+  border-color: #888;
+  color: white;
+}
+
+.btn-login {
+  background: #555;
+  color: white;
+  border: none;
+  padding: 8px 24px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-login:hover {
+  background: #666;
+}
+
+.btn-register {
+  background: transparent;
+  color: white;
+  border: 1px solid #888;
+  padding: 8px 24px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-register:hover {
+  background: #333;
+}
+
+.section-title {
+  font-size: 13px;
+  color: #aaa;
+  margin-bottom: 12px;
+  padding: 0 4px;
+}
+
+.placeholder-box {
+  background: #cccccc;
+  border-radius: 4px;
 }
