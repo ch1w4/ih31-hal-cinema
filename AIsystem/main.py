@@ -197,3 +197,51 @@ def test_gemma():
 
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
+
+
+# ==================================================
+# 映画推薦エンドポイント（フロントエンドから呼び出す想定）
+# ==================================================
+
+
+@app.route("/recommend/movies")
+def recommend_movies():
+    access_token = session.get("access_token")
+    if not access_token:
+        return jsonify({"error": "Not authenticated"}), 401
+
+    # YouTubeデータ取得
+    likes = requests.get("http://localhost:5000/youtube/likes").json()
+    subs = requests.get("http://localhost:5000/youtube/subscriptions").json()
+
+    # プロンプト生成
+    prompt_text = f"""
+あなたは映画推薦AIです。
+以下はユーザーのYouTubeデータです。
+
+【高評価動画】
+{json.dumps(likes, ensure_ascii=False)}
+
+【登録チャンネル】
+{json.dumps(subs, ensure_ascii=False)}
+
+これらの情報から、ユーザーの興味・嗜好を推定し、
+映画データベース（TMDB）に存在しそうな映画を5本推薦してください。
+
+出力形式は以下のJSONにしてください：
+
+{{
+  "reason": "ユーザーの好みの分析",
+  "recommendations": [
+    {{
+      "title": "映画タイトル",
+      "genre": "ジャンル",
+      "why": "なぜこの映画を選んだか"
+    }}
+  ]
+}}
+"""
+
+    # Gemma に投げる
+    response = ask_gemma(prompt_text)
+    return jsonify({"result": response})
