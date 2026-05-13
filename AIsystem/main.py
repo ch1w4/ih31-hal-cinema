@@ -127,8 +127,7 @@ def logout():
     session.clear()
     return jsonify({"message": "Logged out successfully"})
 
-if __name__ == "__main__":
-    app.run(port=5000, debug=True)
+
 
 
 # ============================================
@@ -178,7 +177,7 @@ def youtube_subscriptions():
 def ask_gemma(prompt):
     url = "http://localhost:11434/api/generate"
     payload = {
-        "model": "gemma:2b",
+        "model": "gemma3:4b",
         "prompt": prompt,
         "stream": False
     }
@@ -193,3 +192,8 @@ def test_gemma():
     test_prompt = "こんにちは。あなたは動作していますか？短く答えてください。"
     response = ask_gemma(test_prompt)
     return jsonify({"gemma_response": response})
+
+
+
+if __name__ == "__main__":
+    app.run(port=5000, debug=True)
