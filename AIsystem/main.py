@@ -33,6 +33,7 @@ prompt = """
 """
 
 
+
 app = Flask(__name__)
 app.secret_key = "super_secret_random_key_12345"  # セッションの秘密鍵(Githubのsecretsに保存)
 
@@ -128,6 +129,8 @@ def logout():
     return jsonify({"message": "Logged out successfully"})
 
 
+if __name__ == "__main__":
+    app.run(port=5000, debug=True)
 
 
 # ============================================
