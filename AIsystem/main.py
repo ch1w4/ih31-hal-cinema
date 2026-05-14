@@ -5,6 +5,34 @@ import urllib.parse
 import json
 import base64
 
+prompt = """
+あなたは映画推薦AIです。
+以下はユーザーのYouTubeデータです。
+
+【高評価動画】
+{{likes_json}}
+
+【登録チャンネル】
+{{subs_json}}
+
+これらの情報から、ユーザーの興味・嗜好を推定し、
+映画データベース（TMDB）に存在しそうな映画を5本推薦してください。
+
+出力形式は以下のJSONにしてください：
+
+{
+  "reason": "ユーザーの好みの分析",
+  "recommendations": [
+    {
+      "title": "映画タイトル",
+      "genre": "ジャンル",
+      "why": "なぜこの映画を選んだか"
+    }
+  ]
+}
+"""
+
+
 app = Flask(__name__)
 app.secret_key = "super_secret_random_key_12345"  # セッションの秘密鍵(Githubのsecretsに保存)
 
@@ -99,5 +127,121 @@ def logout():
     session.clear()
     return jsonify({"message": "Logged out successfully"})
 
+
+
+
+# ============================================
+# YouTubeのいいね動画を取得するエンドポイント
+# ============================================
+@app.route("/youtube/likes")
+def youtube_likes():
+    access_token = session.get("access_token")
+    if not access_token:
+        return jsonify({"error": "Not authenticated"}), 401
+
+    url = "https://www.googleapis.com/youtube/v3/videos"
+    params = {
+        "part": "snippet,contentDetails",
+        "myRating": "like",
+        "maxResults": 50
+    }
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    res = requests.get(url, params=params, headers=headers)
+    return jsonify(res.json())
+
+
+# ============================================
+# youtubeのチャンネル登録を取得するエンドポイント
+# ============================================
+@app.route("/youtube/subscriptions")
+def youtube_subscriptions():
+    access_token = session.get("access_token")
+    if not access_token:
+        return jsonify({"error": "Not authenticated"}), 401
+
+    url = "https://www.googleapis.com/youtube/v3/subscriptions"
+    params = {
+        "part": "snippet",
+        "mine": "true",
+        "maxResults": 50
+    }
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    res = requests.get(url, params=params, headers=headers)
+    return jsonify(res.json())
+
+# ==================================================
+# ollamaのgemmaにプロンプトを投げるエンドポイント
+# ==================================================
+def ask_gemma(prompt):
+    url = "http://localhost:11434/api/generate"
+    payload = {
+        "model": "gemma3:4b",
+        "prompt": prompt,
+        "stream": False
+    }
+    res = requests.post(url, json=payload)
+    return res.json().get("response", "")
+
+# ====================================================================
+# テスト用エンドポイント（実際のプロンプトはフロントエンドから送る想定
+# ====================================================================
+@app.route("/test/gemma")
+def test_gemma():
+    test_prompt = "こんにちは。あなたは動作していますか？短く答えてください。"
+    response = ask_gemma(test_prompt)
+    return jsonify({"gemma_response": response})
+
+
+
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
+
+
+# ==================================================
+# 映画推薦エンドポイント（フロントエンドから呼び出す想定）
+# ==================================================
+
+
+@app.route("/recommend/movies")
+def recommend_movies():
+    access_token = session.get("access_token")
+    if not access_token:
+        return jsonify({"error": "Not authenticated"}), 401
+
+    # YouTubeデータ取得
+    likes = requests.get("http://localhost:5000/youtube/likes").json()
+    subs = requests.get("http://localhost:5000/youtube/subscriptions").json()
+
+    # プロンプト生成
+    prompt_text = f"""
+あなたは映画推薦AIです。
+以下はユーザーのYouTubeデータです。
+
+【高評価動画】
+{json.dumps(likes, ensure_ascii=False)}
+
+【登録チャンネル】
+{json.dumps(subs, ensure_ascii=False)}
+
+これらの情報から、ユーザーの興味・嗜好を推定し、
+映画データベース（TMDB）に存在しそうな映画を5本推薦してください。
+
+出力形式は以下のJSONにしてください：
+
+{{
+  "reason": "ユーザーの好みの分析",
+  "recommendations": [
+    {{
+      "title": "映画タイトル",
+      "genre": "ジャンル",
+      "why": "なぜこの映画を選んだか"
+    }}
+  ]
+}}
+"""
+
+    # Gemma に投げる
+    response = ask_gemma(prompt_text)
+    return jsonify({"result": response})
