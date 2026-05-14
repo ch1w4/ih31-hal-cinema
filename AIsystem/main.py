@@ -5,6 +5,11 @@ import urllib.parse
 import json
 import base64
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> 2e3a7a4fc1551aacb4c74383c4652e73c7b4a405
 prompt = """
 あなたは映画推薦AIです。
 以下はユーザーのYouTubeデータです。
@@ -33,6 +38,10 @@ prompt = """
 """
 
 
+<<<<<<< HEAD
+=======
+>>>>>>> 206e1c4bfdb475c246e7c41cf8bcbbc608e0e188
+>>>>>>> 2e3a7a4fc1551aacb4c74383c4652e73c7b4a405
 app = Flask(__name__)
 app.secret_key = "super_secret_random_key_12345"  # セッションの秘密鍵(Githubのsecretsに保存)
 
@@ -127,6 +136,13 @@ def logout():
     session.clear()
     return jsonify({"message": "Logged out successfully"})
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+if __name__ == "__main__":
+    app.run(port=5000, debug=True)
+=======
+>>>>>>> 2e3a7a4fc1551aacb4c74383c4652e73c7b4a405
 
 
 
@@ -245,3 +261,7 @@ def recommend_movies():
     # Gemma に投げる
     response = ask_gemma(prompt_text)
     return jsonify({"result": response})
+<<<<<<< HEAD
+=======
+>>>>>>> 206e1c4bfdb475c246e7c41cf8bcbbc608e0e188
+>>>>>>> 2e3a7a4fc1551aacb4c74383c4652e73c7b4a405
