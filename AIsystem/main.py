@@ -5,32 +5,8 @@ import urllib.parse
 import json
 import base64
 
-prompt = """
-あなたは映画推薦AIです。
-以下はユーザーのYouTubeデータです。
 
-【高評価動画】
-{{likes_json}}
 
-【登録チャンネル】
-{{subs_json}}
-
-これらの情報から、ユーザーの興味・嗜好を推定し、
-映画データベース（TMDB）に存在しそうな映画を5本推薦してください。
-
-出力形式は以下のJSONにしてください：
-
-{
-  "reason": "ユーザーの好みの分析",
-  "recommendations": [
-    {
-      "title": "映画タイトル",
-      "genre": "ジャンル",
-      "why": "なぜこの映画を選んだか"
-    }
-  ]
-}
-"""
 
 
 
@@ -122,6 +98,8 @@ def get_user():
     
     return jsonify(session.get("user_info"))
 
+
+
 @app.route("/auth/logout", methods=["POST"])
 def logout():
     """ログアウト処理"""
@@ -174,6 +152,8 @@ def youtube_subscriptions():
     res = requests.get(url, params=params, headers=headers)
     return jsonify(res.json())
 
+
+
 # ==================================================
 # ollamaのgemmaにプロンプトを投げるエンドポイント
 # ==================================================
@@ -198,40 +178,48 @@ def test_gemma():
 
 
 
-if __name__ == "__main__":
-    app.run(port=5000, debug=True)
 
 
 # ==================================================
 # 映画推薦エンドポイント（フロントエンドから呼び出す想定）
 # ==================================================
 
-
-@app.route("/recommend/movies")
+@app.route("/recommend/movies", methods=["POST"])
 def recommend_movies():
     access_token = session.get("access_token")
     if not access_token:
         return jsonify({"error": "Not authenticated"}), 401
 
+    # フロントから送られてきた映画データ
+    body = request.json
+    movies = body.get("movies", [])
+    coming = body.get("comingSoonMovies", [])
+
     # YouTubeデータ取得
     likes = requests.get("http://localhost:5000/youtube/likes").json()
     subs = requests.get("http://localhost:5000/youtube/subscriptions").json()
 
-    # プロンプト生成
+    # ここで初めて prompt_text を作る
     prompt_text = f"""
 あなたは映画推薦AIです。
-以下はユーザーのYouTubeデータです。
 
-【高評価動画】
+【ユーザーのYouTubeデータ】
+高評価動画:
 {json.dumps(likes, ensure_ascii=False)}
 
-【登録チャンネル】
+登録チャンネル:
 {json.dumps(subs, ensure_ascii=False)}
 
-これらの情報から、ユーザーの興味・嗜好を推定し、
-映画データベース（TMDB）に存在しそうな映画を5本推薦してください。
+【映画館の上映作品】
+{json.dumps(movies, ensure_ascii=False)}
 
-出力形式は以下のJSONにしてください：
+【近日公開作品】
+{json.dumps(coming, ensure_ascii=False)}
+
+上記の情報からユーザーの嗜好を推定し、
+映画館のラインナップの中から最適な映画を5本推薦してください。
+
+出力形式は以下のJSON：
 
 {{
   "reason": "ユーザーの好みの分析",
@@ -239,7 +227,7 @@ def recommend_movies():
     {{
       "title": "映画タイトル",
       "genre": "ジャンル",
-      "why": "なぜこの映画を選んだか"
+      "why": "選んだ理由"
     }}
   ]
 }}
@@ -247,4 +235,16 @@ def recommend_movies():
 
     # Gemma に投げる
     response = ask_gemma(prompt_text)
-    return jsonify({"result": response})
+
+    # AI の生出力をそのまま返す
+    return jsonify({"prompt": prompt_text, "ai_output": response})
+
+
+
+
+
+
+
+# Flaskアプリの起動(最後に記述する)
+if __name__ == "__main__":
+    app.run(port=5000, debug=True)
