@@ -9,7 +9,7 @@ export default function HeroSlider() {
   return (
     <div className="w-full">
       {/* Campaign banner */}
-      <div className="w-full relative overflow-hidden" style={{ height: "280px" }}>
+      <div className="w-full relative overflow-hidden" style={{ height: "360px" }}>
         {/* Background layers */}
         <div
           className="absolute inset-0"

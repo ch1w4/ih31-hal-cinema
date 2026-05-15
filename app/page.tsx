@@ -1,10 +1,13 @@
 import Link from "next/link";
 import Header from "@/components/Header";
 import HeroSlider from "@/components/HeroSlider";
+import MovieCard from "@/components/MovieCard";
 import { movies } from "@/lib/mockData";
 
 export default function HomePage() {
-  const top3 = [movies[1], movies[0], movies[2]]; // 2位, 1位, 3位 (podium order)
+  const rankingMovies = movies.slice(0, 10);
+  const nowShowingMovies = movies.slice(0, 8);
+  const top3 = [movies[1], movies[0], movies[2]]; // 2位, 1位, 3位
 
   return (
     <div className="min-h-screen bg-[#0f0f0f]">
@@ -36,33 +39,30 @@ export default function HomePage() {
 
       {/* Movie Ranking */}
       <div className="max-w-4xl mx-auto px-4 py-4">
-        <div className="bg-[#1a1a1a] rounded overflow-hidden py-6 px-4">
+        <div className="bg-[#1a1a1a] rounded overflow-hidden py-6 px-6">
           <div className="text-sm text-center text-white mb-6">映画ランキング</div>
 
-          {/* Podium layout: 2 - 1 - 3 */}
-          <div className="flex items-end justify-center gap-3 mb-5">
+          {/* Podium: 2nd left, 1st center (larger), 3rd right */}
+          <div className="flex items-end justify-center gap-4 mb-5">
             {top3.map((movie, podiumIdx) => {
-              const rank = podiumIdx === 0 ? 2 : podiumIdx === 1 ? 1 : 3;
+              const rank = [2, 1, 3][podiumIdx];
               const isFirst = rank === 1;
               return (
                 <Link
                   key={movie.id}
                   href={`/movies/${movie.id}`}
                   className="flex flex-col items-center gap-1 group"
-                  style={{ width: isFirst ? "120px" : "96px" }}
+                  style={{ width: isFirst ? "130px" : "100px" }}
                 >
-                  <div
-                    className="text-xs font-bold text-gray-400 mb-1"
-                    style={{ fontSize: isFirst ? "16px" : "13px" }}
-                  >
+                  <div className={`font-bold text-gray-400 mb-1 ${isFirst ? "text-lg" : "text-sm"}`}>
                     {rank}
                   </div>
                   <div
                     className="w-full rounded"
                     style={{
                       aspectRatio: "2/3",
-                      background: `linear-gradient(160deg, ${movie.posterColor} 0%, #1a1a1a 100%)`,
-                      marginBottom: isFirst ? "0" : "8px",
+                      background: `linear-gradient(160deg, ${movie.posterColor} 0%, #111 100%)`,
+                      marginBottom: isFirst ? "0" : "10px",
                     }}
                   />
                   <div className="text-[10px] text-gray-400 text-center truncate w-full group-hover:text-gray-200">
@@ -73,32 +73,30 @@ export default function HomePage() {
             })}
           </div>
 
-          {/* More button */}
           <div className="text-center">
-            <Link
-              href="/now-showing"
-              className="text-xs text-gray-400 hover:text-white transition-colors"
-            >
+            <Link href="/now-showing" className="text-xs text-gray-400 hover:text-white transition-colors">
               もっと見る
             </Link>
           </div>
         </div>
       </div>
 
-      {/* Placeholder sections – 2 rows × 3 gray boxes */}
-      <div className="max-w-4xl mx-auto px-4 pb-8">
-        {[0, 1].map((row) => (
-          <div key={row} className="grid grid-cols-3 gap-3 mb-3">
-            {[0, 1, 2].map((col) => (
-              <div
-                key={col}
-                className="rounded"
-                style={{ aspectRatio: "3/2", background: "#2a2a2a" }}
-              />
-            ))}
-          </div>
-        ))}
+      {/* Now Showing Grid – master branch style */}
+      <div className="max-w-4xl mx-auto px-4 py-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm text-white font-medium">上映中の映画</h2>
+          <Link href="/now-showing" className="text-xs text-gray-400 hover:text-white">
+            すべて見る →
+          </Link>
+        </div>
+        <div className="grid grid-cols-4 gap-3">
+          {nowShowingMovies.map((movie) => (
+            <MovieCard key={movie.id} movie={movie} />
+          ))}
+        </div>
       </div>
+
+      <div className="py-8" />
     </div>
   );
 }
