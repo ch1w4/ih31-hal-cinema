@@ -183,61 +183,37 @@ def test_gemma():
 # ==================================================
 # 映画推薦エンドポイント（フロントエンドから呼び出す想定）
 # ==================================================
-
 @app.route("/recommend/movies", methods=["POST"])
 def recommend_movies():
-    access_token = session.get("access_token")
-    if not access_token:
-        return jsonify({"error": "Not authenticated"}), 401
+    """
+    ユーザー情報に基づいて映画を推薦する
+    """
+    try:
+        user_info = session.get("user_info", {})
+        body = request.json or {}
+        movies = body.get("movies", [])
+        coming_soon = body.get("comingSoonMovies", [])
 
-    # フロントから送られてきた映画データ
-    body = request.json
-    movies = body.get("movies", [])
-    coming = body.get("comingSoonMovies", [])
+        # ユーザーメール情報を使ってシンプルに映画を推薦
+        # メールのハッシュ値をシードにしてランダムソート
+        user_email = user_info.get("email", "default")
+        seed = sum(ord(c) for c in user_email) % 1000
 
-    # YouTubeデータ取得
-    likes = requests.get("http://localhost:5000/youtube/likes").json()
-    subs = requests.get("http://localhost:5000/youtube/subscriptions").json()
+        # 映画をソート（シードを使った疑似ランダムソート）
+        import random
+        random.seed(seed)
+        recommended = sorted(movies, key=lambda x: random.random())[:10]
 
-    # ここで初めて prompt_text を作る
-    prompt_text = f"""
-あなたは映画推薦AIです。
+        return jsonify({
+            "recommended_movies": recommended,
+            "user_email": user_email,
+            "user_name": user_info.get("name", "Unknown"),
+            "user_picture": user_info.get("picture", "")
+        })
+    except Exception as e:
+        print(f"Error in recommend_movies: {e}")
+        return jsonify({"error": str(e), "recommended_movies": []}), 400
 
-【ユーザーのYouTubeデータ】
-高評価動画:
-{json.dumps(likes, ensure_ascii=False)}
-
-登録チャンネル:
-{json.dumps(subs, ensure_ascii=False)}
-
-【映画館の上映作品】
-{json.dumps(movies, ensure_ascii=False)}
-
-【近日公開作品】
-{json.dumps(coming, ensure_ascii=False)}
-
-上記の情報からユーザーの嗜好を推定し、
-映画館のラインナップの中から最適な映画を5本推薦してください。
-
-出力形式は以下のJSON：
-
-{{
-  "reason": "ユーザーの好みの分析",
-  "recommendations": [
-    {{
-      "title": "映画タイトル",
-      "genre": "ジャンル",
-      "why": "選んだ理由"
-    }}
-  ]
-}}
-"""
-
-    # Gemma に投げる
-    response = ask_gemma(prompt_text)
-
-    # AI の生出力をそのまま返す
-    return jsonify({"prompt": prompt_text, "ai_output": response})
 
 
 
