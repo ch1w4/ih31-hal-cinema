@@ -39,7 +39,6 @@ export default function NowShowingPage() {
     } catch (error) {
       console.warn("Failed to load data from localStorage:", error);
     }
-
     setLoading(false);
   }, []);
 

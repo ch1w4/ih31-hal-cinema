@@ -172,6 +172,7 @@ def test_gemma():
 # ==================================================
 @app.route("/recommend/movies", methods=["POST"])
 def recommend_movies():
+<<<<<<< HEAD
     try:
         if "access_token" not in session:
             return jsonify({"error": "Not authenticated"}), 401
@@ -232,6 +233,37 @@ def recommend_movies():
     except Exception as e:
         print("Error in /recommend/movies:", e)
         return jsonify({"error": str(e)}), 500
+=======
+    """
+    ユーザー情報に基づいて映画を推薦する
+    """
+    try:
+        user_info = session.get("user_info", {})
+        body = request.json or {}
+        movies = body.get("movies", [])
+        coming_soon = body.get("comingSoonMovies", [])
+
+        # ユーザーメール情報を使ってシンプルに映画を推薦
+        # メールのハッシュ値をシードにしてランダムソート
+        user_email = user_info.get("email", "default")
+        seed = sum(ord(c) for c in user_email) % 1000
+
+        # 映画をソート（シードを使った疑似ランダムソート）
+        import random
+        random.seed(seed)
+        recommended = sorted(movies, key=lambda x: random.random())[:10]
+
+        return jsonify({
+            "recommended_movies": recommended,
+            "user_email": user_email,
+            "user_name": user_info.get("name", "Unknown"),
+            "user_picture": user_info.get("picture", "")
+        })
+    except Exception as e:
+        print(f"Error in recommend_movies: {e}")
+        return jsonify({"error": str(e), "recommended_movies": []}), 400
+
+>>>>>>> beb55e3ce12b12ac0ccb6200074d10b32a0e8840
 
 
 # Flaskアプリの起動（最後に1回だけ）
