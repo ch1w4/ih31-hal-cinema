@@ -43,7 +43,7 @@ export default function HomePage() {
           <div className="text-sm text-center text-white mb-6">映画ランキング</div>
 
           {/* Podium: 2nd left, 1st center (larger), 3rd right */}
-          <div className="flex items-end justify-center gap-4 mb-5">
+          <div className="flex items-end justify-center gap-10 mb-5">
             {top3.map((movie, podiumIdx) => {
               const rank = [2, 1, 3][podiumIdx];
               const isFirst = rank === 1;

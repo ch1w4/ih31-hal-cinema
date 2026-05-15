@@ -20,7 +20,7 @@ export default function Header() {
         <Link href="/">
           <HalLogo size={60} />
         </Link>
-        <nav className="flex items-start gap-6 md:gap-10">
+        <nav className="flex items-center gap-6 md:gap-10">
           {navItems.map((item) => {
             const isActive =
               item.href === "/"
