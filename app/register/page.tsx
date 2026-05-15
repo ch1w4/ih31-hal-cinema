@@ -6,116 +6,56 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-[#0f0f0f]">
       <Header />
 
-      <main className="max-w-md mx-auto px-4 py-12">
-        <div className="border border-[#333] rounded-lg p-8 bg-[#1a1a1a]">
-          <h1 className="text-xl font-medium text-white mb-2">新規会員登録</h1>
-          <p className="text-sm text-gray-400 mb-8">
-            HAL CINEMA会員に登録して、お得な特典をご利用ください
-          </p>
+      <main className="max-w-sm mx-auto px-4 py-12">
+        <div className="bg-[#0f0f0f] rounded-lg p-8">
+          <h1 className="text-lg font-medium text-white text-center mb-8">会員登録</h1>
 
           <form className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">姓</label>
-                <input
-                  type="text"
-                  placeholder="田中"
-                  className="w-full bg-[#2a2a2a] border border-[#444] rounded px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#888]"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">名</label>
-                <input
-                  type="text"
-                  placeholder="太郎"
-                  className="w-full bg-[#2a2a2a] border border-[#444] rounded px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#888]"
-                />
-              </div>
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">名前</label>
+              <input
+                type="text"
+                className="w-full bg-[#3a3a3a] border-0 rounded px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#666]"
+              />
             </div>
 
             <div>
-              <label className="block text-xs text-gray-400 mb-1">
-                メールアドレス
-              </label>
+              <label className="block text-xs text-gray-400 mb-1">メールアドレス</label>
               <input
                 type="email"
-                placeholder="example@email.com"
-                className="w-full bg-[#2a2a2a] border border-[#444] rounded px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#888]"
+                className="w-full bg-[#3a3a3a] border-0 rounded px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#666]"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-gray-400 mb-1">
-                パスワード
-              </label>
+              <label className="block text-xs text-gray-400 mb-1">パスワード</label>
               <input
                 type="password"
-                placeholder="8文字以上"
-                className="w-full bg-[#2a2a2a] border border-[#444] rounded px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#888]"
+                className="w-full bg-[#3a3a3a] border-0 rounded px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#666]"
               />
             </div>
-
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">
-                パスワード（確認）
-              </label>
-              <input
-                type="password"
-                placeholder="••••••••"
-                className="w-full bg-[#2a2a2a] border border-[#444] rounded px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#888]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">生年月日</label>
-              <input
-                type="date"
-                className="w-full bg-[#2a2a2a] border border-[#444] rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-[#888]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs text-gray-400 mb-2">性別</label>
-              <div className="flex gap-4 text-sm text-gray-300">
-                {["男性", "女性", "回答しない"].map((g) => (
-                  <label key={g} className="flex items-center gap-1.5 cursor-pointer">
-                    <input type="radio" name="gender" className="accent-white" />
-                    {g}
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="flex items-start gap-2 text-xs text-gray-400 cursor-pointer">
-                <input type="checkbox" className="accent-white mt-0.5" />
-                <span>
-                  <Link href="#" className="text-white hover:underline">
-                    利用規約
-                  </Link>
-                  および
-                  <Link href="#" className="text-white hover:underline">
-                    プライバシーポリシー
-                  </Link>
-                  に同意する
-                </span>
-              </label>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full bg-white text-black py-2.5 rounded font-medium text-sm hover:bg-gray-200 transition-colors mt-2"
-            >
-              会員登録する
-            </button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-[#333] text-center">
+          <div className="flex items-center gap-3 my-6">
+            <div className="flex-1 h-px bg-[#444]" />
+            <span className="text-xs text-gray-500">または</span>
+            <div className="flex-1 h-px bg-[#444]" />
+          </div>
+
+          <div className="space-y-3">
+            <button className="w-full bg-[#f0f0f0] text-black py-2.5 rounded text-sm font-medium hover:bg-white transition-colors flex items-center justify-center gap-2">
+              <span className="text-base">G</span>
+              Googleアカウント
+            </button>
+            <button className="w-full bg-[#111] border border-[#444] text-white py-2.5 rounded text-sm font-medium hover:bg-[#1a1a1a] transition-colors flex items-center justify-center gap-2">
+              <span className="text-base"></span>
+              Appleアカウント
+            </button>
+          </div>
+
+          <div className="mt-6 text-center">
             <p className="text-xs text-gray-500 mb-2">すでに会員の方</p>
-            <Link
-              href="/login"
-              className="text-sm text-white hover:underline"
-            >
+            <Link href="/login" className="text-xs text-white hover:underline">
               ログインはこちら
             </Link>
           </div>

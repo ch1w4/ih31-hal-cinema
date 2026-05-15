@@ -6,59 +6,49 @@ export default function LoginPage() {
     <div className="min-h-screen bg-[#0f0f0f]">
       <Header />
 
-      <main className="max-w-md mx-auto px-4 py-12">
-        <div className="border border-[#333] rounded-lg p-8 bg-[#1a1a1a]">
-          <h1 className="text-xl font-medium text-white mb-2">ログイン</h1>
-          <p className="text-sm text-gray-400 mb-8">HAL CINEMA会員アカウントでログイン</p>
+      <main className="max-w-sm mx-auto px-4 py-12">
+        <div className="bg-[#0f0f0f] rounded-lg p-8">
+          <h1 className="text-lg font-medium text-white text-center mb-8">ログイン</h1>
 
           <form className="space-y-4">
             <div>
-              <label className="block text-xs text-gray-400 mb-1">
-                メールアドレス
-              </label>
+              <label className="block text-xs text-gray-400 mb-1">メールアドレス</label>
               <input
                 type="email"
-                placeholder="example@email.com"
-                className="w-full bg-[#2a2a2a] border border-[#444] rounded px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#888]"
+                className="w-full bg-[#3a3a3a] border-0 rounded px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#666]"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-gray-400 mb-1">
-                パスワード
-              </label>
+              <label className="block text-xs text-gray-400 mb-1">パスワード</label>
               <input
                 type="password"
-                placeholder="••••••••"
-                className="w-full bg-[#2a2a2a] border border-[#444] rounded px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#888]"
+                className="w-full bg-[#3a3a3a] border-0 rounded px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#666]"
               />
             </div>
-
-            <div className="flex items-center justify-between text-xs">
-              <label className="flex items-center gap-2 text-gray-400 cursor-pointer">
-                <input type="checkbox" className="accent-white" />
-                ログイン状態を保持する
-              </label>
-              <Link href="#" className="text-gray-400 hover:text-white">
-                パスワードを忘れた方
-              </Link>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full bg-white text-black py-2.5 rounded font-medium text-sm hover:bg-gray-200 transition-colors mt-2"
-            >
-              ログイン
-            </button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-[#333] text-center">
-            <p className="text-xs text-gray-500 mb-3">会員登録がまだの方</p>
-            <Link
-              href="/register"
-              className="text-sm text-white border border-[#555] px-6 py-2 rounded hover:bg-[#333] transition-colors"
-            >
-              新規会員登録（無料）
+          <div className="flex items-center gap-3 my-6">
+            <div className="flex-1 h-px bg-[#444]" />
+            <span className="text-xs text-gray-500">または</span>
+            <div className="flex-1 h-px bg-[#444]" />
+          </div>
+
+          <div className="space-y-3">
+            <button className="w-full bg-[#f0f0f0] text-black py-2.5 rounded text-sm font-medium hover:bg-white transition-colors flex items-center justify-center gap-2">
+              <span className="text-base">G</span>
+              Googleアカウント
+            </button>
+            <button className="w-full bg-[#111] border border-[#444] text-white py-2.5 rounded text-sm font-medium hover:bg-[#1a1a1a] transition-colors flex items-center justify-center gap-2">
+              <span className="text-base"></span>
+              Appleアカウント
+            </button>
+          </div>
+
+          <div className="mt-6 text-center">
+            <p className="text-xs text-gray-500 mb-2">アカウントをお持ちでない方</p>
+            <Link href="/register" className="text-xs text-white hover:underline">
+              新規会員登録はこちら
             </Link>
           </div>
         </div>
