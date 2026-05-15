@@ -1,11 +1,33 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
 import HeroSlider from "@/components/HeroSlider";
 import MovieCard from "@/components/MovieCard";
-import { movies } from "@/lib/mockData";
+import { movies, Movie } from "@/lib/mockData";
 
 export default function HomePage() {
-  const rankingMovies = movies.slice(0, 10);
+  const [recommendedMovies, setRecommendedMovies] = useState<Movie[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // ローカルストレージからオススメ映画を取得
+    try {
+      const stored = localStorage.getItem("recommendedMovies");
+      if (stored) {
+        const recommended = JSON.parse(stored);
+        setRecommendedMovies(recommended);
+      }
+    } catch (error) {
+      console.warn("Failed to load recommended movies:", error);
+    }
+    setLoading(false);
+  }, []);
+
+  // オススメ映画がある場合は表示、ない場合はランキング映画を表示
+  const displayedRankingMovies = recommendedMovies.length > 0 ? recommendedMovies.slice(0, 10) : movies.slice(0, 10);
+  const rankingMovies = displayedRankingMovies;
   const nowShowingMovies = movies.slice(0, 8);
 
   return (
@@ -36,11 +58,11 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Movie Ranking */}
+      {/* Movie Ranking / Recommended */}
       <div className="max-w-4xl mx-auto px-4 py-4">
         <div className="border border-[#333] rounded overflow-hidden">
           <div className="px-4 py-2 section-title bg-[#1a1a1a] border-b border-[#333]">
-            映画ランキング
+            {recommendedMovies.length > 0 && !loading ? "🎬 あなたにオススメの映画" : "映画ランキング"}
           </div>
           <div className="placeholder-box" style={{ height: "300px" }}>
             <div className="p-6 grid grid-cols-5 gap-3 h-full">

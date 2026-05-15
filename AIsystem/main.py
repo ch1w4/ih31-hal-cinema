@@ -4,17 +4,17 @@ import requests
 import urllib.parse
 import json
 import base64
-
-
-
-
-
+import random
 
 app = Flask(__name__)
-app.secret_key = "super_secret_random_key_12345"  # セッションの秘密鍵(Githubのsecretsに保存)
+app.secret_key = "super_secret_random_key_12345"
 
 # CORS設定（Next.jsからのリクエストを許可）
-CORS(app, origins=["http://localhost:3000", "http://localhost:5000"])
+CORS(
+    app,
+    resources={r"/*": {"origins": ["http://localhost:3000"]}},
+    supports_credentials=True,
+)
 
 # Google OAuth 設定
 CLIENT_ID = "757540546817-41rbdtbel91le8956kri1nqpno7qmqq0.apps.googleusercontent.com"
@@ -29,42 +29,41 @@ SCOPES = [
     "openid",
     "email",
     "profile",
-    "https://www.googleapis.com/auth/youtube.readonly"
+    "https://www.googleapis.com/auth/youtube.readonly",
 ]
+
 
 @app.route("/")
 def index():
     return jsonify({"message": "Google Login Test API"})
 
+
 @app.route("/login")
 def login():
-    """Google OAuth認可リクエストへリダイレクト"""
     params = {
         "client_id": CLIENT_ID,
         "redirect_uri": REDIRECT_URI,
         "response_type": "code",
         "scope": " ".join(SCOPES),
         "access_type": "offline",
-        "prompt": "consent"
+        "prompt": "consent",
     }
     url = AUTH_URL + "?" + urllib.parse.urlencode(params)
     return redirect(url)
 
+
 @app.route("/auth/callback")
 def callback():
-    """Google OAuth コールバック処理"""
     code = request.args.get("code")
-    
     if not code:
         return jsonify({"error": "Authorization code not found"}), 400
 
-    # トークン取得
     data = {
         "code": code,
         "client_id": CLIENT_ID,
         "client_secret": CLIENT_SECRET,
         "redirect_uri": REDIRECT_URI,
-        "grant_type": "authorization_code"
+        "grant_type": "authorization_code",
     }
 
     token_res = requests.post(TOKEN_URL, data=data)
@@ -73,46 +72,36 @@ def callback():
     if "error" in token_json:
         return jsonify({"error": token_json.get("error")}), 400
 
-    # アクセストークンをセッションに保存
     access_token = token_json.get("access_token")
     session["access_token"] = access_token
 
-    # ユーザー情報を取得してセッションに保存
     headers = {"Authorization": f"Bearer {access_token}"}
     userinfo_res = requests.get(USERINFO_URL, headers=headers)
     userinfo = userinfo_res.json()
-
     session["user_info"] = userinfo
 
-    # ユーザー情報をBase64エンコード
     user_encoded = base64.b64encode(json.dumps(userinfo).encode()).decode()
 
-    # フロントエンドにリダイレクト（トークンとユーザー情報をクエリパラメータで渡す）
-    return redirect(f"http://localhost:3000/auth/success?token={access_token}&user={user_encoded}")
+    return redirect(
+        f"http://localhost:3000/auth/success?token={access_token}&user={user_encoded}"
+    )
+
 
 @app.route("/auth/user", methods=["GET"])
 def get_user():
-    """セッションからユーザー情報を取得"""
     if "user_info" not in session:
         return jsonify({"error": "Not authenticated"}), 401
-    
     return jsonify(session.get("user_info"))
-
 
 
 @app.route("/auth/logout", methods=["POST"])
 def logout():
-    """ログアウト処理"""
     session.clear()
     return jsonify({"message": "Logged out successfully"})
 
 
-if __name__ == "__main__":
-    app.run(port=5000, debug=True)
-
-
 # ============================================
-# YouTubeのいいね動画を取得するエンドポイント
+# YouTubeのいいね動画
 # ============================================
 @app.route("/youtube/likes")
 def youtube_likes():
@@ -124,7 +113,7 @@ def youtube_likes():
     params = {
         "part": "snippet,contentDetails",
         "myRating": "like",
-        "maxResults": 50
+        "maxResults": 50,
     }
     headers = {"Authorization": f"Bearer {access_token}"}
 
@@ -133,7 +122,7 @@ def youtube_likes():
 
 
 # ============================================
-# youtubeのチャンネル登録を取得するエンドポイント
+# YouTubeのチャンネル登録
 # ============================================
 @app.route("/youtube/subscriptions")
 def youtube_subscriptions():
@@ -145,7 +134,7 @@ def youtube_subscriptions():
     params = {
         "part": "snippet",
         "mine": "true",
-        "maxResults": 50
+        "maxResults": 50,
     }
     headers = {"Authorization": f"Bearer {access_token}"}
 
@@ -153,22 +142,23 @@ def youtube_subscriptions():
     return jsonify(res.json())
 
 
-
 # ==================================================
-# ollamaのgemmaにプロンプトを投げるエンドポイント
+# ollamaのgemmaにプロンプトを投げる
 # ==================================================
-def ask_gemma(prompt):
+def ask_gemma(prompt: str) -> str:
     url = "http://localhost:11434/api/generate"
     payload = {
         "model": "gemma3:4b",
         "prompt": prompt,
-        "stream": False
+        "stream": False,
     }
     res = requests.post(url, json=payload)
+    print("Gemma raw response:", res.json())
     return res.json().get("response", "")
 
+
 # ====================================================================
-# テスト用エンドポイント（実際のプロンプトはフロントエンドから送る想定
+# テスト用エンドポイント
 # ====================================================================
 @app.route("/test/gemma")
 def test_gemma():
@@ -177,30 +167,25 @@ def test_gemma():
     return jsonify({"gemma_response": response})
 
 
-
-
-
 # ==================================================
-# 映画推薦エンドポイント（フロントエンドから呼び出す想定）
+# 映画推薦エンドポイント（フロントからJSONを受け取る）
 # ==================================================
-
 @app.route("/recommend/movies", methods=["POST"])
 def recommend_movies():
-    access_token = session.get("access_token")
-    if not access_token:
-        return jsonify({"error": "Not authenticated"}), 401
+    try:
+        if "access_token" not in session:
+            return jsonify({"error": "Not authenticated"}), 401
 
-    # フロントから送られてきた映画データ
-    body = request.json
-    movies = body.get("movies", [])
-    coming = body.get("comingSoonMovies", [])
+        body = request.json or {}
+        movies = body.get("movies", [])
+        coming = body.get("comingSoonMovies", [])
 
-    # YouTubeデータ取得
-    likes = requests.get("http://localhost:5000/youtube/likes").json()
-    subs = requests.get("http://localhost:5000/youtube/subscriptions").json()
+        # YouTubeデータ取得
+        likes = requests.get("http://localhost:5000/youtube/likes").json()
+        subs = requests.get("http://localhost:5000/youtube/subscriptions").json()
 
-    # ここで初めて prompt_text を作る
-    prompt_text = f"""
+        # プロンプト生成（ここで likes / subs / movies / coming を全部埋め込む）
+        prompt_text = f"""
 あなたは映画推薦AIです。
 
 【ユーザーのYouTubeデータ】
@@ -217,34 +202,38 @@ def recommend_movies():
 {json.dumps(coming, ensure_ascii=False)}
 
 上記の情報からユーザーの嗜好を推定し、
-映画館のラインナップの中から最適な映画を5本推薦してください。
+各映画に対して「ユーザーとのマッチ度スコア（0〜100）」を付けてください。
 
 出力形式は以下のJSON：
 
-{{
+{
   "reason": "ユーザーの好みの分析",
   "recommendations": [
-    {{
+    {
+      "id": "映画ID",
       "title": "映画タイトル",
-      "genre": "ジャンル",
+      "score": 数値,
       "why": "選んだ理由"
-    }}
+    }
   ]
-}}
+}
 """
 
-    # Gemma に投げる
-    response = ask_gemma(prompt_text)
 
-    # AI の生出力をそのまま返す
-    return jsonify({"prompt": prompt_text, "ai_output": response})
+        ai_response = ask_gemma(prompt_text)
+
+        # フロントで中身を確認しやすいように、プロンプトも一緒に返す
+        return jsonify(
+            {
+                "prompt": prompt_text,
+                "ai_output": ai_response,
+            }
+        )
+    except Exception as e:
+        print("Error in /recommend/movies:", e)
+        return jsonify({"error": str(e)}), 500
 
 
-
-
-
-
-
-# Flaskアプリの起動(最後に記述する)
+# Flaskアプリの起動（最後に1回だけ）
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
