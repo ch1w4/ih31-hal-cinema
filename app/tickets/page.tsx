@@ -438,7 +438,7 @@ function TicketsContent() {
                 onClick={() => setHalDiscount(d.id)}
                 className={`px-3 py-1.5 rounded text-xs border transition-colors ${
                   halDiscount === d.id
-                    ? "border-[#e8a090] bg-[#e8a090] text-white"
+                    ? "border-red-600 bg-red-600 text-white"
                     : "border-[#444] text-gray-400 hover:border-[#777]"
                 }`}
               >
