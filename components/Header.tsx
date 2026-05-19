@@ -21,7 +21,7 @@ export default function Header() {
             <img src="/halcinemalogo.png" alt="HAL CINEMA" style={{ height: "100px", width: "auto" }} />
           </Link>
         </div>
-        <nav className="flex items-center justify-center gap-8">
+        <nav className="flex items-center justify-center gap-8 pl-16">
           {navItems.map((item) => {
             const isActive =
               item.href === "/"
