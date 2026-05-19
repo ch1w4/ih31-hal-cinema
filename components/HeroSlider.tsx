@@ -7,9 +7,9 @@ export default function HeroSlider() {
   const [current, setCurrent] = useState(0);
 
   return (
-    <div className="w-full">
+    <div className="max-w-4xl mx-auto px-4 py-4">
       {/* Campaign banner */}
-      <div className="w-full relative overflow-hidden" style={{ height: "460px" }}>
+      <div className="w-full relative overflow-hidden rounded-lg" style={{ height: "460px" }}>
         {/* Background layers */}
         <div
           className="absolute inset-0"
