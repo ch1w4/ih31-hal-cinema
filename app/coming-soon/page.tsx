@@ -29,8 +29,9 @@ export default function ComingSoonPage() {
                     <div className="text-xs text-gray-400 mb-1">
                       {movie.releaseDate.replace(/-/g, "/").slice(5).replace("/", "月")}日公開
                     </div>
-                    <div
-                      className="w-full rounded-sm mb-2"
+                    <Link
+                      href={`/movies/${movie.id}`}
+                      className="w-full rounded-sm mb-2 block hover:opacity-75 transition-opacity"
                       style={{
                         aspectRatio: "2/3",
                         background: `linear-gradient(160deg, ${movie.posterColor} 0%, #1a1a1a 100%)`,
@@ -48,12 +49,6 @@ export default function ComingSoonPage() {
                     <p className="text-[10px] text-gray-500 line-clamp-2 leading-relaxed mb-2">
                       {movie.synopsis}
                     </p>
-                    <Link
-                      href={`/movies/${movie.id}`}
-                      className="text-center text-xs text-white border border-[#555] py-1.5 rounded hover:bg-[#333] transition-colors"
-                    >
-                      詳細
-                    </Link>
                   </div>
                 ))}
               </div>

@@ -29,8 +29,9 @@ export default function NowShowingPage() {
             <div className="grid grid-cols-3 gap-4">
               {section.films.map((movie) => (
                 <div key={movie.id} className="flex flex-col">
-                  <div
-                    className="w-full rounded-sm mb-2"
+                  <Link
+                    href={`/movies/${movie.id}`}
+                    className="w-full rounded-sm mb-2 block hover:opacity-75 transition-opacity"
                     style={{
                       aspectRatio: "2/3",
                       background: `linear-gradient(160deg, ${movie.posterColor} 0%, #1a1a1a 100%)`,
@@ -44,12 +45,6 @@ export default function NowShowingPage() {
                       </span>
                     ))}
                   </div>
-                  <Link
-                    href={`/movies/${movie.id}`}
-                    className="text-center text-xs text-white border border-[#555] py-1.5 rounded hover:bg-[#333] transition-colors"
-                  >
-                    詳細
-                  </Link>
                 </div>
               ))}
             </div>
