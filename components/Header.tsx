@@ -1,7 +1,6 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import HalLogo from "./HalLogo";
 
 const navItems = [
   { href: "/", labelEn: "Home", labelJa: "ホーム" },
@@ -19,7 +18,7 @@ export default function Header() {
       <div className="py-4">
         <div className="flex justify-center mb-4">
           <Link href="/">
-            <HalLogo size={60} />
+            <img src="/halcinemalogo.png" alt="HAL CINEMA" style={{ height: "100px", width: "auto" }} />
           </Link>
         </div>
         <nav className="flex items-center justify-center gap-8">
