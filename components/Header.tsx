@@ -20,7 +20,7 @@ export default function Header() {
         <Link href="/">
           <HalLogo size={60} />
         </Link>
-        <nav className="flex items-end justify-center gap-6 md:gap-10 w-full">
+        <nav className="flex items-center justify-center gap-8 w-full">
           {navItems.map((item) => {
             const isActive =
               item.href === "/"
@@ -38,10 +38,7 @@ export default function Header() {
                 >
                   {item.labelEn}
                 </span>
-                <span
-                  className="nav-label-ja"
-                  style={{ whiteSpace: "pre-line", lineHeight: "1.3" }}
-                >
+                <span className="nav-label-ja">
                   {item.labelJa}
                 </span>
               </Link>
