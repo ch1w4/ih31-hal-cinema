@@ -26,6 +26,13 @@ export default function LoginPage() {
                 className="w-full bg-[#3a3a3a] border-0 rounded px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#666]"
               />
             </div>
+
+            <button
+              type="submit"
+              className="w-full bg-white text-black py-2.5 rounded text-sm font-medium hover:bg-gray-200 transition-colors mt-2"
+            >
+              ログイン
+            </button>
           </form>
 
           <div className="flex items-center gap-3 my-6">
@@ -38,10 +45,6 @@ export default function LoginPage() {
             <button className="w-full bg-[#f0f0f0] text-black py-2.5 rounded text-sm font-medium hover:bg-white transition-colors flex items-center justify-center gap-2">
               <span className="text-base">G</span>
               Googleアカウント
-            </button>
-            <button className="w-full bg-[#111] border border-[#444] text-white py-2.5 rounded text-sm font-medium hover:bg-[#1a1a1a] transition-colors flex items-center justify-center gap-2">
-              <span className="text-base"></span>
-              Appleアカウント
             </button>
           </div>
 

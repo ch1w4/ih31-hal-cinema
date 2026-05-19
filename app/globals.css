@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+html {
+  font-size: 18px;
+}
+
 :root {
   --bg-primary: #0f0f0f;
   --bg-secondary: #1a1a1a;
