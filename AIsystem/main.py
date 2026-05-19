@@ -206,17 +206,17 @@ def recommend_movies():
 
 出力形式は以下のJSON：
 
-{
+{{
   "reason": "ユーザーの好みの分析",
   "recommendations": [
-    {
+    {{
       "id": "映画ID",
       "title": "映画タイトル",
       "score": 数値,
       "why": "選んだ理由"
-    }
+    }}
   ]
-}
+}}
 """
 
         print("\n" + "=" * 80)
