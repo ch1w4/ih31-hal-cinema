@@ -15,10 +15,10 @@ export default function Header() {
 
   return (
     <header className="bg-[#0f0f0f] border-b border-[#2a2a2a]">
-      <div className="py-4">
-        <div className="flex justify-center mb-4">
+      <div className="py-2">
+        <div className="flex justify-center mb-2">
           <Link href="/">
-            <img src="/halcinemalogo.png" alt="HAL CINEMA" style={{ height: "100px", width: "auto" }} />
+            <img src="/halcinemalogo.png" alt="HAL CINEMA" style={{ height: "72px", width: "auto" }} />
           </Link>
         </div>
         <nav className="flex items-center justify-center gap-8 pl-12 ">
