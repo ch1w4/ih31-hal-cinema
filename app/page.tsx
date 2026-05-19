@@ -7,7 +7,7 @@ import { movies } from "@/lib/mockData";
 export default function HomePage() {
   const rankingMovies = movies.slice(0, 10);
   const nowShowingMovies = movies.slice(0, 8);
-  const top3 = [movies[1], movies[0], movies[2]]; // 2ˆÊ, 1ˆÊ, 3ˆÊ
+  const top3 = [movies[1], movies[0], movies[2]]; // 2ä½, 1ä½, 3ä½
 
   return (
     <div className="min-h-screen bg-[#0f0f0f]">
@@ -20,19 +20,19 @@ export default function HomePage() {
       <div className="max-w-4xl mx-auto px-4 py-3">
         <div className="flex items-stretch border border-[#333] rounded overflow-hidden w-fit">
           <div className="px-4 py-2.5 text-sm text-gray-300 bg-[#1a1a1a] border-r border-[#333] whitespace-nowrap">
-            HAL CINEMA‰ïˆõ
+            HAL CINEMAä¼šå“¡
           </div>
           <Link
             href="/login"
             className="px-6 py-2.5 text-sm text-white bg-[#555] hover:bg-[#666] transition-colors border-r border-[#333]"
           >
-            ƒƒOƒCƒ“
+            ãƒ­ã‚°ã‚¤ãƒ³
           </Link>
           <Link
             href="/register"
             className="px-6 py-2.5 text-sm text-white hover:bg-[#222] transition-colors"
           >
-            V‹K“o˜^
+            æ–°è¦ç™»éŒ²
           </Link>
         </div>
       </div>
@@ -40,7 +40,7 @@ export default function HomePage() {
       {/* Movie Ranking */}
       <div className="max-w-4xl mx-auto px-4 py-4">
         <div className="bg-[#1a1a1a] rounded overflow-hidden py-6 px-6">
-          <div className="text-sm text-center text-white mb-6">‰f‰æƒ‰ƒ“ƒLƒ“ƒO</div>
+          <div className="text-sm text-center text-white mb-6">æ˜ ç”»ãƒ©ãƒ³ã‚­ãƒ³ã‚°</div>
 
           {/* Podium: 2nd left, 1st center (larger), 3rd right */}
           <div className="flex items-end justify-center gap-10 mb-5">
@@ -75,18 +75,18 @@ export default function HomePage() {
 
           <div className="text-center">
             <Link href="/now-showing" className="text-sm text-gray-400 hover:text-white transition-colors">
-              ‚à‚Á‚ÆŒ©‚é
+              ã‚‚ã£ã¨è¦‹ã‚‹
             </Link>
           </div>
         </div>
       </div>
 
-      {/* Now Showing Grid ? master branch style */}
+      {/* Now Showing Grid */}
       <div className="max-w-4xl mx-auto px-4 py-4">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm text-white font-medium">ã‰f’†‚Ì‰f‰æ</h2>
+          <h2 className="text-xl text-white font-medium">ä¸Šæ˜ ä¸­ã®æ˜ ç”»</h2>
           <Link href="/now-showing" className="text-sm text-gray-400 hover:text-white">
-            ‚·‚×‚ÄŒ©‚é ¨
+            ã™ã¹ã¦è¦‹ã‚‹ â†’
           </Link>
         </div>
         <div className="grid grid-cols-4 gap-3">
