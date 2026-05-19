@@ -1,4 +1,4 @@
-import Header from "@/components/Header";
+﻿import Header from "@/components/Header";
 import Link from "next/link";
 import { movies } from "@/lib/mockData";
 
@@ -12,8 +12,8 @@ export default function NowShowingPage() {
       <Header />
 
       <main className="max-w-4xl mx-auto px-4 py-6">
-        <h1 className="text-sm font-medium text-white mb-6 pb-2 border-b border-[#333]">
-          <span className="text-xs text-gray-400 block mb-1">Now Showing</span>
+        <h1 className="text-xl font-medium text-white mb-6 pb-2 border-b border-[#333]">
+          <span className="text-sm text-gray-400 block mb-1">Now Showing</span>
           上映中
         </h1>
 
@@ -24,7 +24,7 @@ export default function NowShowingPage() {
         ].map((section, si) => (
           <div key={si} className="mb-8">
             {section.label && (
-              <div className="text-xs text-gray-400 mb-1">{section.label}</div>
+              <div className="text-sm text-gray-400 mb-1">{section.label}</div>
             )}
             <div className="grid grid-cols-3 gap-4">
               {section.films.map((movie) => (
@@ -37,10 +37,10 @@ export default function NowShowingPage() {
                       background: `linear-gradient(160deg, ${movie.posterColor} 0%, #1a1a1a 100%)`,
                     }}
                   />
-                  <div className="text-xs text-gray-300 mb-1 truncate">{movie.title}</div>
+                  <div className="text-sm text-gray-300 mb-1 truncate">{movie.title}</div>
                   <div className="flex gap-1 flex-wrap mb-2">
                     {movie.genre.map((g) => (
-                      <span key={g} className="text-[9px] px-1.5 py-0.5 border border-[#444] text-gray-500 rounded">
+                      <span key={g} className="text-sm px-1.5 py-0.5 border border-[#444] text-gray-500 rounded">
                         {g}
                       </span>
                     ))}

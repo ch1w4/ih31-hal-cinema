@@ -55,30 +55,30 @@ export default function MovieDetailPage() {
             />
           </div>
           <div className="flex-1">
-            <div className="text-xs text-gray-400 mb-1">
+            <div className="text-sm text-gray-400 mb-1">
               公開期間：{movie.releaseDate.replace(/-/g, "/")}〜{movie.endDate.replace(/-/g, "/")}
             </div>
-            <div className="text-xs text-gray-500 mb-2">カラタ探し</div>
-            <p className="text-[11px] text-gray-400 leading-relaxed mb-3 line-clamp-5">
+            <div className="text-sm text-gray-500 mb-2">カラタ探し</div>
+            <p className="text-sm text-gray-400 leading-relaxed mb-3 line-clamp-5">
               {movie.synopsis}
             </p>
             <div className="flex flex-wrap gap-1 mb-3">
               {movie.genre.map((g) => (
-                <span key={g} className="text-[9px] px-1.5 py-0.5 border border-[#444] text-gray-400 rounded">
+                <span key={g} className="text-sm px-1.5 py-0.5 border border-[#444] text-gray-400 rounded">
                   {g}
                 </span>
               ))}
-              <span className="text-[9px] px-1.5 py-0.5 border border-[#444] text-gray-400 rounded">
+              <span className="text-sm px-1.5 py-0.5 border border-[#444] text-gray-400 rounded">
                 {movie.rating}
               </span>
             </div>
-            <div className="text-[10px] text-gray-500 mb-1">声優・キャスト</div>
+            <div className="text-sm text-gray-500 mb-1">声優・キャスト</div>
             <div className="flex flex-wrap gap-1">
               {movie.cast.map((name) => (
-                <span key={name} className="text-[10px] text-gray-400">{name}</span>
+                <span key={name} className="text-sm text-gray-400">{name}</span>
               ))}
             </div>
-            <div className="text-[10px] text-gray-500 mt-2">
+            <div className="text-sm text-gray-500 mt-2">
               監督：{movie.director}　{movie.duration}分
             </div>
           </div>
@@ -86,14 +86,14 @@ export default function MovieDetailPage() {
 
         {/* Schedule section */}
         <div className="border-t border-[#333] pt-4">
-          <div className="text-xs text-gray-400 mb-3">上映スケジュール</div>
+          <div className="text-sm text-gray-400 mb-3">上映スケジュール</div>
 
           {/* Region tabs */}
           <div className="flex gap-3 overflow-x-auto pb-2 mb-4">
             {regions.map((r, i) => (
               <button
                 key={i}
-                className={`flex-shrink-0 text-xs pb-1 border-b-2 transition-colors ${
+                className={`flex-shrink-0 text-sm pb-1 border-b-2 transition-colors ${
                   i === 2
                     ? "border-white text-white"
                     : "border-transparent text-gray-500 hover:text-gray-300"
@@ -109,7 +109,7 @@ export default function MovieDetailPage() {
             <select
               value={selectedTheater}
               onChange={(e) => setSelectedTheater(e.target.value)}
-              className="bg-[#1a1a1a] border border-[#444] text-white text-xs rounded px-3 py-2 w-full max-w-xs focus:outline-none"
+              className="bg-[#1a1a1a] border border-[#444] text-white text-base rounded px-4 py-3 w-full max-w-xs focus:outline-none"
             >
               {theaters.map((t) => (
                 <option key={t} value={t}>{t}</option>
@@ -123,7 +123,7 @@ export default function MovieDetailPage() {
               <button
                 key={s.date}
                 onClick={() => { setSelectedDate(s.date); setSelectedTime(null); }}
-                className={`flex-shrink-0 px-4 py-1.5 rounded text-xs transition-colors border ${
+                className={`flex-shrink-0 px-5 py-3 rounded text-base transition-colors border ${
                   s.date === selectedDate
                     ? "border-white text-white"
                     : "border-[#444] text-gray-400 hover:border-[#777]"
@@ -140,13 +140,13 @@ export default function MovieDetailPage() {
               <div className="flex-1">
                 {selectedSchedule.slots.map((slot) => (
                   <div key={slot.screen} className="mb-4">
-                    <div className="text-xs text-gray-500 mb-2">{slot.screen}</div>
+                    <div className="text-sm text-gray-500 mb-2">{slot.screen}</div>
                     <div className="flex flex-wrap gap-2">
                       {slot.times.map((time) => (
                         <button
                           key={time}
                           onClick={() => setSelectedTime(time)}
-                          className={`px-4 py-2 rounded text-xs transition-colors border ${
+                          className={`px-5 py-3 rounded text-base transition-colors border ${
                             selectedTime === time
                               ? "border-white text-white bg-[#2a2a2a]"
                               : "border-[#555] text-gray-400 hover:border-white hover:text-white"
@@ -162,7 +162,7 @@ export default function MovieDetailPage() {
 
               {/* Booking summary panel */}
               {selectedTime && (
-                <div className="w-48 flex-shrink-0 border border-[#333] rounded p-3 bg-[#1a1a1a] text-xs self-start">
+                <div className="w-48 flex-shrink-0 border border-[#333] rounded p-3 bg-[#1a1a1a] text-sm self-start">
                   <div className="text-gray-400 mb-2">選択内容</div>
                   <div className="text-gray-300 mb-1">作品：{movie.title}</div>
                   <div className="text-gray-300 mb-1">日時：{selectedDate} {selectedTime}</div>
@@ -172,7 +172,7 @@ export default function MovieDetailPage() {
                   </div>
                   <Link
                     href={`/tickets?movieId=${params.id}&date=${encodeURIComponent(selectedDate)}&time=${encodeURIComponent(selectedTime ?? "")}&screen=${encodeURIComponent(selectedSchedule?.slots.find(s => s.times.includes(selectedTime ?? ""))?.screen ?? "")}`}
-                    className="block text-center bg-white text-black py-1.5 rounded font-medium hover:bg-gray-200 transition-colors"
+                    className="block text-center bg-white text-black py-3 rounded font-medium hover:bg-gray-200 transition-colors"
                   >
                     席を選択する
                   </Link>

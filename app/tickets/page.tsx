@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
@@ -118,7 +118,7 @@ function TicketsContent() {
   return (
     <main className="max-w-2xl mx-auto px-4 py-6">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-1 text-[10px] text-gray-500 mb-6 overflow-x-auto pb-1">
+      <div className="flex items-center gap-1 text-sm text-gray-500 mb-6 overflow-x-auto pb-1">
         {stepLabels.map((s, i) => (
           <span key={s.key} className="flex items-center gap-1 flex-shrink-0">
             {i > 0 && <span className="text-gray-700">›</span>}
@@ -132,7 +132,7 @@ function TicketsContent() {
       {/* ── STEP 1: 映画選択 ── */}
       {step === "select-movie" && (
         <div>
-          <h2 className="text-sm text-gray-300 mb-4">映画を選択してください</h2>
+          <h2 className="text-base text-gray-300 mb-4">映画を選択してください</h2>
           <div className="space-y-2">
             {movies.slice(0, 6).map((m) => (
               <button
@@ -157,7 +157,7 @@ function TicketsContent() {
                 />
                 <div>
                   <div className="text-white text-sm font-medium">{m.title}</div>
-                  <div className="text-xs text-gray-400 mt-0.5">
+                  <div className="text-sm text-gray-400 mt-0.5">
                     {m.genre[0]} · {m.duration}分 · {m.rating}
                   </div>
                 </div>
@@ -181,13 +181,13 @@ function TicketsContent() {
             />
             <div>
               <div className="text-white text-sm font-medium">{movie.title}</div>
-              <div className="text-xs text-gray-400">
+              <div className="text-sm text-gray-400">
                 {movie.duration}分 · {movie.rating}
               </div>
             </div>
           </div>
 
-          <h2 className="text-sm text-gray-300 mb-3">日付を選択してください</h2>
+          <h2 className="text-base text-gray-300 mb-3">日付を選択してください</h2>
           <div className="flex gap-2 flex-wrap mb-5">
             {schedules.map((s) => (
               <button
@@ -197,7 +197,7 @@ function TicketsContent() {
                   setSelectedTime("");
                   setSelectedScreen("");
                 }}
-                className={`px-4 py-1.5 rounded text-xs border transition-colors ${
+                className={`px-5 py-3 rounded text-base border transition-colors ${
                   selectedDate === s.date
                     ? "border-white text-white bg-[#2a2a2a]"
                     : "border-[#444] text-gray-400 hover:border-[#777]"
@@ -210,12 +210,12 @@ function TicketsContent() {
 
           {selectedDate && (
             <>
-              <h2 className="text-sm text-gray-300 mb-3">時間帯を選択してください</h2>
+              <h2 className="text-base text-gray-300 mb-3">時間帯を選択してください</h2>
               {schedules
                 .find((s) => s.date === selectedDate)
                 ?.slots.map((slot) => (
                   <div key={slot.screen} className="mb-4">
-                    <div className="text-xs text-gray-500 mb-2">{slot.screen}</div>
+                    <div className="text-sm text-gray-500 mb-2">{slot.screen}</div>
                     <div className="flex flex-wrap gap-2">
                       {slot.times.map((time) => (
                         <button
@@ -224,7 +224,7 @@ function TicketsContent() {
                             setSelectedTime(time);
                             setSelectedScreen(slot.screen);
                           }}
-                          className={`px-4 py-2 rounded text-xs border transition-colors ${
+                          className={`px-4 py-2 rounded text-sm border transition-colors ${
                             selectedTime === time && selectedScreen === slot.screen
                               ? "border-white text-white bg-[#2a2a2a]"
                               : "border-[#555] text-gray-400 hover:border-white hover:text-white"
@@ -242,14 +242,14 @@ function TicketsContent() {
           <div className="flex gap-3 mt-4">
             <button
               onClick={() => setStep("select-movie")}
-              className="px-4 py-2 border border-[#444] text-gray-400 rounded text-sm hover:border-white hover:text-white transition-colors"
+              className="px-5 py-3 border border-[#444] text-gray-400 rounded text-base hover:border-white hover:text-white transition-colors"
             >
               戻る
             </button>
             <button
               onClick={() => setStep("seat")}
               disabled={!selectedTime}
-              className={`px-6 py-2 rounded text-sm font-medium transition-colors ${
+              className={`px-8 py-3 rounded text-base font-medium transition-colors ${
                 selectedTime
                   ? "bg-white text-black hover:bg-gray-200"
                   : "bg-[#333] text-gray-600 cursor-not-allowed"
@@ -265,13 +265,13 @@ function TicketsContent() {
       {step === "seat" && movie && (
         <div>
           {/* Summary bar */}
-          <div className="text-xs text-gray-400 border border-[#333] rounded p-3 bg-[#1a1a1a] mb-4 space-y-0.5">
+          <div className="text-sm text-gray-400 border border-[#333] rounded p-3 bg-[#1a1a1a] mb-4 space-y-0.5">
             <div>{movie.title}</div>
             <div>{selectedDate}　{selectedTime}　{selectedScreen}</div>
           </div>
 
           {/* Legend */}
-          <div className="flex gap-6 text-xs text-gray-300 mb-5">
+          <div className="flex gap-6 text-sm text-gray-300 mb-5">
             <span className="flex items-center gap-2">
               <span className="inline-block w-5 h-4 bg-gray-400 rounded-t-sm" />空白
             </span>
@@ -289,14 +289,14 @@ function TicketsContent() {
             <div className="flex justify-center mb-1">
               <div className="bg-white rounded h-2" style={{ width: "55%" }} />
             </div>
-            <div className="text-center text-xs text-gray-400 mb-4">screen1</div>
+            <div className="text-center text-sm text-gray-400 mb-4">screen1</div>
 
             {/* Top rows A-C */}
             <div className="mb-1">
               <div className="flex items-center mb-1">
                 <span className="w-6" />
                 <div
-                  className="flex flex-1 justify-between px-0 text-[9px] text-gray-500"
+                  className="flex flex-1 justify-between px-0 text-sm text-gray-500"
                   style={{ paddingLeft: "1px" }}
                 >
                   <span>1</span>
@@ -306,13 +306,13 @@ function TicketsContent() {
               </div>
               {TOP_ROWS.map((row) => (
                 <div key={row} className="flex items-center gap-1 mb-1">
-                  <span className="text-[10px] text-gray-400 w-5 text-right">{row}</span>
+                  <span className="text-sm text-gray-400 w-5 text-right">{row}</span>
                   <div className="flex gap-0.5">
                     {Array.from({ length: TOP_COLS }, (_, c) => (
                       <SeatButton key={c} id={`${row}-${c + 1}`} />
                     ))}
                   </div>
-                  <span className="text-[10px] text-gray-400 w-5 ml-1">{row}</span>
+                  <span className="text-sm text-gray-400 w-5 ml-1">{row}</span>
                 </div>
               ))}
             </div>
@@ -324,13 +324,13 @@ function TicketsContent() {
               <div className="flex-1">
                 <div className="flex items-center mb-1">
                   <span className="w-5" />
-                  <div className="text-[9px] text-gray-500 ml-0.5">1</div>
+                  <div className="text-sm text-gray-500 ml-0.5">1</div>
                   <div className="flex-1" />
-                  <div className="text-[9px] text-gray-500 mr-1">13</div>
+                  <div className="text-sm text-gray-500 mr-1">13</div>
                 </div>
                 {BOTTOM_ROWS.map((row) => (
                   <div key={row} className="flex items-center gap-1 mb-1">
-                    <span className="text-[10px] text-gray-400 w-5 text-right">{row}</span>
+                    <span className="text-sm text-gray-400 w-5 text-right">{row}</span>
                     <div className="flex gap-0.5">
                       {Array.from({ length: LEFT_BLOCK }, (_, c) => (
                         <SeatButton key={c} id={`${row}-${c + 1}`} />
@@ -342,7 +342,7 @@ function TicketsContent() {
                         <SeatButton key={c} id={`${row}-${c + LEFT_BLOCK + 1}`} />
                       ))}
                     </div>
-                    <span className="text-[10px] text-gray-400 w-5 ml-1">{row}</span>
+                    <span className="text-sm text-gray-400 w-5 ml-1">{row}</span>
                   </div>
                 ))}
               </div>
@@ -351,7 +351,7 @@ function TicketsContent() {
               <div className="flex flex-col items-center ml-2 self-center">
                 <div className="border-r border-t border-b border-gray-500 h-20 w-3" />
                 <div
-                  className="text-[9px] text-gray-400 mt-1"
+                  className="text-sm text-gray-400 mt-1"
                   style={{ writingMode: "vertical-rl" }}
                 >
                   出入り口
@@ -361,7 +361,7 @@ function TicketsContent() {
 
             {/* Seat count + selected chips */}
             <div className="flex items-center gap-4 mt-4 border-t border-[#333] pt-3">
-              <div className="text-xs text-gray-400">
+              <div className="text-sm text-gray-400">
                 <div>座席数</div>
                 <div className="font-bold text-white">200席</div>
               </div>
@@ -369,7 +369,7 @@ function TicketsContent() {
                 {selectedSeats.map((id) => (
                   <div key={id} className="flex items-center gap-1">
                     <span className="inline-block w-5 h-4 bg-red-500 rounded-t-sm" />
-                    <span className="text-[10px] text-gray-300">{id}</span>
+                    <span className="text-sm text-gray-300">{id}</span>
                   </div>
                 ))}
               </div>
@@ -379,14 +379,14 @@ function TicketsContent() {
           <div className="flex gap-3 mt-2">
             <button
               onClick={() => setStep("select-time")}
-              className="px-4 py-2 border border-[#444] text-gray-400 rounded text-sm hover:border-white hover:text-white transition-colors"
+              className="px-5 py-3 border border-[#444] text-gray-400 rounded text-base hover:border-white hover:text-white transition-colors"
             >
               戻る
             </button>
             <button
               onClick={() => selectedSeats.length > 0 && setStep("ticket-type")}
               disabled={selectedSeats.length === 0}
-              className={`px-6 py-2 rounded text-sm font-medium transition-colors ${
+              className={`px-8 py-3 rounded text-base font-medium transition-colors ${
                 selectedSeats.length > 0
                   ? "bg-white text-black hover:bg-gray-200"
                   : "bg-[#333] text-gray-600 cursor-not-allowed"
@@ -401,7 +401,7 @@ function TicketsContent() {
       {/* ── STEP 4: チケット種別 ── */}
       {step === "ticket-type" && movie && (
         <div>
-          <div className="text-xs text-gray-400 border border-[#333] rounded p-3 bg-[#1a1a1a] mb-4 space-y-0.5">
+          <div className="text-sm text-gray-400 border border-[#333] rounded p-3 bg-[#1a1a1a] mb-4 space-y-0.5">
             <div>{movie.title}</div>
             <div>
               {selectedDate}　{selectedTime}　{selectedScreen}
@@ -409,17 +409,17 @@ function TicketsContent() {
             <div>座席：{selectedSeats.join(", ")}</div>
           </div>
 
-          <h2 className="text-sm text-gray-300 mb-4">チケットの種類をお選びください</h2>
+          <h2 className="text-base text-gray-300 mb-4">チケットの種類をお選びください</h2>
           <div className="space-y-3 mb-5">
             {selectedSeats.map((seatId) => (
               <div key={seatId} className="flex items-center gap-3">
-                <span className="text-xs text-gray-400 w-12 flex-shrink-0">{seatId}</span>
+                <span className="text-sm text-gray-400 w-12 flex-shrink-0">{seatId}</span>
                 <select
                   value={ticketSelections[seatId] || "general"}
                   onChange={(e) =>
                     setTicketSelections((p) => ({ ...p, [seatId]: e.target.value }))
                   }
-                  className="flex-1 bg-[#1a1a1a] border border-[#444] text-white text-xs rounded px-3 py-2 focus:outline-none"
+                  className="flex-1 bg-[#1a1a1a] border border-[#444] text-white text-sm rounded px-3 py-2 focus:outline-none"
                 >
                   {ticketTypes.map((t) => (
                     <option key={t.id} value={t.id}>
@@ -436,7 +436,7 @@ function TicketsContent() {
               <button
                 key={d.id}
                 onClick={() => setHalDiscount(d.id)}
-                className={`px-3 py-1.5 rounded text-xs border transition-colors ${
+                className={`px-3 py-1.5 rounded text-sm border transition-colors ${
                   halDiscount === d.id
                     ? "border-red-600 bg-red-600 text-white"
                     : "border-[#444] text-gray-400 hover:border-[#777]"
@@ -455,7 +455,7 @@ function TicketsContent() {
           <div className="flex gap-3">
             <button
               onClick={() => setStep("seat")}
-              className="px-4 py-2 border border-[#444] text-gray-400 rounded text-sm hover:border-white hover:text-white transition-colors"
+              className="px-5 py-3 border border-[#444] text-gray-400 rounded text-base hover:border-white hover:text-white transition-colors"
             >
               戻る
             </button>
@@ -475,7 +475,7 @@ function TicketsContent() {
           <section className="bg-[#1a1a1a] rounded-t p-4 mb-px">
             <div className="flex justify-between items-center mb-3">
               <span className="text-sm text-white">氏名</span>
-              <span className="text-xs text-red-400">*必須</span>
+              <span className="text-sm text-red-400">*必須</span>
             </div>
             <div className="space-y-2">
               {[
@@ -485,7 +485,7 @@ function TicketsContent() {
                 { label: "フリガナ(名)", placeholder: "名", value: firstNameKana, set: setFirstNameKana },
               ].map(({ label, placeholder, value, set }) => (
                 <div key={label}>
-                  <label className="text-[10px] text-gray-400 block mb-0.5">{label}</label>
+                  <label className="text-sm text-gray-400 block mb-0.5">{label}</label>
                   <input
                     type="text"
                     placeholder={placeholder}
@@ -519,9 +519,9 @@ function TicketsContent() {
           <section className="bg-[#1a1a1a] p-4 mb-px">
             <div className="flex justify-between items-center mb-3">
               <span className="text-sm text-white">電話番号</span>
-              <span className="text-xs text-red-400">*必須</span>
+              <span className="text-sm text-red-400">*必須</span>
             </div>
-            <label className="text-[10px] text-gray-400 block mb-0.5">半角数字・ハイフンなし</label>
+            <label className="text-sm text-gray-400 block mb-0.5">半角数字・ハイフンなし</label>
             <input
               type="tel"
               placeholder="08000000000"
@@ -535,7 +535,7 @@ function TicketsContent() {
             <div className="text-sm text-white mb-3">メールアドレス</div>
             <div className="space-y-2">
               <div>
-                <label className="text-[10px] text-gray-400 block mb-0.5">メールアドレス</label>
+                <label className="text-sm text-gray-400 block mb-0.5">メールアドレス</label>
                 <input
                   type="email"
                   placeholder="例）HALCINEMA@HAL.HLA"
@@ -545,7 +545,7 @@ function TicketsContent() {
                 />
               </div>
               <div>
-                <label className="text-[10px] text-gray-400 block mb-0.5">確認</label>
+                <label className="text-sm text-gray-400 block mb-0.5">確認</label>
                 <input
                   type="email"
                   placeholder="例）HALCINEMA@HAL.HLA"
@@ -560,7 +560,7 @@ function TicketsContent() {
           <section className="bg-[#1a1a1a] rounded-b p-4 mb-4">
             <div className="flex justify-between items-center mb-3">
               <span className="text-sm text-white">支払い方法</span>
-              <span className="text-xs text-red-400">*必須</span>
+              <span className="text-sm text-red-400">*必須</span>
             </div>
             <div className="space-y-2">
               {(["credit", "paypay"] as const).map((p) => (
@@ -583,14 +583,14 @@ function TicketsContent() {
           <div className="flex gap-3 pt-2">
             <button
               onClick={() => setStep("ticket-type")}
-              className="px-4 py-2 border border-[#444] text-gray-400 rounded text-sm hover:border-white hover:text-white transition-colors"
+              className="px-5 py-3 border border-[#444] text-gray-400 rounded text-base hover:border-white hover:text-white transition-colors"
             >
               戻る
             </button>
             <button
               onClick={() => email && phone && setStep("confirm")}
               disabled={!email || !phone}
-              className={`px-6 py-2 rounded text-sm font-medium transition-colors ${
+              className={`px-8 py-3 rounded text-base font-medium transition-colors ${
                 email && phone
                   ? "bg-white text-black hover:bg-gray-200"
                   : "bg-[#333] text-gray-600 cursor-not-allowed"
@@ -611,10 +611,10 @@ function TicketsContent() {
             </svg>
           </div>
           <div className="text-white text-xl font-bold mb-1">購入完了</div>
-          <div className="text-gray-400 text-xs mb-8">ご購入ありがとうございます</div>
+          <div className="text-gray-400 text-sm mb-8">ご購入ありがとうございます</div>
 
           <div className="border border-[#333] rounded p-4 bg-[#1a1a1a] mb-6 text-left space-y-2 text-sm">
-            <div className="text-gray-400 text-xs mb-3">予約内容</div>
+            <div className="text-gray-400 text-sm mb-3">予約内容</div>
             {[
               { label: "予約番号", value: `HC-${Math.random().toString(36).slice(2, 8).toUpperCase()}` },
               { label: "作品", value: movie.title },
@@ -630,7 +630,7 @@ function TicketsContent() {
             ))}
           </div>
 
-          <div className="text-xs text-gray-500 mb-8">
+          <div className="text-sm text-gray-500 mb-8">
             ご登録のメールアドレスに確認メールを送信しました。<br />
             当日は予約番号をご提示ください。
           </div>
@@ -669,7 +669,7 @@ function TicketsContent() {
           <div className="flex gap-3">
             <button
               onClick={() => setStep("customer-info")}
-              className="px-4 py-2 border border-[#444] text-gray-400 rounded text-sm hover:border-white hover:text-white transition-colors"
+              className="px-5 py-3 border border-[#444] text-gray-400 rounded text-base hover:border-white hover:text-white transition-colors"
             >
               戻る
             </button>
