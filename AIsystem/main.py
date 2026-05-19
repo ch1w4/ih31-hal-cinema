@@ -172,7 +172,6 @@ def test_gemma():
 # ==================================================
 @app.route("/recommend/movies", methods=["POST"])
 def recommend_movies():
-<<<<<<< HEAD
     try:
         if "access_token" not in session:
             return jsonify({"error": "Not authenticated"}), 401
@@ -220,50 +219,73 @@ def recommend_movies():
 }
 """
 
+        print("\n" + "=" * 80)
+        print("🎬 映画推薦リクエスト開始")
+        print("=" * 80)
+        print(f"YouTube高評価動画数: {len(likes.get('items', []))}")
+        print(f"登録チャンネル数: {len(subs.get('items', []))}")
+        print(f"対象映画数: {len(movies)}")
+        print(f"近日公開映画数: {len(coming)}")
+        print("\n📝 プロンプトをGemmaに送信中...")
 
         ai_response = ask_gemma(prompt_text)
 
-        # フロントで中身を確認しやすいように、プロンプトも一緒に返す
-        return jsonify(
-            {
-                "prompt": prompt_text,
-                "ai_output": ai_response,
-            }
-        )
+        print("\n✅ AIレスポンス取得完了")
+        print(f"レスポンス長: {len(ai_response)} 文字")
+        print(f"レスポンス内容:\n{ai_response}\n")
+
+        # AIレスポンスをJSON として解析
+        try:
+            # 複数行のJSON レスポンスをパース
+            ai_json = json.loads(ai_response)
+            recommendations = ai_json.get("recommendations", [])
+            print(f"✅ JSON解析成功: {len(recommendations)}件の推薦を取得")
+        except json.JSONDecodeError as e:
+            # JSONパース失敗時はリコメンデーションを空にする
+            print(f"❌ JSON解析失敗: {str(e)}")
+            print(f"レスポンス内容: {ai_response}")
+            recommendations = []
+
+        # 映画データを全て結合
+        all_movies = {movie["id"]: movie for movie in movies + coming}
+
+        # レコメンデーションに映画の詳細情報を付与
+        enriched_recommendations = []
+        for rec in recommendations:
+            movie_id = rec.get("id")
+            if movie_id in all_movies:
+                movie_data = all_movies[movie_id]
+                enriched_recommendations.append(
+                    {
+                        "id": movie_data.get("id"),
+                        "title": movie_data.get("title"),
+                        "posterColor": movie_data.get("posterColor", "#666"),
+                        "score": rec.get("score", 0),
+                        "why": rec.get("why", ""),
+                    }
+                )
+            else:
+                print(f"⚠️  映画IDが見つかりません: {movie_id}")
+
+        print(f"\n🎯 最終的な推薦映画数: {len(enriched_recommendations)}")
+        for i, movie in enumerate(enriched_recommendations, 1):
+            print(f"  {i}. {movie['title']} (スコア: {movie['score']}) - {movie['why']}")
+
+        result = {
+            "reason": ai_json.get("reason", "") if "ai_json" in locals() else "",
+            "recommended_movies": enriched_recommendations[:10],  # Top 10 の推薦
+        }
+        print(f"\n✨ レスポンス送信: {len(result['recommended_movies'])}件の推薦を返却")
+        print("=" * 80 + "\n")
+
+        return jsonify(result)
     except Exception as e:
-        print("Error in /recommend/movies:", e)
+        print("=" * 80)
+        print(f"❌ /recommend/movies エラー発生: {str(e)}")
+        print("=" * 80)
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-=======
-    """
-    ユーザー情報に基づいて映画を推薦する
-    """
-    try:
-        user_info = session.get("user_info", {})
-        body = request.json or {}
-        movies = body.get("movies", [])
-        coming_soon = body.get("comingSoonMovies", [])
-
-        # ユーザーメール情報を使ってシンプルに映画を推薦
-        # メールのハッシュ値をシードにしてランダムソート
-        user_email = user_info.get("email", "default")
-        seed = sum(ord(c) for c in user_email) % 1000
-
-        # 映画をソート（シードを使った疑似ランダムソート）
-        import random
-        random.seed(seed)
-        recommended = sorted(movies, key=lambda x: random.random())[:10]
-
-        return jsonify({
-            "recommended_movies": recommended,
-            "user_email": user_email,
-            "user_name": user_info.get("name", "Unknown"),
-            "user_picture": user_info.get("picture", "")
-        })
-    except Exception as e:
-        print(f"Error in recommend_movies: {e}")
-        return jsonify({"error": str(e), "recommended_movies": []}), 400
-
->>>>>>> beb55e3ce12b12ac0ccb6200074d10b32a0e8840
 
 
 # Flaskアプリの起動（最後に1回だけ）

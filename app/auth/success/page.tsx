@@ -32,6 +32,7 @@ export default function AuthSuccessPage() {
           const res = await fetch("http://localhost:5000/recommend/movies", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            credentials: "include",  // セッション情報を送信
             body: JSON.stringify({
               movies,
               comingSoonMovies
@@ -41,7 +42,11 @@ export default function AuthSuccessPage() {
           if (res.ok) {
             const data = await res.json();
             // 推薦映画を保存
+            console.log("Recommended movies:", data);
             localStorage.setItem("recommendedMovies", JSON.stringify(data.recommended_movies || []));
+          } else {
+            console.warn("Recommendation API returned:", res.status);
+            localStorage.setItem("recommendedMovies", JSON.stringify([]));
           }
         } catch (fetchError) {
           console.warn("Failed to fetch recommendations:", fetchError);

@@ -64,26 +64,42 @@ export default function HomePage() {
           <div className="px-4 py-2 section-title bg-[#1a1a1a] border-b border-[#333]">
             {recommendedMovies.length > 0 && !loading ? "🎬 あなたにオススメの映画" : "映画ランキング"}
           </div>
-          <div className="placeholder-box" style={{ height: "300px" }}>
-            <div className="p-6 grid grid-cols-5 gap-3 h-full">
+          <div className="placeholder-box" style={{ height: "300px", overflow: "visible" }}>
+            <div className="p-6 grid grid-cols-5 gap-3 h-full relative">
               {rankingMovies.map((movie, i) => (
-                <Link
-                  key={movie.id}
-                  href={`/movies/${movie.id}`}
-                  className="flex flex-col items-center gap-1 group"
-                >
+                <div key={movie.id} className="flex flex-col items-center gap-1 group relative">
                   <div className="text-xs font-bold text-gray-600">{i + 1}</div>
-                  <div
-                    className="w-full rounded"
-                    style={{
-                      aspectRatio: "2/3",
-                      background: `linear-gradient(160deg, ${movie.posterColor} 0%, #1a1a1a 100%)`,
-                    }}
-                  />
-                  <div className="text-[9px] text-gray-500 text-center truncate w-full group-hover:text-gray-300">
-                    {movie.title}
+                  <Link
+                    href={`/movies/${movie.id}`}
+                    className="w-full"
+                  >
+                    <div
+                      className="w-full rounded relative overflow-hidden"
+                      style={{
+                        aspectRatio: "2/3",
+                        background: `linear-gradient(160deg, ${movie.posterColor} 0%, #1a1a1a 100%)`,
+                      }}
+                    >
+                      {/* スコアをポスターの右上に表示（推薦の場合） */}
+                      {(movie as any).score !== undefined && (
+                        <div className="absolute top-1 right-1 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                          {(movie as any).score}点
+                        </div>
+                      )}
+                    </div>
+                  </Link>
+                  <div className="w-full">
+                    <div className="text-[9px] text-gray-500 text-center truncate w-full group-hover:text-gray-300">
+                      {movie.title}
+                    </div>
+                    {/* 推薦理由をツールチップで表示 */}
+                    {(movie as any).why && (
+                      <div className="absolute bottom-[calc(100%+10px)] left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-gray-800 text-gray-100 text-[8px] px-2 py-1 rounded whitespace-nowrap z-20 border border-gray-600 pointer-events-none">
+                        {(movie as any).why}
+                      </div>
+                    )}
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           </div>
