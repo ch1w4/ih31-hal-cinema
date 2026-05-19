@@ -16,11 +16,13 @@ export default function Header() {
 
   return (
     <header className="bg-[#0f0f0f] border-b border-[#2a2a2a]">
-      <div className="w-full px-4 py-4 flex flex-col items-center gap-4">
-        <Link href="/">
-          <HalLogo size={60} />
-        </Link>
-        <nav className="flex items-center justify-center gap-8 w-full">
+      <div className="py-4">
+        <div className="flex justify-center mb-4">
+          <Link href="/">
+            <HalLogo size={60} />
+          </Link>
+        </div>
+        <nav className="flex items-center justify-center gap-8">
           {navItems.map((item) => {
             const isActive =
               item.href === "/"
@@ -47,5 +49,6 @@ export default function Header() {
         </nav>
       </div>
     </header>
+
   );
 }
