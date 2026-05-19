@@ -171,7 +171,7 @@ export default function MovieDetailPage() {
                     SCREEN：{selectedSchedule.slots.find(s => s.times.includes(selectedTime))?.screen}
                   </div>
                   <Link
-                    href="/tickets"
+                    href={`/tickets?movieId=${params.id}&date=${encodeURIComponent(selectedDate)}&time=${encodeURIComponent(selectedTime ?? "")}&screen=${encodeURIComponent(selectedSchedule?.slots.find(s => s.times.includes(selectedTime ?? ""))?.screen ?? "")}`}
                     className="block text-center bg-white text-black py-1.5 rounded font-medium hover:bg-gray-200 transition-colors"
                   >
                     席を選択する
