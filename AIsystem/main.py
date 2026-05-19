@@ -234,14 +234,21 @@ def recommend_movies():
         print(f"レスポンス長: {len(ai_response)} 文字")
         print(f"レスポンス内容:\n{ai_response}\n")
 
-        # AIレスポンスをJSON として解析
+        # AIレスポンスをJSON として解析# AIレスポンスをJSON として解析
         try:
-            # 複数行のJSON レスポンスをパース
-            ai_json = json.loads(ai_response)
+            cleaned = ai_response.strip()
+
+            # 🔥 コードブロック除去（Gemma が返す ```json ... ``` を削除）
+            if cleaned.startswith("```"):
+                cleaned = cleaned.split("```")[1]  # 最初の ``` を除去
+                cleaned = cleaned.replace("json", "", 1).strip()  # ```json の json を除去
+                cleaned = cleaned.split("```")[0].strip()  # 最後の ``` を除去
+
+            ai_json = json.loads(cleaned)
             recommendations = ai_json.get("recommendations", [])
             print(f"✅ JSON解析成功: {len(recommendations)}件の推薦を取得")
+
         except json.JSONDecodeError as e:
-            # JSONパース失敗時はリコメンデーションを空にする
             print(f"❌ JSON解析失敗: {str(e)}")
             print(f"レスポンス内容: {ai_response}")
             recommendations = []
