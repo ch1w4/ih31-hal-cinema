@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
 import { movies, mockSchedules } from "@/lib/mockData";
 
-type Step = "select-movie" | "select-time" | "seat" | "ticket-type" | "customer-info" | "confirm";
+type Step = "select-movie" | "select-time" | "seat" | "ticket-type" | "customer-info" | "confirm" | "complete";
 
 const TOP_ROWS = ["A", "B", "C"];
 const BOTTOM_ROWS = ["D", "E", "F", "G", "H", "I"];
@@ -46,6 +46,7 @@ const stepLabels: { key: Step; label: string }[] = [
   { key: "ticket-type", label: "チケット種別" },
   { key: "customer-info", label: "お客様情報" },
   { key: "confirm", label: "購入確認" },
+  { key: "complete", label: "完了" },
 ];
 
 function TicketsContent() {
@@ -601,6 +602,48 @@ function TicketsContent() {
         </div>
       )}
 
+      {/* ── 購入完了 ── */}
+      {step === "complete" && movie && (
+        <div className="text-center py-10">
+          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-red-600 mx-auto mb-6">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <div className="text-white text-xl font-bold mb-1">購入完了</div>
+          <div className="text-gray-400 text-xs mb-8">ご購入ありがとうございます</div>
+
+          <div className="border border-[#333] rounded p-4 bg-[#1a1a1a] mb-6 text-left space-y-2 text-sm">
+            <div className="text-gray-400 text-xs mb-3">予約内容</div>
+            {[
+              { label: "予約番号", value: `HC-${Math.random().toString(36).slice(2, 8).toUpperCase()}` },
+              { label: "作品", value: movie.title },
+              { label: "日時", value: `${selectedDate}　${selectedTime}` },
+              { label: "SCREEN", value: selectedScreen },
+              { label: "座席", value: selectedSeats.join(", ") },
+              { label: "合計金額", value: `¥${totalPrice.toLocaleString()}` },
+            ].map(({ label, value }) => (
+              <div key={label} className="flex">
+                <span className="text-gray-500 w-28 flex-shrink-0">{label}</span>
+                <span className="text-gray-200">{value}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-xs text-gray-500 mb-8">
+            ご登録のメールアドレスに確認メールを送信しました。<br />
+            当日は予約番号をご提示ください。
+          </div>
+
+          <a
+            href="/"
+            className="inline-block px-8 py-2.5 bg-white text-black rounded text-sm font-medium hover:bg-gray-200 transition-colors"
+          >
+            トップページへ
+          </a>
+        </div>
+      )}
+
       {/* ── STEP 6: 購入確認 ── */}
       {step === "confirm" && movie && (
         <div>
@@ -630,7 +673,10 @@ function TicketsContent() {
             >
               戻る
             </button>
-            <button className="px-8 py-2 bg-[#e8a090] text-white rounded text-sm font-medium hover:bg-[#d08070] transition-colors">
+            <button
+              onClick={() => setStep("complete")}
+              className="px-8 py-2 bg-red-600 text-white rounded text-sm font-medium hover:bg-red-700 transition-colors"
+            >
               購入する
             </button>
           </div>

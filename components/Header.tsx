@@ -16,11 +16,11 @@ export default function Header() {
 
   return (
     <header className="bg-[#0f0f0f] border-b border-[#2a2a2a]">
-      <div className="max-w-4xl mx-auto px-4 py-4 flex flex-col items-center gap-4">
+      <div className="w-full px-4 py-4 flex flex-col items-center gap-4">
         <Link href="/">
           <HalLogo size={60} />
         </Link>
-        <nav className="flex items-center gap-6 md:gap-10">
+        <nav className="flex items-center justify-center gap-6 md:gap-10 w-full">
           {navItems.map((item) => {
             const isActive =
               item.href === "/"
