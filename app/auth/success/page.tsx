@@ -32,31 +32,45 @@ export default function AuthSuccessPage() {
           const res = await fetch("http://localhost:5000/recommend/movies", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            credentials: "include",  // セッション情報を送信
+            credentials: "include", // セッション送信
             body: JSON.stringify({
               movies,
-              comingSoonMovies
-            })
-          });
+              comingSoonMovies,
+            }),
+            });
+            if (res.ok) {
+              const data = await res.json();
 
-          if (res.ok) {
-            const data = await res.json();
-            // 推薦映画を保存
-            console.log("Recommended movies:", data);
-            localStorage.setItem("recommendedMovies", JSON.stringify(data.recommended_movies || []));
+              let parsed = [];
+
+              try {
+                // Flask が返す enriched_recommendations を読む
+                if (data.recommended_movies) {
+                  parsed = data.recommended_movies;
+                }
+                // AI の生レスポンスが返る場合（旧形式）
+                else if (data.ai_output) {
+                  const ai = JSON.parse(data.ai_output);
+                  parsed = ai.recommendations || [];
+                }
+              } catch (e) {
+                console.error("AIレスポンスのJSONパース失敗:", e);
+              }
+
+              localStorage.setItem("recommendedMovies", JSON.stringify(parsed));
+
+
           } else {
             console.warn("Recommendation API returned:", res.status);
             localStorage.setItem("recommendedMovies", JSON.stringify([]));
           }
         } catch (fetchError) {
           console.warn("Failed to fetch recommendations:", fetchError);
-          // APIが失敗してもログイン処理は続ける
           localStorage.setItem("recommendedMovies", JSON.stringify([]));
         }
 
         // now-showing に遷移
         router.push("/now-showing");
-
       } catch (error) {
         console.error("Failed to parse auth data:", error);
         router.push("/login");

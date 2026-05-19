@@ -177,14 +177,14 @@ def recommend_movies():
             return jsonify({"error": "Not authenticated"}), 401
 
         body = request.json or {}
-        movies = body.get("movies", [])
+        movies_list = body.get("movies", [])
         coming = body.get("comingSoonMovies", [])
 
         # YouTubeデータ取得
         likes = requests.get("http://localhost:5000/youtube/likes").json()
         subs = requests.get("http://localhost:5000/youtube/subscriptions").json()
 
-        # プロンプト生成（ここで likes / subs / movies / coming を全部埋め込む）
+        # プロンプト生成
         prompt_text = f"""
 あなたは映画推薦AIです。
 
@@ -196,13 +196,13 @@ def recommend_movies():
 {json.dumps(subs, ensure_ascii=False)}
 
 【映画館の上映作品】
-{json.dumps(movies, ensure_ascii=False)}
+{json.dumps(movies_list, ensure_ascii=False)}
 
 【近日公開作品】
 {json.dumps(coming, ensure_ascii=False)}
 
 上記の情報からユーザーの嗜好を推定し、
-各映画に対して「ユーザーとのマッチ度スコア（0〜100）」を付けてください。
+映画館のラインナップの中から最適な映画を推薦してください。
 
 出力形式は以下のJSON：
 
@@ -224,7 +224,7 @@ def recommend_movies():
         print("=" * 80)
         print(f"YouTube高評価動画数: {len(likes.get('items', []))}")
         print(f"登録チャンネル数: {len(subs.get('items', []))}")
-        print(f"対象映画数: {len(movies)}")
+        print(f"対象映画数: {len(movies_list)}")
         print(f"近日公開映画数: {len(coming)}")
         print("\n📝 プロンプトをGemmaに送信中...")
 
@@ -247,7 +247,7 @@ def recommend_movies():
             recommendations = []
 
         # 映画データを全て結合
-        all_movies = {movie["id"]: movie for movie in movies + coming}
+        all_movies = {movie["id"]: movie for movie in movies_list + coming}
 
         # レコメンデーションに映画の詳細情報を付与
         enriched_recommendations = []
