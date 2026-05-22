@@ -31,12 +31,15 @@ export default function ComingSoonPage() {
                     </div>
                     <Link
                       href={`/movies/${movie.id}`}
-                      className="w-full rounded-sm mb-2 block hover:opacity-75 transition-opacity"
-                      style={{
-                        aspectRatio: "2/3",
-                        background: `linear-gradient(160deg, ${movie.posterColor} 0%, #1a1a1a 100%)`,
-                      }}
-                    />
+                      className="w-full rounded-sm mb-2 block overflow-hidden hover:opacity-75 transition-opacity"
+                      style={{ aspectRatio: "2/3" }}
+                    >
+                      {movie.poster ? (
+                        <img src={movie.poster} alt={movie.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full" style={{ background: `linear-gradient(160deg, ${movie.posterColor} 0%, #1a1a1a 100%)` }} />
+                      )}
+                    </Link>
                     <div className="text-sm text-gray-300 mb-1 truncate">{movie.title}</div>
                     <div className="text-sm text-gray-500 mb-1">{movie.titleEn}</div>
                     <div className="flex gap-1 flex-wrap mb-2">
