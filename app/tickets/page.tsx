@@ -5,23 +5,63 @@ import Header from "@/components/Header";
 import { movies, mockSchedules } from "@/lib/mockData";
 
 type Step = "select-movie" | "select-time" | "seat" | "ticket-type" | "customer-info" | "confirm" | "complete";
-
-const TOP_ROWS = ["A", "B", "C"];
-const BOTTOM_ROWS = ["D", "E", "F", "G", "H", "I"];
-const TOP_COLS = 16;
-const LEFT_BLOCK = 2;
-const RIGHT_BLOCK = 11;
-
 type SeatStatus = "empty" | "purchased" | "selected";
 
-function buildSeatMap() {
+type ScreenConfig = {
+  name: string;
+  capacity: number;
+  topRows: string[];
+  topCols: number;
+  bottomRows: string[];
+  bottomCols: number;
+  bottomLeftBlock: number | null; // null = no aisle gap
+};
+
+const SCREEN_CONFIGS: Record<"large" | "medium" | "small", ScreenConfig> = {
+  large: {
+    name: "大スクリーン",
+    capacity: 200,
+    topRows: ["A", "B", "C"],
+    topCols: 16,
+    bottomRows: ["D", "E", "F", "G", "H", "I"],
+    bottomCols: 13,
+    bottomLeftBlock: 2,
+  },
+  medium: {
+    name: "中スクリーン",
+    capacity: 120,
+    topRows: ["A", "B", "C"],
+    topCols: 15,
+    bottomRows: ["D", "E", "F", "G", "H"],
+    bottomCols: 15,
+    bottomLeftBlock: null,
+  },
+  small: {
+    name: "小スクリーン",
+    capacity: 70,
+    topRows: ["A", "B", "C"],
+    topCols: 9,
+    bottomRows: ["D", "E", "F", "G"],
+    bottomCols: 13,
+    bottomLeftBlock: null,
+  },
+};
+
+function getScreenType(screenName: string): "large" | "medium" | "small" {
+  if (screenName.includes("大")) return "large";
+  if (screenName.includes("中")) return "medium";
+  if (screenName.includes("小")) return "small";
+  return "large";
+}
+
+function buildSeatMap(config: ScreenConfig): Record<string, SeatStatus> {
   const map: Record<string, SeatStatus> = {};
-  const purchased = ["F-7", "F-8", "G-3"];
-  for (const row of [...TOP_ROWS, ...BOTTOM_ROWS]) {
-    const cols = TOP_ROWS.includes(row) ? TOP_COLS : LEFT_BLOCK + RIGHT_BLOCK;
+  const allRows = [...config.topRows, ...config.bottomRows];
+  for (const row of allRows) {
+    const isTop = config.topRows.includes(row);
+    const cols = isTop ? config.topCols : config.bottomCols;
     for (let c = 1; c <= cols; c++) {
-      const id = `${row}-${c}`;
-      map[id] = purchased.includes(id) ? "purchased" : "empty";
+      map[`${row}-${c}`] = "empty";
     }
   }
   return map;
@@ -63,7 +103,8 @@ function TicketsContent() {
   const [selectedDate, setSelectedDate] = useState(initDate);
   const [selectedScreen, setSelectedScreen] = useState(initScreen);
   const [selectedTime, setSelectedTime] = useState(initTime);
-  const [seatMap, setSeatMap] = useState<Record<string, SeatStatus>>(buildSeatMap);
+  const screenConfig = SCREEN_CONFIGS[getScreenType(selectedScreen)];
+  const [seatMap, setSeatMap] = useState<Record<string, SeatStatus>>(() => buildSeatMap(screenConfig));
   const [ticketSelections, setTicketSelections] = useState<Record<string, string>>({});
   const [halDiscount, setHalDiscount] = useState("no");
   const [lastName, setLastName] = useState("");
@@ -134,7 +175,7 @@ function TicketsContent() {
         <div>
           <h2 className="text-base text-gray-300 mb-4">映画を選択してください</h2>
           <div className="space-y-2">
-            {movies.slice(0, 6).map((m) => (
+            {movies.map((m) => (
               <button
                 key={m.id}
                 onClick={() => {
@@ -142,7 +183,7 @@ function TicketsContent() {
                   setSelectedDate("");
                   setSelectedTime("");
                   setSelectedScreen("");
-                  setSeatMap(buildSeatMap());
+                  setSeatMap(buildSeatMap(SCREEN_CONFIGS.large));
                   setStep("select-time");
                 }}
                 className="w-full flex items-center gap-3 p-3 rounded border border-[#333] bg-[#1a1a1a] hover:border-[#666] transition-colors text-left"
@@ -221,6 +262,7 @@ function TicketsContent() {
                           onClick={() => {
                             setSelectedTime(time);
                             setSelectedScreen(slot.screen);
+                            setSeatMap(buildSeatMap(SCREEN_CONFIGS[getScreenType(slot.screen)]));
                           }}
                           className={`px-4 py-2 rounded text-sm border transition-colors ${
                             selectedTime === time && selectedScreen === slot.screen
@@ -287,26 +329,23 @@ function TicketsContent() {
             <div className="flex justify-center mb-1">
               <div className="bg-white rounded h-2" style={{ width: "55%" }} />
             </div>
-            <div className="text-center text-sm text-gray-400 mb-4">screen1</div>
+            <div className="text-center text-sm text-gray-400 mb-4">{selectedScreen}</div>
 
-            {/* Top rows A-C */}
+            {/* Top rows */}
             <div className="mb-1">
               <div className="flex items-center mb-1">
                 <span className="w-6" />
-                <div
-                  className="flex flex-1 justify-between px-0 text-sm text-gray-500"
-                  style={{ paddingLeft: "1px" }}
-                >
+                <div className="flex flex-1 justify-between text-sm text-gray-500">
                   <span>1</span>
-                  <span>16</span>
+                  <span>{screenConfig.topCols}</span>
                 </div>
                 <span className="w-6" />
               </div>
-              {TOP_ROWS.map((row) => (
+              {screenConfig.topRows.map((row) => (
                 <div key={row} className="flex items-center gap-1 mb-1">
                   <span className="text-sm text-gray-400 w-5 text-right">{row}</span>
                   <div className="flex gap-0.5">
-                    {Array.from({ length: TOP_COLS }, (_, c) => (
+                    {Array.from({ length: screenConfig.topCols }, (_, c) => (
                       <SeatButton key={c} id={`${row}-${c + 1}`} />
                     ))}
                   </div>
@@ -317,29 +356,39 @@ function TicketsContent() {
 
             <div className="my-3" />
 
-            {/* Bottom rows D-I */}
+            {/* Bottom rows */}
             <div className="flex">
               <div className="flex-1">
                 <div className="flex items-center mb-1">
                   <span className="w-5" />
                   <div className="text-sm text-gray-500 ml-0.5">1</div>
                   <div className="flex-1" />
-                  <div className="text-sm text-gray-500 mr-1">13</div>
+                  <div className="text-sm text-gray-500 mr-1">{screenConfig.bottomCols}</div>
                 </div>
-                {BOTTOM_ROWS.map((row) => (
+                {screenConfig.bottomRows.map((row) => (
                   <div key={row} className="flex items-center gap-1 mb-1">
                     <span className="text-sm text-gray-400 w-5 text-right">{row}</span>
-                    <div className="flex gap-0.5">
-                      {Array.from({ length: LEFT_BLOCK }, (_, c) => (
-                        <SeatButton key={c} id={`${row}-${c + 1}`} />
-                      ))}
-                    </div>
-                    <div className="w-4" />
-                    <div className="flex gap-0.5">
-                      {Array.from({ length: RIGHT_BLOCK }, (_, c) => (
-                        <SeatButton key={c} id={`${row}-${c + LEFT_BLOCK + 1}`} />
-                      ))}
-                    </div>
+                    {screenConfig.bottomLeftBlock !== null ? (
+                      <>
+                        <div className="flex gap-0.5">
+                          {Array.from({ length: screenConfig.bottomLeftBlock }, (_, c) => (
+                            <SeatButton key={c} id={`${row}-${c + 1}`} />
+                          ))}
+                        </div>
+                        <div className="w-4" />
+                        <div className="flex gap-0.5">
+                          {Array.from({ length: screenConfig.bottomCols - screenConfig.bottomLeftBlock }, (_, c) => (
+                            <SeatButton key={c} id={`${row}-${c + screenConfig.bottomLeftBlock! + 1}`} />
+                          ))}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex gap-0.5">
+                        {Array.from({ length: screenConfig.bottomCols }, (_, c) => (
+                          <SeatButton key={c} id={`${row}-${c + 1}`} />
+                        ))}
+                      </div>
+                    )}
                     <span className="text-sm text-gray-400 w-5 ml-1">{row}</span>
                   </div>
                 ))}
@@ -348,10 +397,7 @@ function TicketsContent() {
               {/* 出入り口 */}
               <div className="flex flex-col items-center ml-2 self-center">
                 <div className="border-r border-t border-b border-gray-500 h-20 w-3" />
-                <div
-                  className="text-sm text-gray-400 mt-1"
-                  style={{ writingMode: "vertical-rl" }}
-                >
+                <div className="text-sm text-gray-400 mt-1" style={{ writingMode: "vertical-rl" }}>
                   出入り口
                 </div>
               </div>
@@ -361,7 +407,7 @@ function TicketsContent() {
             <div className="flex items-center gap-4 mt-4 border-t border-[#333] pt-3">
               <div className="text-sm text-gray-400">
                 <div>座席数</div>
-                <div className="font-bold text-white">200席</div>
+                <div className="font-bold text-white">{screenConfig.capacity}席</div>
               </div>
               <div className="flex gap-2 flex-wrap">
                 {selectedSeats.map((id) => (
