@@ -44,15 +44,23 @@ export default function MovieDetailPage() {
 
         {/* Movie Info */}
         <div className="flex gap-5 mb-6">
-          <div className="flex-shrink-0">
-            <div
-              className="rounded"
-              style={{
-                width: "140px",
-                aspectRatio: "2/3",
-                background: `linear-gradient(160deg, ${movie.posterColor} 0%, #111 100%)`,
-              }}
-            />
+          <div className="flex-shrink-0" style={{ width: "140px" }}>
+            {movie.poster ? (
+              <img
+                src={movie.poster}
+                alt={movie.title}
+                className="w-full rounded object-cover"
+                style={{ aspectRatio: "2/3" }}
+              />
+            ) : (
+              <div
+                className="w-full rounded"
+                style={{
+                  aspectRatio: "2/3",
+                  background: `linear-gradient(160deg, ${movie.posterColor} 0%, #111 100%)`,
+                }}
+              />
+            )}
           </div>
           <div className="flex-1">
             <div className="text-sm text-gray-400 mb-1">

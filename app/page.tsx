@@ -5,7 +5,6 @@ import MovieCard from "@/components/MovieCard";
 import { movies } from "@/lib/mockData";
 
 export default function HomePage() {
-  const rankingMovies = movies.slice(0, 10);
   const nowShowingMovies = movies.slice(0, 8);
   const top3 = [movies[1], movies[0], movies[2]]; // 2位, 1位, 3位
 
@@ -58,13 +57,18 @@ export default function HomePage() {
                     {rank}
                   </div>
                   <div
-                    className="w-full rounded"
+                    className="w-full rounded overflow-hidden"
                     style={{
                       aspectRatio: "2/3",
-                      background: `linear-gradient(160deg, ${movie.posterColor} 0%, #111 100%)`,
                       marginBottom: isFirst ? "0" : "10px",
                     }}
-                  />
+                  >
+                    {movie.poster ? (
+                      <img src={movie.poster} alt={movie.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full" style={{ background: `linear-gradient(160deg, ${movie.posterColor} 0%, #111 100%)` }} />
+                    )}
+                  </div>
                   <div className="text-sm text-gray-400 text-center truncate w-full group-hover:text-gray-200">
                     {movie.title}
                   </div>

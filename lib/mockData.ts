@@ -11,6 +11,7 @@ export type Movie = {
   cast: string[];
   director: string;
   posterColor: string;
+  poster?: string;
   ranking?: number;
 };
 
@@ -39,6 +40,7 @@ export const movies: Movie[] = [
     cast: ["橋本環奈", "眞栄田郷敦", "山本舞香", "神尾楓珠"],
     director: "羽住監督",
     posterColor: "#1a3a5c",
+    poster: "/moviesamune/eiga1.jpg",
     ranking: 1,
   },
   {
@@ -55,6 +57,7 @@ export const movies: Movie[] = [
     cast: ["綾瀬はるか", "當真あみ", "細田佳央太"],
     director: "石井監督",
     posterColor: "#0a1a3a",
+    poster: "/moviesamune/eiga2.jpg",
     ranking: 2,
   },
   {
@@ -71,6 +74,7 @@ export const movies: Movie[] = [
     cast: ["ホアキン・フェニックス", "レディー・ガガ", "ブレンダン・グリーソン"],
     director: "トッド・フィリップス",
     posterColor: "#3a1a2a",
+    poster: "/moviesamune/eiga3.jpg",
     ranking: 3,
   },
   {
@@ -87,6 +91,7 @@ export const movies: Movie[] = [
     cast: ["福士蒼汰", "福原遥", "宮沢氷魚"],
     director: "行定監督",
     posterColor: "#2a1a0a",
+    poster: "/moviesamune/eiga4.jpg",
     ranking: 4,
   },
   {
@@ -103,6 +108,7 @@ export const movies: Movie[] = [
     cast: ["(声優)笑福亭鶴瓶", "(声優)片岡愛之助", "(声優)中島美嘉"],
     director: "クリス・ルノー監督",
     posterColor: "#1a3a1a",
+    poster: "/moviesamune/eiga5.jpg",
     ranking: 5,
   },
   {
@@ -119,6 +125,7 @@ export const movies: Movie[] = [
     cast: ["緒方恵美", "花澤香菜", "中村悠一"],
     director: "朴監督",
     posterColor: "#0a2a3a",
+    poster: "/moviesamune/eiga6.jpg",
     ranking: 6,
   },
   {
@@ -135,6 +142,7 @@ export const movies: Movie[] = [
     cast: ["メリル・ストリープ", "アン・ハンサウェイ", "エミリー・ブラント","スタンリー・トゥッチ"],
     director: "デヴィッド・フランケル監督",
     posterColor: "#2a0a3a",
+    poster: "/moviesamune/eiga7.jpg",
     ranking: 7,
   },
   {
@@ -151,6 +159,7 @@ export const movies: Movie[] = [
     cast: ["佐藤二郎", "山田祐樹貴", "伊藤沙莉"],
     director: "永井監督",
     posterColor: "#1a1a2a",
+    poster: "/moviesamune/eiga8.jpg",
     ranking: 8,
   },
   {
@@ -167,6 +176,7 @@ export const movies: Movie[] = [
     cast: ["吉沢亮", "森 七菜"],
     director: "李相日監督",
     posterColor: "#3a0a0a",
+    poster: "/moviesamune/eiga9.jpg",
     ranking: 9,
   },
   {
@@ -183,6 +193,7 @@ export const movies: Movie[] = [
     cast: ["本島純政", "松本麗世", "藤林泰也"],
     director: "山口監督",
     posterColor: "#2a2a0a",
+    poster: "/moviesamune/eiga10.jpg",
     ranking: 10,
   },
   {
@@ -199,6 +210,7 @@ export const movies: Movie[] = [
     cast: ["福山雅治", "大泉洋", "永瀬廉"],
     director: "平野監督",
     posterColor: "#1a2a3a",
+    poster: "/moviesamune/eiga12.jpg",
     ranking: 11,
   },
   {
@@ -215,6 +227,7 @@ export const movies: Movie[] = [
     cast: ["窪田正孝(声)", "永瀬ゆずな(声)", "立川志の輔(声)"],
     director: "廣田監督",
     posterColor: "#2a2a3a",
+    poster: "/moviesamune/eiga13.jpg",
     ranking: 12,
   },
 ];
