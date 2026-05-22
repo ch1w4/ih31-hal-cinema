@@ -29,8 +29,9 @@ export default function HeroSlider() {
   }
 
   return (
-    <div className="w-full">
-      <div className="w-full relative overflow-hidden" style={{ height: "460px" }}>
+    <div className="max-w-4xl mx-auto px-4 py-4">
+      {/* Campaign banner */}
+      <div className="w-full relative overflow-hidden rounded-lg" style={{ height: "460px" }}>
         {currentSlide.type === "image" ? (
           <div className="absolute inset-0 bg-[#0f0f0f]">
             <Image

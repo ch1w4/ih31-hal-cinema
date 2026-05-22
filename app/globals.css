@@ -26,12 +26,13 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  width: 120px;
   gap: 6px;
   cursor: pointer;
   text-decoration: none;
   color: #cccccc;
   transition: color 0.2s;
-  padding: 6px 12px;
+  padding: 6px 0;
 }
 .nav-item:hover,
 .nav-item.active {
