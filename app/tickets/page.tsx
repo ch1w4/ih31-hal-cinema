@@ -147,14 +147,13 @@ function TicketsContent() {
                 }}
                 className="w-full flex items-center gap-3 p-3 rounded border border-[#333] bg-[#1a1a1a] hover:border-[#666] transition-colors text-left"
               >
-                <div
-                  className="flex-shrink-0 rounded"
-                  style={{
-                    width: "40px",
-                    aspectRatio: "2/3",
-                    background: `linear-gradient(160deg, ${m.posterColor} 0%, #111 100%)`,
-                  }}
-                />
+                <div className="flex-shrink-0 rounded overflow-hidden" style={{ width: "40px", aspectRatio: "2/3" }}>
+                  {m.poster ? (
+                    <img src={m.poster} alt={m.title} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full" style={{ background: `linear-gradient(160deg, ${m.posterColor} 0%, #111 100%)` }} />
+                  )}
+                </div>
                 <div>
                   <div className="text-white text-sm font-medium">{m.title}</div>
                   <div className="text-sm text-gray-400 mt-0.5">
@@ -171,14 +170,13 @@ function TicketsContent() {
       {step === "select-time" && movie && (
         <div>
           <div className="flex items-center gap-3 border border-[#333] rounded p-3 bg-[#1a1a1a] mb-5">
-            <div
-              className="flex-shrink-0 rounded"
-              style={{
-                width: "36px",
-                aspectRatio: "2/3",
-                background: `linear-gradient(160deg, ${movie.posterColor} 0%, #111 100%)`,
-              }}
-            />
+            <div className="flex-shrink-0 rounded overflow-hidden" style={{ width: "36px", aspectRatio: "2/3" }}>
+              {movie.poster ? (
+                <img src={movie.poster} alt={movie.title} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full" style={{ background: `linear-gradient(160deg, ${movie.posterColor} 0%, #111 100%)` }} />
+              )}
+            </div>
             <div>
               <div className="text-white text-sm font-medium">{movie.title}</div>
               <div className="text-sm text-gray-400">

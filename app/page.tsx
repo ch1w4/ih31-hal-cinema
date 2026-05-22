@@ -36,7 +36,7 @@ export default function HomePage() {
 
       <HeroSlider />
 
-      <div className="max-w-4xl mx-auto px-4 py-3">
+      <div className="max-w-6xl mx-auto px-4 py-3">
         <div className="flex items-stretch border border-[#333] rounded overflow-hidden w-fit">
           <div className="px-4 py-2.5 text-sm text-gray-300 bg-[#1a1a1a] border-r border-[#333] whitespace-nowrap">
             HAL CINEMA会員
@@ -51,15 +51,15 @@ export default function HomePage() {
       </div>
 
       {/* Movie Ranking / AI Recommended */}
-      <div className="max-w-4xl mx-auto px-4 py-4">
-        <div className="bg-[#1a1a1a] rounded overflow-hidden py-6 px-6">
-          <div className="text-sm text-center text-white mb-6">
-            {recommendedMovies.length > 0 && !loading ? "あなたへのおすすめ" : "映画ランキング"}
+      <div className="max-w-6xl mx-auto px-4 py-4">
+        <div className="border border-[#333] rounded overflow-hidden">
+          <div className="px-4 py-2 section-title bg-[#1a1a1a] border-b border-[#333]">
+            {recommendedMovies.length > 0 && !loading ? "あなたにオススメの映画" : "映画ランキング"}
           </div>
 
-          {recommendedMovies.length > 0 && !loading ? (
-            <div className="grid grid-cols-5 gap-3">
-              {recommendedMovies.slice(0, 10).map((movie, i) => {
+          <div className="placeholder-box" style={{ overflow: "visible" }}>
+            <div className="p-6 grid grid-cols-5 gap-3 relative">
+              {(recommendedMovies.length > 0 && !loading ? recommendedMovies.slice(0, 10) : movies.slice(0, 10)).map((movie, i) => {
                 const rec = movie as any;
                 return (
                   <div key={movie.id} className="flex flex-col items-center gap-1 group relative">
@@ -81,54 +81,20 @@ export default function HomePage() {
                     <div className="text-[9px] text-gray-500 text-center truncate w-full group-hover:text-gray-300">
                       {movie.title}
                     </div>
+                    {rec.why && (
+                      <div className="absolute bottom-[calc(100%+10px)] left-1/2 -translate-x-1/2 hidden group-hover:block bg-gray-800 text-gray-100 text-[8px] px-2 py-1 rounded whitespace-nowrap z-20 border border-gray-600 pointer-events-none">
+                        {rec.why}
+                      </div>
+                    )}
                   </div>
                 );
               })}
             </div>
-          ) : (
-            <>
-              <div className="flex items-end justify-center gap-10 mb-5">
-                {top3.map((movie, podiumIdx) => {
-                  const rank = [2, 1, 3][podiumIdx];
-                  const isFirst = rank === 1;
-                  return (
-                    <Link
-                      key={movie.id}
-                      href={`/movies/${movie.id}`}
-                      className="flex flex-col items-center gap-1 group"
-                      style={{ width: isFirst ? "130px" : "100px" }}
-                    >
-                      <div className={`font-bold text-gray-400 mb-1 ${isFirst ? "text-lg" : "text-sm"}`}>
-                        {rank}
-                      </div>
-                      <div
-                        className="w-full rounded overflow-hidden"
-                        style={{ aspectRatio: "2/3", marginBottom: isFirst ? "0" : "10px" }}
-                      >
-                        {movie.poster ? (
-                          <img src={movie.poster} alt={movie.title} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full" style={{ background: `linear-gradient(160deg, ${movie.posterColor} 0%, #111 100%)` }} />
-                        )}
-                      </div>
-                      <div className="text-sm text-gray-400 text-center truncate w-full group-hover:text-gray-200">
-                        {movie.title}
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-              <div className="text-center">
-                <Link href="/now-showing" className="text-sm text-gray-400 hover:text-white transition-colors">
-                  もっと見る
-                </Link>
-              </div>
-            </>
-          )}
+          </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-4">
+      <div className="max-w-6xl mx-auto px-4 py-4">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-xl text-white font-medium">上映中の映画</h2>
           <Link href="/now-showing" className="text-sm text-gray-400 hover:text-white">
