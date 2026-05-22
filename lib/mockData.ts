@@ -210,7 +210,7 @@ export const movies: Movie[] = [
     cast: ["福山雅治", "大泉洋", "永瀬廉"],
     director: "平野監督",
     posterColor: "#1a2a3a",
-    poster: "/moviesamune/eiga12.jpg",
+    poster: "/moviesamune/eiga11.jpg",
     ranking: 11,
   },
   {
@@ -227,7 +227,7 @@ export const movies: Movie[] = [
     cast: ["窪田正孝(声)", "永瀬ゆずな(声)", "立川志の輔(声)"],
     director: "廣田監督",
     posterColor: "#2a2a3a",
-    poster: "/moviesamune/eiga13.jpg",
+    poster: "/moviesamune/eiga12.jpg",
     ranking: 12,
   },
 ];
