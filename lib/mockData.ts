@@ -64,7 +64,7 @@ export const movies: Movie[] = [
     id: "3",
     title: "ジョーカー：フォリ・ア・ドゥ",
     titleEn: "Joker: Folie à Deux",
-    genre: ["サスペンス", "サスペンス", "ミステリー・ミュージカル"],
+    genre: ["サスペンス", "ミュージカル"],
     releaseDate: "2024-10-11",
     endDate: "2025-01-31",
     duration: 118,

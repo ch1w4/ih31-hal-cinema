@@ -133,8 +133,8 @@ export default function NowShowingPage() {
                   </Link>
                   <div className="text-sm text-gray-300 mb-1 truncate">{movie.title}</div>
                   <div className="flex gap-1 flex-wrap">
-                    {movie.genre.map((g) => (
-                      <span key={g} className="text-sm px-1.5 py-0.5 border border-[#444] text-gray-500 rounded">{g}</span>
+                    {movie.genre.map((g, i) => (
+                      <span key={`${g}-${i}`} className="text-sm px-1.5 py-0.5 border border-[#444] text-gray-500 rounded">{g}</span>
                     ))}
                   </div>
                 </div>
