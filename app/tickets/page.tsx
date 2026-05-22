@@ -14,7 +14,8 @@ type ScreenConfig = {
   topCols: number;
   bottomRows: string[];
   bottomCols: number;
-  bottomLeftBlock: number | null; // null = no aisle gap
+  bottomLeftBlock: number | null;
+  exitSide: "left" | "right";
 };
 
 const SCREEN_CONFIGS: Record<"large" | "medium" | "small", ScreenConfig> = {
@@ -26,6 +27,7 @@ const SCREEN_CONFIGS: Record<"large" | "medium" | "small", ScreenConfig> = {
     bottomRows: ["D", "E", "F", "G", "H", "I"],
     bottomCols: 13,
     bottomLeftBlock: 2,
+    exitSide: "right",
   },
   medium: {
     name: "中スクリーン",
@@ -35,6 +37,7 @@ const SCREEN_CONFIGS: Record<"large" | "medium" | "small", ScreenConfig> = {
     bottomRows: ["D", "E", "F", "G", "H"],
     bottomCols: 15,
     bottomLeftBlock: null,
+    exitSide: "left",
   },
   small: {
     name: "小スクリーン",
@@ -44,6 +47,7 @@ const SCREEN_CONFIGS: Record<"large" | "medium" | "small", ScreenConfig> = {
     bottomRows: ["D", "E", "F", "G"],
     bottomCols: 13,
     bottomLeftBlock: null,
+    exitSide: "right",
   },
 };
 
@@ -357,7 +361,16 @@ function TicketsContent() {
             <div className="my-3" />
 
             {/* Bottom rows */}
-            <div className="flex">
+            <div className="flex items-center gap-2">
+              {/* 出入り口（左側：中スクリーン） */}
+              {screenConfig.exitSide === "left" && (
+                <div className="flex flex-col items-center self-stretch justify-center gap-0.5">
+                  <span className="text-gray-500 text-xs leading-none">↑</span>
+                  <div className="border-l border-gray-500 w-px flex-1" />
+                  <div className="text-xs text-gray-400" style={{ writingMode: "vertical-rl" }}>出入り口</div>
+                </div>
+              )}
+
               <div className="flex-1">
                 <div className="flex items-center mb-1">
                   <span className="w-5" />
@@ -394,13 +407,14 @@ function TicketsContent() {
                 ))}
               </div>
 
-              {/* 出入り口 */}
-              <div className="flex flex-col items-center ml-2 self-center">
-                <div className="border-r border-t border-b border-gray-500 h-20 w-3" />
-                <div className="text-sm text-gray-400 mt-1" style={{ writingMode: "vertical-rl" }}>
-                  出入り口
+              {/* 出入り口（右側：大・小スクリーン） */}
+              {screenConfig.exitSide === "right" && (
+                <div className="flex flex-col items-center self-stretch justify-center gap-0.5">
+                  <span className="text-gray-500 text-xs leading-none">↑</span>
+                  <div className="border-l border-gray-500 w-px flex-1" />
+                  <div className="text-xs text-gray-400" style={{ writingMode: "vertical-rl" }}>出入り口</div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Seat count + selected chips */}
