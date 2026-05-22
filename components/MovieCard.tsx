@@ -17,14 +17,6 @@ export default function MovieCard({ movie }: { movie: Movie }) {
           padding: "12px",
         }}
       >
-        {movie.ranking && (
-          <div
-            className="text-4xl font-bold opacity-20 absolute"
-            style={{ top: "50%", left: "50%", transform: "translate(-50%,-50%)" }}
-          >
-            {movie.ranking}
-          </div>
-        )}
       </div>
       {/* Info */}
       <div className="p-2 bg-[#1a1a1a]">
