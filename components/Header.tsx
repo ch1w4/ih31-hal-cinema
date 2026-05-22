@@ -2,7 +2,6 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import HalLogo from "./HalLogo";
 
 const navItems = [
   { href: "/", labelEn: "Home", labelJa: "ホーム" },
@@ -29,21 +28,18 @@ export default function Header() {
     if (userInfo) {
       try {
         setUser(JSON.parse(userInfo));
-      } catch (error) {
-        console.error("Failed to parse user info:", error);
+      } catch {
+        // ignore
       }
     }
   }, []);
 
   const handleLogout = async () => {
     try {
-      await fetch("http://localhost:5000/auth/logout", {
-        method: "POST",
-      });
-    } catch (error) {
-      console.error("Logout error:", error);
+      await fetch("http://localhost:5000/auth/logout", { method: "POST" });
+    } catch {
+      // ignore
     }
-
     localStorage.removeItem("authToken");
     localStorage.removeItem("userInfo");
     setUser(null);
@@ -52,58 +48,38 @@ export default function Header() {
 
   return (
     <header className="bg-[#0f0f0f] border-b border-[#2a2a2a]">
-      <div className="max-w-6xl mx-auto px-4 py-4">
-        <div className="flex items-center justify-between mb-4">
+      <div className="py-2 relative">
+        <div className="flex justify-center mb-2">
           <Link href="/">
-            <HalLogo size={60} />
+            <img src="/halcinemalogo.png" alt="HAL CINEMA" style={{ height: "72px", width: "auto" }} />
           </Link>
-
-          {user && (
-            <div className="relative">
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors"
-              >
-                {user.picture && (
-                  <img
-                    src={user.picture}
-                    alt={user.name || "User"}
-                    className="w-8 h-8 rounded-full"
-                  />
-                )}
-                <span className="text-sm">{user.email}</span>
-                <svg
-                  className={`w-4 h-4 transition-transform ${
-                    isDropdownOpen ? "rotate-180" : ""
-                  }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 14l-7 7m0 0l-7-7m7 7V3"
-                  />
-                </svg>
-              </button>
-
-              {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-[#1a1a1a] border border-[#333] rounded-lg shadow-lg z-50">
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-[#2a2a2a] transition-colors rounded-lg"
-                  >
-                    ログアウト
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
-        <nav className="flex items-start gap-6 md:gap-10">
+        {user && (
+          <div className="absolute right-4 top-2">
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors"
+            >
+              {user.picture && (
+                <img src={user.picture} alt={user.name || "User"} className="w-8 h-8 rounded-full" />
+              )}
+              <span className="text-xs text-gray-400">{user.email}</span>
+            </button>
+            {isDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-40 bg-[#1a1a1a] border border-[#333] rounded-lg shadow-lg z-50">
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-[#2a2a2a] transition-colors rounded-lg"
+                >
+                  ログアウト
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        <nav className="flex items-center justify-center gap-16">
           {navItems.map((item) => {
             const isActive =
               item.href === "/"
@@ -121,10 +97,7 @@ export default function Header() {
                 >
                   {item.labelEn}
                 </span>
-                <span
-                  className="nav-label-ja"
-                  style={{ whiteSpace: "pre-line", lineHeight: "1.3" }}
-                >
+                <span className="nav-label-ja">
                   {item.labelJa}
                 </span>
               </Link>

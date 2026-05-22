@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Header from "@/components/Header";
 import { campaigns } from "@/lib/mockData";
 
@@ -33,21 +34,20 @@ export default function CampaignPage() {
         {/* Campaign List */}
         <div className="space-y-4">
           {campaigns.map((campaign) => (
-            <div
+            <Link
               key={campaign.id}
-              className="border border-[#333] rounded-lg overflow-hidden bg-[#1a1a1a] hover:border-[#555] transition-colors cursor-pointer"
+              href={`/campaign/${campaign.id}`}
+              className="block border border-[#333] rounded-lg overflow-hidden bg-[#1a1a1a] hover:border-[#555] transition-colors"
             >
               <div className="flex gap-4 p-4">
-                {/* Visual placeholder */}
+                {/* Visual accent bar */}
                 <div
                   className="flex-shrink-0 rounded flex items-center justify-center"
                   style={{
                     width: "120px",
                     height: "80px",
-                    background:
-                      campaign.id === "1"
-                        ? "linear-gradient(135deg, #c0392b, #3498db)"
-                        : "linear-gradient(135deg, #2a2a2a, #1a1a1a)",
+                    background: `linear-gradient(135deg, ${campaign.accentColor}cc, ${campaign.accentColor}44)`,
+                    borderLeft: `3px solid ${campaign.accentColor}`,
                   }}
                 >
                   <span className="text-[10px] text-white text-center px-2 leading-tight font-medium">
@@ -58,7 +58,10 @@ export default function CampaignPage() {
                 {/* Content */}
                 <div className="flex-1">
                   <div className="flex items-start gap-2 mb-1">
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#333] text-gray-400 flex-shrink-0">
+                    <span
+                      className="text-[10px] px-1.5 py-0.5 rounded text-white flex-shrink-0"
+                      style={{ background: campaign.accentColor }}
+                    >
                       {campaign.category}
                     </span>
                     <span className="text-[10px] text-gray-500">{campaign.period}</span>
@@ -72,7 +75,7 @@ export default function CampaignPage() {
                   </p>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </main>
