@@ -361,60 +361,66 @@ function TicketsContent() {
             <div className="my-3" />
 
             {/* Bottom rows */}
-            <div className="flex items-center gap-2">
-              {/* 出入り口（左側：中スクリーン） */}
-              {screenConfig.exitSide === "left" && (
-                <div className="flex flex-col items-center self-stretch justify-center gap-0.5">
-                  <span className="text-gray-500 text-xs leading-none">↑</span>
-                  <div className="border-l border-gray-500 w-px flex-1" />
-                  <div className="text-xs text-gray-400" style={{ writingMode: "vertical-rl" }}>出入り口</div>
-                </div>
-              )}
+            <div>
+              {/* Column header (outside the exit-indicator flex so ↑ aligns with rows only) */}
+              <div className="flex items-center mb-1">
+                <span className="w-5" />
+                <div className="text-sm text-gray-500 ml-0.5">1</div>
+                <div className="flex-1" />
+                <div className="text-sm text-gray-500">{screenConfig.bottomCols}</div>
+                <span className="w-5 ml-1" />
+              </div>
 
-              <div className="flex-1">
-                <div className="flex items-center mb-1">
-                  <span className="w-5" />
-                  <div className="text-sm text-gray-500 ml-0.5">1</div>
-                  <div className="flex-1" />
-                  <div className="text-sm text-gray-500 mr-1">{screenConfig.bottomCols}</div>
-                </div>
-                {screenConfig.bottomRows.map((row) => (
-                  <div key={row} className="flex items-center gap-1 mb-1">
-                    <span className="text-sm text-gray-400 w-5 text-right">{row}</span>
-                    {screenConfig.bottomLeftBlock !== null ? (
-                      <>
+              {/* Rows + exit indicator */}
+              <div className="flex items-stretch gap-2">
+                {/* 出入り口（左側：中スクリーン） */}
+                {screenConfig.exitSide === "left" && (
+                  <div className="flex flex-col items-center gap-0.5">
+                    <span className="text-gray-500 text-xs leading-none">↑</span>
+                    <div className="border-l border-gray-500 w-px flex-1" />
+                    <div className="text-xs text-gray-400" style={{ writingMode: "vertical-rl" }}>出入り口</div>
+                  </div>
+                )}
+
+                <div>
+                  {screenConfig.bottomRows.map((row) => (
+                    <div key={row} className="flex items-center gap-1 mb-1">
+                      <span className="text-sm text-gray-400 w-5 text-right">{row}</span>
+                      {screenConfig.bottomLeftBlock !== null ? (
+                        <>
+                          <div className="flex gap-0.5">
+                            {Array.from({ length: screenConfig.bottomLeftBlock }, (_, c) => (
+                              <SeatButton key={c} id={`${row}-${c + 1}`} />
+                            ))}
+                          </div>
+                          <div className="w-4" />
+                          <div className="flex gap-0.5">
+                            {Array.from({ length: screenConfig.bottomCols - screenConfig.bottomLeftBlock }, (_, c) => (
+                              <SeatButton key={c} id={`${row}-${c + screenConfig.bottomLeftBlock! + 1}`} />
+                            ))}
+                          </div>
+                        </>
+                      ) : (
                         <div className="flex gap-0.5">
-                          {Array.from({ length: screenConfig.bottomLeftBlock }, (_, c) => (
+                          {Array.from({ length: screenConfig.bottomCols }, (_, c) => (
                             <SeatButton key={c} id={`${row}-${c + 1}`} />
                           ))}
                         </div>
-                        <div className="w-4" />
-                        <div className="flex gap-0.5">
-                          {Array.from({ length: screenConfig.bottomCols - screenConfig.bottomLeftBlock }, (_, c) => (
-                            <SeatButton key={c} id={`${row}-${c + screenConfig.bottomLeftBlock! + 1}`} />
-                          ))}
-                        </div>
-                      </>
-                    ) : (
-                      <div className="flex gap-0.5">
-                        {Array.from({ length: screenConfig.bottomCols }, (_, c) => (
-                          <SeatButton key={c} id={`${row}-${c + 1}`} />
-                        ))}
-                      </div>
-                    )}
-                    <span className="text-sm text-gray-400 w-5 ml-1">{row}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* 出入り口（右側：大・小スクリーン） */}
-              {screenConfig.exitSide === "right" && (
-                <div className="flex flex-col items-center self-stretch justify-center gap-0.5">
-                  <span className="text-gray-500 text-xs leading-none">↑</span>
-                  <div className="border-l border-gray-500 w-px flex-1" />
-                  <div className="text-xs text-gray-400" style={{ writingMode: "vertical-rl" }}>出入り口</div>
+                      )}
+                      <span className="text-sm text-gray-400 w-5 ml-1">{row}</span>
+                    </div>
+                  ))}
                 </div>
-              )}
+
+                {/* 出入り口（右側：大・小スクリーン） */}
+                {screenConfig.exitSide === "right" && (
+                  <div className="flex flex-col items-center gap-0.5">
+                    <span className="text-gray-500 text-xs leading-none">↑</span>
+                    <div className="border-l border-gray-500 w-px flex-1" />
+                    <div className="text-xs text-gray-400" style={{ writingMode: "vertical-rl" }}>出入り口</div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Seat count + selected chips */}
