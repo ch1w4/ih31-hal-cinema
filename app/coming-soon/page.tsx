@@ -41,7 +41,6 @@ export default function ComingSoonPage() {
                       )}
                     </Link>
                     <div className="text-sm text-gray-300 mb-1 truncate">{movie.title}</div>
-                    <div className="text-sm text-gray-500 mb-1">{movie.titleEn}</div>
                     <div className="flex gap-1 flex-wrap mb-2">
                       {movie.genre.map((g) => (
                         <span key={g} className="text-sm px-1.5 py-0.5 border border-[#444] text-gray-500 rounded">
