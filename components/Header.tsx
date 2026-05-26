@@ -7,7 +7,7 @@ const navItems = [
   { href: "/", labelEn: "Home", labelJa: "ホーム" },
   { href: "/now-showing", labelEn: "Now Showing", labelJa: "上映中" },
   { href: "/coming-soon", labelEn: "Coming Soon", labelJa: "上映予定" },
-  { href: "/campaign", labelEn: "Campaign/News", labelJa: "キャンペーン/ニュース" },
+  { href: "/campaign", labelEn: "Campaign/News", labelJa: "キャンペーンニュース" },
   { href: "/tickets", labelEn: "Online Tickets", labelJa: "チケット購入" },
 ];
 
