@@ -102,7 +102,7 @@ export default function MovieDetailPage() {
               <button
                 key={i}
                 className={`flex-shrink-0 text-sm pb-1 border-b-2 transition-colors ${
-                  i === 2
+                  i === 3
                     ? "border-white text-white"
                     : "border-transparent text-gray-500 hover:text-gray-300"
                 }`}
