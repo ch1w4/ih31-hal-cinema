@@ -30,7 +30,7 @@ export default function ComingSoonPage() {
                       {movie.releaseDate.replace(/-/g, "/").slice(5).replace("/", "月")}日公開
                     </div>
                     <Link
-                      href={`/movies/${movie.id}`}
+                      href={`/coming-soon/${movie.id}`}
                       className="w-full rounded-sm mb-2 block overflow-hidden hover:opacity-75 transition-opacity"
                       style={{ aspectRatio: "2/3" }}
                     >
