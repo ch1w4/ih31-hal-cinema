@@ -68,7 +68,7 @@ export default function HomePage() {
           hasRecs が false のとき: 全映画の先頭10本を「映画ランキング」として表示 */}
       <div className="max-w-6xl mx-auto px-4 py-4">
         <div className="border border-[#333] rounded overflow-hidden">
-          <div className="px-4 py-2 section-title bg-[#1a1a1a] border-b border-[#333] text-base">
+          <div className="px-4 py-3 bg-[#1a1a1a] border-b border-[#333] text-xl font-medium text-gray-300">
             {hasRecs ? "あなたにオススメの映画" : "映画ランキング"}
           </div>
 
