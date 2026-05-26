@@ -1,7 +1,13 @@
-﻿import Header from "@/components/Header";
+// 上映予定ページ（サーバーコンポーネント）
+// comingSoonMovies を月別グループに分けてグリッド表示する
+// 各映画カードをクリックすると /coming-soon/[id] の詳細ページへ遷移
+
+import Header from "@/components/Header";
 import Link from "next/link";
 import { comingSoonMovies } from "@/lib/mockData";
 
+// 月ごとのグループ定義（ラベルと映画IDのリスト）
+// 新しい映画を追加するときはここにIDを追記する
 const monthGroups = [
   { label: "近日公開", ids: ["cs1", "cs2", "cs3"] },
   { label: "三月公開", ids: ["cs4"] },
@@ -19,6 +25,7 @@ export default function ComingSoonPage() {
         </h1>
 
         {monthGroups.map((group) => {
+          // グループに属する映画だけをIDで絞り込む
           const films = comingSoonMovies.filter((m) => group.ids.includes(m.id));
           return (
             <div key={group.label} className="mb-10">
@@ -26,9 +33,11 @@ export default function ComingSoonPage() {
               <div className="grid grid-cols-3 gap-4">
                 {films.map((movie) => (
                   <div key={movie.id} className="flex flex-col">
+                    {/* "YYYY-MM-DD" → "MM月DD日" に変換して公開日を表示 */}
                     <div className="text-sm text-gray-400 mb-1">
                       {movie.releaseDate.replace(/-/g, "/").slice(5).replace("/", "月")}日公開
                     </div>
+                    {/* ポスター画像クリックで詳細ページへ */}
                     <Link
                       href={`/coming-soon/${movie.id}`}
                       className="w-full rounded-sm mb-2 block overflow-hidden hover:opacity-75 transition-opacity"
@@ -48,6 +57,7 @@ export default function ComingSoonPage() {
                         </span>
                       ))}
                     </div>
+                    {/* あらすじは2行に切り詰めて一覧の可読性を保つ */}
                     <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed mb-2">
                       {movie.synopsis}
                     </p>

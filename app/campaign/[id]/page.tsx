@@ -1,3 +1,6 @@
+// キャンペーン詳細ページ
+// URLの [id] パラメータで campaigns 配列から該当キャンペーンを取得して表示する
+
 "use client";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -5,9 +8,11 @@ import Header from "@/components/Header";
 import { campaigns } from "@/lib/mockData";
 
 export default function CampaignDetailPage() {
+  // URLパラメータ（例: /campaign/camp-1 → params.id = "camp-1"）
   const params = useParams();
   const campaign = campaigns.find((c) => c.id === params.id);
 
+  // 存在しないIDの場合は404相当のフォールバック表示
   if (!campaign) {
     return (
       <div className="min-h-screen bg-[#0f0f0f]">
@@ -24,7 +29,7 @@ export default function CampaignDetailPage() {
       <Header />
 
       <main className="max-w-3xl mx-auto px-4 py-6">
-        {/* Breadcrumb */}
+        {/* パンくずナビ: キャンペーン一覧 → 現在のタイトル */}
         <div className="flex items-center gap-2 text-xs text-gray-500 mb-6">
           <Link href="/campaign" className="hover:text-gray-300 transition-colors">
             キャンペーン・ニュース
@@ -33,7 +38,7 @@ export default function CampaignDetailPage() {
           <span className="text-gray-400">{campaign.title}</span>
         </div>
 
-        {/* Header banner */}
+        {/* ヘッダーバナー: accentColor でグラデーションと左ボーダーを生成 */}
         <div
           className="rounded-lg p-6 mb-6"
           style={{ background: `linear-gradient(135deg, ${campaign.accentColor}cc, ${campaign.accentColor}44)`, borderLeft: `4px solid ${campaign.accentColor}` }}
@@ -51,19 +56,19 @@ export default function CampaignDetailPage() {
           <p className="text-sm text-gray-300">{campaign.subtitle}</p>
         </div>
 
-        {/* Summary */}
+        {/* 概要テキスト */}
         <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-4 mb-6">
           <p className="text-sm text-gray-200 leading-relaxed">{campaign.description}</p>
         </div>
 
-        {/* Body */}
+        {/* 本文: whitespace-pre-line で改行文字（\n）をそのまま表示 */}
         <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-6 mb-8">
           <p className="text-sm text-gray-200 leading-relaxed whitespace-pre-line">
             {campaign.body}
           </p>
         </div>
 
-        {/* Back button */}
+        {/* 一覧に戻るボタン */}
         <div className="flex justify-center">
           <Link
             href="/campaign"

@@ -1,4 +1,8 @@
-﻿import Header from "@/components/Header";
+// 新規会員登録ページ
+// 現時点ではフォーム送信・Googleボタンともにモック（非機能）
+// 将来的にはFastAPI /register エンドポイントへPOSTする予定
+
+import Header from "@/components/Header";
 import Link from "next/link";
 
 export default function RegisterPage() {
@@ -10,6 +14,7 @@ export default function RegisterPage() {
         <div className="bg-[#0f0f0f] rounded-lg p-8">
           <h1 className="text-lg font-medium text-white text-center mb-8">会員登録</h1>
 
+          {/* 名前・メール・パスワードフォーム（現在は送信不可のモックUI） */}
           <form className="space-y-4">
             <div>
               <label className="block text-sm text-gray-400 mb-1">名前</label>
@@ -49,6 +54,7 @@ export default function RegisterPage() {
             <div className="flex-1 h-px bg-[#444]" />
           </div>
 
+          {/* Google連携ボタン（現在はモックのみ、onClick未実装） */}
           <div className="space-y-3">
             <button className="w-full bg-[#f0f0f0] text-black py-4 rounded text-base font-medium hover:bg-white transition-colors flex items-center justify-center gap-2">
               <span className="text-base">G</span>

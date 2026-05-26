@@ -1,9 +1,23 @@
+// ログインページ
+// メール/パスワードフォームはモックUI（送信しても何も起きない）
+// 実際に機能するのは「Googleでログイン」ボタンのみ
+//
+// Google OAuth フロー:
+//   1. ユーザーがボタンをクリック → FastAPI localhost:5000/login へリダイレクト
+//   2. FastAPI が Google の OAuth 認可画面へリダイレクト
+//   3. ユーザーが許可 → Google が FastAPI コールバックURLへリダイレクト
+//   4. FastAPI がトークンとユーザー情報を生成 → /auth/success?token=...&user=... へリダイレクト
+//   5. /auth/success ページが localStorage に保存して /now-showing へ移動
+
 "use client";
 
 import Header from "@/components/Header";
 import Link from "next/link";
 
 export default function LoginPage() {
+  // ブラウザを直接FastAPIのOAuthエンドポイントへ遷移させる
+  // Next.js の router.push ではなく location.href を使う理由:
+  // FastAPI が 302リダイレクトを返すため、fetchでは処理できないから
   const handleGoogleLogin = () => {
     window.location.href = "http://localhost:5000/login";
   };
@@ -16,6 +30,7 @@ export default function LoginPage() {
         <div className="bg-[#0f0f0f] rounded-lg p-8">
           <h1 className="text-lg font-medium text-white text-center mb-8">ログイン</h1>
 
+          {/* メール/パスワードフォーム（現在は非機能のモックUI） */}
           <form className="space-y-4">
             <div>
               <label className="block text-sm text-gray-400 mb-1">メールアドレス</label>
@@ -43,10 +58,12 @@ export default function LoginPage() {
 
           <div className="mt-6 pt-6 border-t border-[#333]">
             <p className="text-xs text-gray-500 text-center mb-3">または</p>
+            {/* 唯一動作するログイン手段。クリックでFastAPI OAuth開始 */}
             <button
               onClick={handleGoogleLogin}
               className="w-full bg-white text-black py-2.5 rounded font-medium text-sm hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
             >
+              {/* Google アイコン（SVGインライン）*/}
               <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                 <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
