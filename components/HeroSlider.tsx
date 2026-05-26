@@ -4,6 +4,7 @@
 "use client";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 const AUTO_PLAY_INTERVAL = 5000;
 
@@ -13,31 +14,37 @@ const slides = [
     id: "wakuwaku",
     src: "/images/hero/わくわく.png",
     alt: "春のわくわく映画キャンペーン",
+    href:"/campaign/1",
   },
   {
     id: "hal-friend",
     src: "/images/hero/HAL友.png",
     alt: "HAL CINEMA友の会",
+    href:"/campaign/2",
   },
   {
     id: "ladies",
     src: "/images/hero/レディース.png",
     alt: "レディースデー",
+    href:"/campaign/3",
   },
   {
     id: "senior",
     src: "/images/hero/シニア.png",
     alt: "シニア割引",
+    href:"/campaign/4",
   },
   {
     id: "student",
     src: "/images/hero/学生.png",
     alt: "学生割引",
+    href:"/campaign/5",
   },
   {
     id: "four-dx",
     src: "/images/hero/4dx.png",
     alt: "4DXシアター",
+    href:"/campaign/6",
   },
 ] as const;
 
@@ -69,16 +76,18 @@ export default function HeroSlider() {
     <div className="max-w-4xl mx-auto px-4 py-4">
       {/* スライダー本体: 高さ固定460px、overflow-hiddenで画像がはみ出ないようにする */}
       <div className="w-full relative overflow-hidden rounded-lg" style={{ height: "460px" }}>
-        <div className="absolute inset-0 bg-[#0f0f0f]">
-          <Image
-            src={currentSlide.src}
-            alt={currentSlide.alt}
-            fill
-            priority={current === 0}
-            sizes="100vw"
-            className="object-contain"
-          />
-        </div>
+        <Link href={currentSlide.href} className="absolute inset-0 block" aria-label={`詳細を見る: ${currentSlide.alt}`}>
+          <div className="absolute inset-0 bg-[#0f0f0f]">
+            <Image
+              src={currentSlide.src}
+              alt={currentSlide.alt}
+              fill
+              priority={current === 0}
+              sizes="100vw"
+              className="object-contain"
+            />
+          </div>
+        </Link>
 
         {/* 前へボタン */}
         <button
