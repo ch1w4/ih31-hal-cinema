@@ -74,7 +74,7 @@ export default function HomePage() {
 
           <div className="placeholder-box" style={{ overflow: "visible" }}>
             <div className="p-6 grid grid-cols-5 gap-3 relative">
-              {(hasRecs ? recommendedMovies.slice(0, 10) : movies.slice(0, 10)).map((movie, i) => {
+              {(hasRecs ? recommendedMovies.slice(0, 5) : movies.slice(0, 5)).map((movie, i) => {
                 // rec は Movie に AI追加フィールド { score, why } が乗った拡張オブジェクト
                 // 型定義を増やさないために any キャストで参照する
                 const rec = movie as any;
@@ -82,7 +82,7 @@ export default function HomePage() {
                   <div key={movie.id} className="flex flex-col items-center gap-1 group relative">
                     {/* 順位番号 */}
                     <div className="text-xs font-bold text-gray-600">{i + 1}</div>
-                    <Link href={`/movies/${movie.id}`} className="w-full">
+                    <Link href={`/movies/${movie.id}`} className="w-full block transition-[transform,opacity] duration-200 hover:scale-[1.03] hover:opacity-90">
                       <div className="w-full rounded overflow-hidden relative" style={{ aspectRatio: "2/3" }}>
                         {movie.poster ? (
                           <img src={movie.poster} alt={movie.title} className="w-full h-full object-cover" />
@@ -97,7 +97,7 @@ export default function HomePage() {
                         )}
                       </div>
                     </Link>
-                    <div className="text-[9px] text-gray-500 text-center truncate w-full group-hover:text-gray-300">
+                    <div className="text-[9px] text-gray-500 text-center truncate w-full ">
                       {movie.title}
                     </div>
                     {/* ホバー時に表示するAI推薦理由ツールチップ */}
