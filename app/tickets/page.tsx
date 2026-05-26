@@ -1,23 +1,36 @@
+// チケット購入ページ
+// 映画選択 → 時間帯選択 → 座席選択 → チケット種別 → お客様情報 → 購入確認 → 完了
+// の7ステップウィザード形式で購入フローを管理する。
+// /movies/[id] ページからURLパラメータ（movieId・date・time・screen）を受け取った場合は
+// 座席選択ステップから開始する。
 "use client";
 import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
 import { movies, mockSchedules } from "@/lib/mockData";
 
+// ウィザードの各ステップを表すユニオン型
 type Step = "select-movie" | "select-time" | "seat" | "ticket-type" | "customer-info" | "confirm" | "complete";
+
+// 座席の状態。empty=空席、purchased=購入済み、selected=今回選択中
 type SeatStatus = "empty" | "purchased" | "selected";
 
+// スクリーンの物理的な座席配置を表す設定型
 type ScreenConfig = {
-  name: string;
-  capacity: number;
-  topRows: string[];
-  topCols: number;
-  bottomRows: string[];
-  bottomCols: number;
-  bottomLeftBlock: number | null;
-  exitSide: "left" | "right";
+  name: string;          // 表示名（例：大スクリーン）
+  capacity: number;      // 総座席数
+  topRows: string[];     // スクリーン寄りの上段行ラベル（例：["A","B","C"]）
+  topCols: number;       // 上段の列数
+  bottomRows: string[];  // 下段行ラベル
+  bottomCols: number;    // 下段の列数（大スクリーンは通路を挟んだ合計数）
+  bottomLeftBlock: number | null; // 大スクリーンのみ：通路左側の列数（nullなら通路なし）
+  exitSide: "left" | "right";    // 出入り口の位置（中スクリーンは左、大・小は右）
 };
 
+// スクリーン種別ごとの座席配置定義
+// 大スクリーン：A-C行×16列 ＋ D-I行×13列（左2列＋通路＋右11列）
+// 中スクリーン：A-C行×15列 ＋ D-H行×15列（通路なし）
+// 小スクリーン：A-C行×10列 ＋ D-G行×10列（通路なし）
 const SCREEN_CONFIGS: Record<"large" | "medium" | "small", ScreenConfig> = {
   large: {
     name: "大スクリーン",
@@ -51,6 +64,8 @@ const SCREEN_CONFIGS: Record<"large" | "medium" | "small", ScreenConfig> = {
   },
 };
 
+// スクリーン名の文字（大・中・小）からスクリーン種別を判定する
+// mockData の screen 名が「大スクリーン1」「中スクリーン1」「小スクリーン1」の形式であることを前提とする
 function getScreenType(screenName: string): "large" | "medium" | "small" {
   if (screenName.includes("大")) return "large";
   if (screenName.includes("中")) return "medium";
@@ -58,6 +73,8 @@ function getScreenType(screenName: string): "large" | "medium" | "small" {
   return "large";
 }
 
+// ScreenConfig を元に全座席の初期状態マップを生成する
+// キーは "行-列" 形式（例："A-1"）、値は全て "empty"
 function buildSeatMap(config: ScreenConfig): Record<string, SeatStatus> {
   const map: Record<string, SeatStatus> = {};
   const allRows = [...config.topRows, ...config.bottomRows];
@@ -71,6 +88,7 @@ function buildSeatMap(config: ScreenConfig): Record<string, SeatStatus> {
   return map;
 }
 
+// チケット種別と料金の定義
 const ticketTypes = [
   { id: "general", label: "一般", price: 1900 },
   { id: "student", label: "大学生・専門学生", price: 1500 },
@@ -78,11 +96,13 @@ const ticketTypes = [
   { id: "child", label: "小学生以下", price: 1000 },
 ];
 
+// HALカード・水曜割引の選択肢（現在はUI表示のみ、料金計算には未反映）
 const halDiscounts = [
   { id: "no", label: "HALカードと水曜割引なし" },
   { id: "yes", label: "HALカードと水曜割引あり" },
 ];
 
+// パンくずナビに表示するステップの順序と表示名
 const stepLabels: { key: Step; label: string }[] = [
   { key: "select-movie", label: "映画選択" },
   { key: "select-time", label: "時間帯選択" },
@@ -93,7 +113,10 @@ const stepLabels: { key: Step; label: string }[] = [
   { key: "complete", label: "完了" },
 ];
 
+// チケット購入ウィザードの本体コンポーネント
+// useSearchParams を使用するため Suspense でラップする必要がある
 function TicketsContent() {
+  // /movies/[id] からのリンクでURLパラメータが渡された場合は座席選択から開始する
   const searchParams = useSearchParams();
   const initMovieId = searchParams.get("movieId") ?? "";
   const initDate = searchParams.get("date") ?? "";
@@ -102,15 +125,26 @@ function TicketsContent() {
   const initStep: Step =
     initMovieId && initDate && initTime ? "seat" : "select-movie";
 
+  // ウィザードの現在ステップ
   const [step, setStep] = useState<Step>(initStep);
+
+  // 各ステップで選択した値
   const [selectedMovieId, setSelectedMovieId] = useState(initMovieId);
   const [selectedDate, setSelectedDate] = useState(initDate);
   const [selectedScreen, setSelectedScreen] = useState(initScreen);
   const [selectedTime, setSelectedTime] = useState(initTime);
+
+  // 選択中スクリーンのレイアウト設定（selectedScreen 変化に追従）
   const screenConfig = SCREEN_CONFIGS[getScreenType(selectedScreen)];
+
+  // 座席マップ：キー "行-列"、値は SeatStatus
   const [seatMap, setSeatMap] = useState<Record<string, SeatStatus>>(() => buildSeatMap(screenConfig));
+
+  // 座席ごとに選択されたチケット種別ID（例：{ "A-1": "student", "A-2": "general" }）
   const [ticketSelections, setTicketSelections] = useState<Record<string, string>>({});
   const [halDiscount, setHalDiscount] = useState("no");
+
+  // お客様情報フォームの各フィールド
   const [lastName, setLastName] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastNameKana, setLastNameKana] = useState("");
@@ -121,18 +155,28 @@ function TicketsContent() {
   const [emailConfirm, setEmailConfirm] = useState("");
   const [payment, setPayment] = useState<"credit" | "paypay">("credit");
 
+  // 選択中の映画オブジェクト
   const movie = movies.find((m) => m.id === selectedMovieId);
+
+  // 選択中映画のスケジュール（未定義の場合はid=1のスケジュールをフォールバック）
   const schedules = mockSchedules[selectedMovieId] || mockSchedules["1"] || [];
+
+  // 現在 "selected" 状態の座席IDリスト
   const selectedSeats = Object.entries(seatMap)
     .filter(([, s]) => s === "selected")
     .map(([id]) => id);
+
+  // パンくずナビでの現在位置インデックス
   const currentIdx = stepLabels.findIndex((s) => s.key === step);
 
+  // 選択座席の合計金額（ticketSelections に未設定の席は一般料金で計算）
   const totalPrice = selectedSeats.reduce((sum, id) => {
     const t = ticketTypes.find((t) => t.id === (ticketSelections[id] || "general"));
     return sum + (t?.price ?? 1900);
   }, 0);
 
+  // 座席ボタンをクリックしたときの状態トグル
+  // 購入済み座席（blue）は変更不可
   function toggleSeat(id: string) {
     setSeatMap((prev) => {
       const cur = prev[id];
@@ -141,6 +185,8 @@ function TicketsContent() {
     });
   }
 
+  // 個々の座席を表すボタンコンポーネント（TicketsContent 内でのみ使用）
+  // gray=空席、red=選択中、blue=購入済み
   function SeatButton({ id }: { id: string }) {
     const status = seatMap[id] ?? "empty";
     const color =
@@ -162,7 +208,7 @@ function TicketsContent() {
 
   return (
     <main className="max-w-2xl mx-auto px-4 py-6">
-      {/* Breadcrumb */}
+      {/* パンくずナビ：完了済みステップに ✓ を表示 */}
       <div className="flex items-center gap-1 text-sm text-gray-500 mb-6 overflow-x-auto pb-1">
         {stepLabels.map((s, i) => (
           <span key={s.key} className="flex items-center gap-1 flex-shrink-0">
@@ -187,6 +233,7 @@ function TicketsContent() {
                   setSelectedDate("");
                   setSelectedTime("");
                   setSelectedScreen("");
+                  // 映画選択時は大スクリーンの初期マップをセット（時間帯選択後に更新される）
                   setSeatMap(buildSeatMap(SCREEN_CONFIGS.large));
                   setStep("select-time");
                 }}
@@ -212,8 +259,10 @@ function TicketsContent() {
       )}
 
       {/* ── STEP 2: 時間帯選択 ── */}
+      {/* 日付を選ぶと、その日のスクリーンごとの上映時間一覧が表示される */}
       {step === "select-time" && movie && (
         <div>
+          {/* 選択中映画のサマリーバー */}
           <div className="flex items-center gap-3 border border-[#333] rounded p-3 bg-[#1a1a1a] mb-5">
             <div className="flex-shrink-0 rounded overflow-hidden" style={{ width: "36px", aspectRatio: "2/3" }}>
               {movie.poster ? (
@@ -251,6 +300,7 @@ function TicketsContent() {
             ))}
           </div>
 
+          {/* 日付選択後に時間帯一覧を表示（スクリーンごとにグループ化） */}
           {selectedDate && (
             <>
               <h2 className="text-base text-gray-300 mb-3">時間帯を選択してください</h2>
@@ -266,6 +316,7 @@ function TicketsContent() {
                           onClick={() => {
                             setSelectedTime(time);
                             setSelectedScreen(slot.screen);
+                            // スクリーン名から種別を判定し、対応する座席マップを生成する
                             setSeatMap(buildSeatMap(SCREEN_CONFIGS[getScreenType(slot.screen)]));
                           }}
                           className={`px-4 py-2 rounded text-sm border transition-colors ${
@@ -308,13 +359,13 @@ function TicketsContent() {
       {/* ── STEP 3: 座席選択 ── */}
       {step === "seat" && movie && (
         <div>
-          {/* Summary bar */}
+          {/* 選択内容サマリー */}
           <div className="text-sm text-gray-400 border border-[#333] rounded p-3 bg-[#1a1a1a] mb-4 space-y-0.5">
             <div>{movie.title}</div>
             <div>{selectedDate}　{selectedTime}　{selectedScreen}</div>
           </div>
 
-          {/* Legend */}
+          {/* 座席色の凡例 */}
           <div className="flex gap-6 text-sm text-gray-300 mb-5">
             <span className="flex items-center gap-2">
               <span className="inline-block w-5 h-4 bg-gray-400 rounded-t-sm" />空白
@@ -327,105 +378,110 @@ function TicketsContent() {
             </span>
           </div>
 
-          {/* Seat map box */}
+          {/* 座席マップ本体（赤枠） */}
           <div className="border-2 border-red-700 rounded p-4 bg-[#111] mb-4 overflow-x-auto">
-            {/* Screen bar */}
+            {/* スクリーンを表す白いバー */}
             <div className="flex justify-center mb-1">
               <div className="bg-white rounded h-2" style={{ width: "55%" }} />
             </div>
             <div className="text-center text-sm text-gray-400 mb-4">{selectedScreen}</div>
 
+            {/* 座席全体を中央揃えにするコンテナ */}
             <div className="flex flex-col items-center">
-            {/* Top rows */}
-            <div className="mb-1">
-              <div className="flex items-center mb-1">
-                <span className="w-6" />
-                <div className="flex flex-1 justify-between text-sm text-gray-500">
-                  <span>1</span>
-                  <span>{screenConfig.topCols}</span>
-                </div>
-                <span className="w-6" />
-              </div>
-              {screenConfig.topRows.map((row) => (
-                <div key={row} className="flex items-center gap-1 mb-1">
-                  <span className="text-sm text-gray-400 w-5 text-right">{row}</span>
-                  <div className="flex gap-0.5">
-                    {Array.from({ length: screenConfig.topCols }, (_, c) => (
-                      <SeatButton key={c} id={`${row}-${c + 1}`} />
-                    ))}
+              {/* 上段（スクリーン寄り）：topRows × topCols の格子 */}
+              <div className="mb-1">
+                <div className="flex items-center mb-1">
+                  <span className="w-6" />
+                  <div className="flex flex-1 justify-between text-sm text-gray-500">
+                    <span>1</span>
+                    <span>{screenConfig.topCols}</span>
                   </div>
-                  <span className="text-sm text-gray-400 w-5 ml-1">{row}</span>
+                  <span className="w-6" />
                 </div>
-              ))}
-            </div>
-
-            <div className="my-3" />
-
-            {/* Bottom rows */}
-            <div>
-              {/* Column header (outside the exit-indicator flex so ↑ aligns with rows only) */}
-              <div className="flex items-center mb-1">
-                <span className="w-5" />
-                <div className="text-sm text-gray-500 ml-0.5">1</div>
-                <div className="flex-1" />
-                <div className="text-sm text-gray-500">{screenConfig.bottomCols}</div>
-                <span className="w-5 ml-1" />
+                {screenConfig.topRows.map((row) => (
+                  <div key={row} className="flex items-center gap-1 mb-1">
+                    <span className="text-sm text-gray-400 w-5 text-right">{row}</span>
+                    <div className="flex gap-0.5">
+                      {Array.from({ length: screenConfig.topCols }, (_, c) => (
+                        <SeatButton key={c} id={`${row}-${c + 1}`} />
+                      ))}
+                    </div>
+                    <span className="text-sm text-gray-400 w-5 ml-1">{row}</span>
+                  </div>
+                ))}
               </div>
 
-              {/* Rows + exit indicator */}
-              <div className="flex items-stretch gap-2">
-                {/* 出入り口（左側：中スクリーン） */}
-                {screenConfig.exitSide === "left" && (
-                  <div className="flex flex-col items-center gap-0.5">
-                    <span className="text-gray-500 text-xs leading-none">↑</span>
-                    <div className="border-l border-gray-500 w-px flex-1" />
-                    <div className="text-xs text-gray-400" style={{ writingMode: "vertical-rl" }}>出入り口</div>
-                  </div>
-                )}
+              {/* 上段・下段の間のスペース（劇場の通路に相当） */}
+              <div className="my-3" />
 
-                <div>
-                  {screenConfig.bottomRows.map((row) => (
-                    <div key={row} className="flex items-center gap-1 mb-1">
-                      <span className="text-sm text-gray-400 w-5 text-right">{row}</span>
-                      {screenConfig.bottomLeftBlock !== null ? (
-                        <>
+              {/* 下段：bottomRows × bottomCols の格子
+                  大スクリーンのみ bottomLeftBlock で左ブロックを分割し、通路（w-4）を挟む */}
+              <div>
+                {/* 列番号ヘッダー（出入り口インジケーターと同じflexに入れると↑の位置がずれるため分離） */}
+                <div className="flex items-center mb-1">
+                  <span className="w-5" />
+                  <div className="text-sm text-gray-500 ml-0.5">1</div>
+                  <div className="flex-1" />
+                  <div className="text-sm text-gray-500">{screenConfig.bottomCols}</div>
+                  <span className="w-5 ml-1" />
+                </div>
+
+                {/* 下段の行 + 出入り口インジケーターを横並びにする */}
+                <div className="flex items-stretch gap-2">
+                  {/* 中スクリーンは出入り口が左側 */}
+                  {screenConfig.exitSide === "left" && (
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span className="text-gray-500 text-xs leading-none">↑</span>
+                      <div className="border-l border-gray-500 w-px flex-1" />
+                      <div className="text-xs text-gray-400" style={{ writingMode: "vertical-rl" }}>出入り口</div>
+                    </div>
+                  )}
+
+                  <div>
+                    {screenConfig.bottomRows.map((row) => (
+                      <div key={row} className="flex items-center gap-1 mb-1">
+                        <span className="text-sm text-gray-400 w-5 text-right">{row}</span>
+                        {screenConfig.bottomLeftBlock !== null ? (
+                          // 大スクリーン：左ブロック（2席）＋通路＋右ブロック（11席）
+                          <>
+                            <div className="flex gap-0.5">
+                              {Array.from({ length: screenConfig.bottomLeftBlock }, (_, c) => (
+                                <SeatButton key={c} id={`${row}-${c + 1}`} />
+                              ))}
+                            </div>
+                            <div className="w-4" /> {/* 通路 */}
+                            <div className="flex gap-0.5">
+                              {Array.from({ length: screenConfig.bottomCols - screenConfig.bottomLeftBlock }, (_, c) => (
+                                <SeatButton key={c} id={`${row}-${c + screenConfig.bottomLeftBlock! + 1}`} />
+                              ))}
+                            </div>
+                          </>
+                        ) : (
+                          // 中・小スクリーン：通路なし
                           <div className="flex gap-0.5">
-                            {Array.from({ length: screenConfig.bottomLeftBlock }, (_, c) => (
+                            {Array.from({ length: screenConfig.bottomCols }, (_, c) => (
                               <SeatButton key={c} id={`${row}-${c + 1}`} />
                             ))}
                           </div>
-                          <div className="w-4" />
-                          <div className="flex gap-0.5">
-                            {Array.from({ length: screenConfig.bottomCols - screenConfig.bottomLeftBlock }, (_, c) => (
-                              <SeatButton key={c} id={`${row}-${c + screenConfig.bottomLeftBlock! + 1}`} />
-                            ))}
-                          </div>
-                        </>
-                      ) : (
-                        <div className="flex gap-0.5">
-                          {Array.from({ length: screenConfig.bottomCols }, (_, c) => (
-                            <SeatButton key={c} id={`${row}-${c + 1}`} />
-                          ))}
-                        </div>
-                      )}
-                      <span className="text-sm text-gray-400 w-5 ml-1">{row}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* 出入り口（右側：大・小スクリーン） */}
-                {screenConfig.exitSide === "right" && (
-                  <div className="flex flex-col items-center gap-0.5">
-                    <span className="text-gray-500 text-xs leading-none">↑</span>
-                    <div className="border-l border-gray-500 w-px flex-1" />
-                    <div className="text-xs text-gray-400" style={{ writingMode: "vertical-rl" }}>出入り口</div>
+                        )}
+                        <span className="text-sm text-gray-400 w-5 ml-1">{row}</span>
+                      </div>
+                    ))}
                   </div>
-                )}
+
+                  {/* 大・小スクリーンは出入り口が右側 */}
+                  {screenConfig.exitSide === "right" && (
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span className="text-gray-500 text-xs leading-none">↑</span>
+                      <div className="border-l border-gray-500 w-px flex-1" />
+                      <div className="text-xs text-gray-400" style={{ writingMode: "vertical-rl" }}>出入り口</div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-            </div> {/* end flex flex-col items-center */}
 
-            {/* Seat count + selected chips */}
+            {/* 座席数と選択中の座席IDチップ */}
             <div className="flex items-center gap-4 mt-4 border-t border-[#333] pt-3">
               <div className="text-sm text-gray-400">
                 <div>座席数</div>
@@ -465,6 +521,7 @@ function TicketsContent() {
       )}
 
       {/* ── STEP 4: チケット種別 ── */}
+      {/* 選択した座席ごとに種別（一般・学生・シニア・子供）を設定し、合計金額を算出する */}
       {step === "ticket-type" && movie && (
         <div>
           <div className="text-sm text-gray-400 border border-[#333] rounded p-3 bg-[#1a1a1a] mb-4 space-y-0.5">
@@ -477,6 +534,7 @@ function TicketsContent() {
 
           <h2 className="text-base text-gray-300 mb-4">チケットの種類をお選びください</h2>
           <div className="space-y-3 mb-5">
+            {/* 座席ごとに種別ドロップダウンを表示 */}
             {selectedSeats.map((seatId) => (
               <div key={seatId} className="flex items-center gap-3">
                 <span className="text-sm text-gray-400 w-12 flex-shrink-0">{seatId}</span>
@@ -497,6 +555,7 @@ function TicketsContent() {
             ))}
           </div>
 
+          {/* HALカード・水曜割引の選択（現在は見た目のみ） */}
           <div className="flex gap-2 mb-5">
             {halDiscounts.map((d) => (
               <button
@@ -536,8 +595,10 @@ function TicketsContent() {
       )}
 
       {/* ── STEP 5: お客様情報入力 ── */}
+      {/* 氏名・性別・電話番号・メールアドレス・支払い方法を収集する */}
       {step === "customer-info" && (
         <div className="space-y-0">
+          {/* 氏名セクション（漢字・フリガナ） */}
           <section className="bg-[#1a1a1a] rounded-t p-4 mb-px">
             <div className="flex justify-between items-center mb-3">
               <span className="text-sm text-white">氏名</span>
@@ -646,6 +707,7 @@ function TicketsContent() {
             </div>
           </section>
 
+          {/* 電話番号とメールアドレスの両方が入力済みの場合のみ次へ進める */}
           <div className="flex gap-3 pt-2">
             <button
               onClick={() => setStep("ticket-type")}
@@ -665,48 +727,6 @@ function TicketsContent() {
               次へ
             </button>
           </div>
-        </div>
-      )}
-
-      {/* ── 購入完了 ── */}
-      {step === "complete" && movie && (
-        <div className="text-center py-10">
-          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-red-600 mx-auto mb-6">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <div className="text-white text-xl font-bold mb-1">購入完了</div>
-          <div className="text-gray-400 text-sm mb-8">ご購入ありがとうございます</div>
-
-          <div className="border border-[#333] rounded p-4 bg-[#1a1a1a] mb-6 text-left space-y-2 text-sm">
-            <div className="text-gray-400 text-sm mb-3">予約内容</div>
-            {[
-              { label: "予約番号", value: `HC-${Math.random().toString(36).slice(2, 8).toUpperCase()}` },
-              { label: "作品", value: movie.title },
-              { label: "日時", value: `${selectedDate}　${selectedTime}` },
-              { label: "SCREEN", value: selectedScreen },
-              { label: "座席", value: selectedSeats.join(", ") },
-              { label: "合計金額", value: `¥${totalPrice.toLocaleString()}` },
-            ].map(({ label, value }) => (
-              <div key={label} className="flex">
-                <span className="text-gray-500 w-28 flex-shrink-0">{label}</span>
-                <span className="text-gray-200">{value}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="text-sm text-gray-500 mb-8">
-            ご登録のメールアドレスに確認メールを送信しました。<br />
-            当日は予約番号をご提示ください。
-          </div>
-
-          <a
-            href="/"
-            className="inline-block px-8 py-2.5 bg-white text-black rounded text-sm font-medium hover:bg-gray-200 transition-colors"
-          >
-            トップページへ
-          </a>
         </div>
       )}
 
@@ -748,10 +768,55 @@ function TicketsContent() {
           </div>
         </div>
       )}
+
+      {/* ── STEP 7: 購入完了 ── */}
+      {/* 予約番号は Math.random で生成したモック値（本番では API から取得する） */}
+      {step === "complete" && movie && (
+        <div className="text-center py-10">
+          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-red-600 mx-auto mb-6">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <div className="text-white text-xl font-bold mb-1">購入完了</div>
+          <div className="text-gray-400 text-sm mb-8">ご購入ありがとうございます</div>
+
+          <div className="border border-[#333] rounded p-4 bg-[#1a1a1a] mb-6 text-left space-y-2 text-sm">
+            <div className="text-gray-400 text-sm mb-3">予約内容</div>
+            {[
+              { label: "予約番号", value: `HC-${Math.random().toString(36).slice(2, 8).toUpperCase()}` },
+              { label: "作品", value: movie.title },
+              { label: "日時", value: `${selectedDate}　${selectedTime}` },
+              { label: "SCREEN", value: selectedScreen },
+              { label: "座席", value: selectedSeats.join(", ") },
+              { label: "合計金額", value: `¥${totalPrice.toLocaleString()}` },
+            ].map(({ label, value }) => (
+              <div key={label} className="flex">
+                <span className="text-gray-500 w-28 flex-shrink-0">{label}</span>
+                <span className="text-gray-200">{value}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-sm text-gray-500 mb-8">
+            ご登録のメールアドレスに確認メールを送信しました。<br />
+            当日は予約番号をご提示ください。
+          </div>
+
+          <a
+            href="/"
+            className="inline-block px-8 py-2.5 bg-white text-black rounded text-sm font-medium hover:bg-gray-200 transition-colors"
+          >
+            トップページへ
+          </a>
+        </div>
+      )}
     </main>
   );
 }
 
+// useSearchParams を使う TicketsContent を Suspense でラップする
+// Next.js App Router では useSearchParams は Suspense バウンダリ内でのみ使用可能
 export default function TicketsPage() {
   return (
     <div className="min-h-screen bg-[#0f0f0f]">
