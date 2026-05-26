@@ -40,6 +40,7 @@ export default function Header() {
     } catch {
       // ignore
     }
+    localStorage.removeItem("recommendedMovies");
     localStorage.removeItem("authToken");
     localStorage.removeItem("userInfo");
     setUser(null);
