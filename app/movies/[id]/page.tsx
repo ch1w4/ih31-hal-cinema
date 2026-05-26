@@ -66,7 +66,6 @@ export default function MovieDetailPage() {
             <div className="text-sm text-gray-400 mb-1">
               公開期間：{movie.releaseDate.replace(/-/g, "/")}〜{movie.endDate.replace(/-/g, "/")}
             </div>
-            <div className="text-sm text-gray-500 mb-2">カラタ探し</div>
             <p className="text-sm text-gray-400 leading-relaxed mb-3 line-clamp-5">
               {movie.synopsis}
             </p>

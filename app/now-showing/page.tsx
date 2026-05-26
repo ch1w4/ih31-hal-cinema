@@ -23,9 +23,7 @@ export default function NowShowingPage() {
       }
       const user = localStorage.getItem("userInfo");
       if (user) setUserInfo(JSON.parse(user));
-    } catch {
-      // ignore
-    }
+    } catch {}
     setLoading(false);
   }, []);
 

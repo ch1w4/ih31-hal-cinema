@@ -2,8 +2,9 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import { campaigns } from "@/lib/mockData";
 
+const categories = ["すべて", "キャンペーン", "割引情報", "会員情報", "お知らせ"];
+
 export default function CampaignPage() {
-  const categories = ["すべて", "キャンペーン", "割引情報", "会員情報", "お知らせ"];
 
   return (
     <div className="min-h-screen bg-[#0f0f0f]">

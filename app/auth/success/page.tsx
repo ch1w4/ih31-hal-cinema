@@ -1,7 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { movies, comingSoonMovies } from "@/lib/mockData";
 
@@ -43,9 +42,7 @@ function AuthSuccessContent() {
                 const ai = JSON.parse(data.ai_output);
                 parsed = ai.recommendations || [];
               }
-            } catch {
-              // ignore
-            }
+            } catch {}
             localStorage.setItem("recommendedMovies", JSON.stringify(parsed));
           } else {
             localStorage.setItem("recommendedMovies", JSON.stringify([]));

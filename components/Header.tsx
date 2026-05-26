@@ -28,9 +28,7 @@ export default function Header() {
     if (userInfo) {
       try {
         setUser(JSON.parse(userInfo));
-      } catch {
-        // ignore
-      }
+      } catch {}
     }
   }, []);
 
@@ -51,7 +49,7 @@ export default function Header() {
       <div className="max-w-6xl mx-auto px-4 py-4">
         <div className="flex items-center justify-between mb-4">
           <Link href="/">
-            <img src="/halcinemalogo.png" alt="HAL CINEMA" style={{ height: "60px", width: "auto" }} />
+            <img src="/halcinemalogo.png" alt="HAL CINEMA" style={{ height: "80px", width: "auto" }} />
           </Link>
 
           {user && (
