@@ -48,10 +48,18 @@ http://localhost:5000/login
 
 
 modelfileからmovie-recをcreateする
+※学校回線だとtimeoutします
 ```terminal
 ollama create movie-rec -f Modelfile
 ```
+
 映画推薦用に加工したのでこれを使用する
 ```terminal
 ollama run movie-rec
 ```
+
+都度movie-recは更新するので、更新する場合は以下の手順に従ってください
+```terminal
+ollama rm movie-rec
+```
+これで旧movie-recを削除その後上記に従って新しいmovie-recを作成してください

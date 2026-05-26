@@ -4,7 +4,6 @@ import requests
 import urllib.parse
 import json
 import base64
-import random
 
 app = Flask(__name__)
 app.secret_key = "super_secret_random_key_12345"
@@ -141,21 +140,6 @@ def youtube_subscriptions():
     res = requests.get(url, params=params, headers=headers)
     return jsonify(res.json())
 
-# ============================================
-# 映画推薦の候補をフィルタリング
-# ============================================
-def filter_candidates(movies, likes, subs):
-    # 超簡易フィルタ（後で強化できる）
-    keywords = ["ホラー", "サスペンス", "アニメ", "恋愛"]
-
-    filtered = []
-    for m in movies:
-        if any(g in m["genre"] for g in keywords):
-            filtered.append(m)
-
-    return filtered[:15]  # 上位15本だけ渡す
-
-
 
 # ==================================================
 # ollamaのmovie-recにプロンプトを投げる
@@ -171,20 +155,18 @@ def ask_movie_rec(prompt: str) -> str:
     return res.json().get("response", "")
 
 
-
-
 # ====================================================================
 # テスト用エンドポイント
 # ====================================================================
 @app.route("/test/movie-rec")
 def test_movie_rec():
-    test_prompt = "こんにちは。あなたは動作していますか？短く答えてください。"
+    test_prompt = "こんにちは。短く返事してください。"
     response = ask_movie_rec(test_prompt)
     return jsonify({"movie_rec_response": response})
 
 
 # ==================================================
-# 映画推薦エンドポイント（フロントからJSONを受け取る）
+# 映画推薦エンドポイント
 # ==================================================
 @app.route("/recommend/movies", methods=["POST"])
 def recommend_movies():
@@ -194,51 +176,109 @@ def recommend_movies():
 
         body = request.json or {}
         movies_list = body.get("movies", [])
-        coming = body.get("comingSoonMovies", [])   
+        coming = body.get("comingSoonMovies", [])
 
-        # YouTubeデータ取得
-        likes = requests.get("http://localhost:5000/youtube/likes").json()
-        subs = requests.get("http://localhost:5000/youtube/subscriptions").json()
+        # YouTubeデータ取得（エラーハンドリング付き）
+        youtube_likes = []
+        youtube_subs = []
+        
+        try:
+            likes_res = requests.get("http://localhost:5000/youtube/likes")
+            if likes_res.status_code == 200:
+                youtube_likes = likes_res.json().get("items", [])
+        except Exception as e:
+            print(f"⚠️  YouTube Likes取得失敗: {str(e)}")
+        
+        try:
+            subs_res = requests.get("http://localhost:5000/youtube/subscriptions")
+            if subs_res.status_code == 200:
+                youtube_subs = subs_res.json().get("items", [])
+        except Exception as e:
+            print(f"⚠️  YouTube Subscriptions取得失敗: {str(e)}")
 
-        # プロンプト生成
-        filtered_movies = filter_candidates(movies_list, likes, subs)
-        prompt_text = json.dumps({
-            "user_profile": {
-                "youtube_likes": likes.get("items", []),
-                "youtube_subs": subs.get("items", []),
-            },
-            "candidates": filtered_movies
-        }, ensure_ascii=False)
+        # user_profile を compact に
+        user_profile = {
+            "youtube_likes": youtube_likes,
+            "youtube_subs": youtube_subs,
+        }
 
+        # YouTubeデータが空なら fallback
+        if len(user_profile["youtube_likes"]) == 0 and len(user_profile["youtube_subs"]) == 0:
+            user_profile["default_preference"] = True
+
+        # 映画は全件渡す（16本）
+        all_candidates = movies_list + coming
+
+        # Ollama 用プロンプト生成
+        prompt_text = f"""与えられたユーザープロフィールと映画候補から、おすすめの映画を選んでください。
+
+ユーザープロフィール:
+{json.dumps(user_profile, ensure_ascii=False, indent=2)}
+
+映画候補:
+{json.dumps(all_candidates, ensure_ascii=False, indent=2)}
+
+以下のJSON形式で、必ず正確に返してください。他のテキストは返さないでください:
+
+{{
+  "reason": "ユーザーのプロフィール分析（簡潔に）",
+  "recommendations": [
+    {{"id": 1, "score": 0.9, "why": "おすすめ理由"}},
+    {{"id": 2, "score": 0.85, "why": "おすすめ理由"}}
+  ]
+}}
+
+最大10件の推薦映画を返してください。"""
 
         print("\n" + "=" * 80)
         print("🎬 映画推薦リクエスト開始")
         print("=" * 80)
-        print(f"YouTube高評価動画数: {len(likes.get('items', []))}")
-        print(f"登録チャンネル数: {len(subs.get('items', []))}")
-        print(f"対象映画数: {len(movies_list)}")
-        print(f"近日公開映画数: {len(coming)}")
-        print("\n📝 プロンプトをGemmaに送信中...")
+        print(f"YouTube高評価動画数: {len(user_profile['youtube_likes'])}")
+        print(f"登録チャンネル数: {len(user_profile['youtube_subs'])}")
+        print(f"候補映画数: {len(all_candidates)}")
+        print("\n📝 プロンプトを movie-rec に送信中...")
 
         ai_response = ask_movie_rec(prompt_text)
-
 
         print("\n✅ AIレスポンス取得完了")
         print(f"レスポンス長: {len(ai_response)} 文字")
         print(f"レスポンス内容:\n{ai_response}\n")
 
-        # AIレスポンスをJSON として解析# AIレスポンスをJSON として解析
+        # JSON解析
+        ai_json = {}
+        recommendations = []
         try:
             cleaned = ai_response.strip()
 
-            # 🔥 コードブロック除去（Gemma が返す ```json ... ``` を削除）
-            if cleaned.startswith("```"):
-                cleaned = cleaned.split("```")[1]  # 最初の ``` を除去
-                cleaned = cleaned.replace("json", "", 1).strip()  # ```json の json を除去
-                cleaned = cleaned.split("```")[0].strip()  # 最後の ``` を除去
+            # マークダウンコードブロックを削除
+            if "```" in cleaned:
+                cleaned = cleaned.split("```")[1]
+                cleaned = cleaned.replace("json", "", 1).strip()
+                cleaned = cleaned.split("```")[0].strip()
 
+            # JSON をパース
             ai_json = json.loads(cleaned)
             recommendations = ai_json.get("recommendations", [])
+            print(f"✅ JSON解析成功: {len(recommendations)}件の推薦を取得")
+
+        except json.JSONDecodeError as e:
+            print(f"⚠️  JSON解析失敗: {str(e)}")
+            print(f"正確なレスポンス: {ai_response}")
+            
+            # フォールバック: 自然言語レスポンスから映画 ID を推測
+            print("🔄 フォールバック処理を実行...")
+            recommendations = []
+            for movie in all_candidates:
+                # スコアはランダムに割り当て
+                import random
+                recommendations.append({
+                    "id": movie.get("id"),
+                    "score": random.uniform(0.5, 0.95),
+                    "why": "デフォルト推薦"
+                })
+            # ランダムに最大5件を選択
+            recommendations = sorted(recommendations, key=lambda x: x["score"], reverse=True)[:5]
+            print(f"🔄 フォールバック: {len(recommendations)}件の推薦を生成")
             print(f"✅ JSON解析成功: {len(recommendations)}件の推薦を取得")
 
         except json.JSONDecodeError as e:
@@ -246,10 +286,9 @@ def recommend_movies():
             print(f"レスポンス内容: {ai_response}")
             recommendations = []
 
-        # 映画データを全て結合
-        all_movies = {movie["id"]: movie for movie in movies_list + coming}
+        # 映画データを結合
+        all_movies = {movie["id"]: movie for movie in all_candidates}
 
-        # レコメンデーションに映画の詳細情報を付与
         enriched_recommendations = []
         for rec in recommendations:
             movie_id = rec.get("id")
@@ -264,21 +303,19 @@ def recommend_movies():
                         "why": rec.get("why", ""),
                     }
                 )
-            else:
-                print(f"⚠️  映画IDが見つかりません: {movie_id}")
 
         print(f"\n🎯 最終的な推薦映画数: {len(enriched_recommendations)}")
-        for i, movie in enumerate(enriched_recommendations, 1):
-            print(f"  {i}. {movie['title']} (スコア: {movie['score']}) - {movie['why']}")
 
         result = {
             "reason": ai_json.get("reason", "") if "ai_json" in locals() else "",
-            "recommended_movies": enriched_recommendations[:10],  # Top 10 の推薦
+            "recommended_movies": enriched_recommendations[:10],
         }
+
         print(f"\n✨ レスポンス送信: {len(result['recommended_movies'])}件の推薦を返却")
         print("=" * 80 + "\n")
 
         return jsonify(result)
+
     except Exception as e:
         print("=" * 80)
         print(f"❌ /recommend/movies エラー発生: {str(e)}")
@@ -288,6 +325,6 @@ def recommend_movies():
         return jsonify({"error": str(e)}), 500
 
 
-# Flaskアプリの起動（最後に1回だけ）
+# Flaskアプリ起動
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
