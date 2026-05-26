@@ -302,6 +302,7 @@ export const mockSchedules: Record<string, ScheduleDay[]> = {
       slots: [
         { screen: "大スクリーン1", times: ["10:00", "13:30", "17:00", "20:30"] },
         { screen: "中スクリーン1", times: ["11:30", "15:00", "18:30"] },
+        { screen: "小スクリーン1", times: ["12:00", "16:00", "19:30"] },
       ],
     },
     {
@@ -309,6 +310,7 @@ export const mockSchedules: Record<string, ScheduleDay[]> = {
       slots: [
         { screen: "大スクリーン1", times: ["10:00", "13:30", "17:00", "20:30"] },
         { screen: "中スクリーン1", times: ["11:30", "15:00"] },
+        { screen: "小スクリーン1", times: ["12:30", "16:30", "20:00"] },
       ],
     },
     {
@@ -316,6 +318,7 @@ export const mockSchedules: Record<string, ScheduleDay[]> = {
       slots: [
         { screen: "大スクリーン1", times: ["10:00", "13:30", "17:00"] },
         { screen: "中スクリーン1", times: ["11:30", "15:00", "18:30", "21:00"] },
+        { screen: "小スクリーン1", times: ["12:00", "16:00"] },
       ],
     },
     {
@@ -323,6 +326,7 @@ export const mockSchedules: Record<string, ScheduleDay[]> = {
       slots: [
         { screen: "大スクリーン1", times: ["10:00", "13:30", "17:00", "20:30"] },
         { screen: "中スクリーン1", times: ["12:00", "15:30"] },
+        { screen: "小スクリーン1", times: ["11:00", "14:30", "18:00"] },
       ],
     },
     {
@@ -330,6 +334,7 @@ export const mockSchedules: Record<string, ScheduleDay[]> = {
       slots: [
         { screen: "大スクリーン1", times: ["10:00", "13:30", "17:00", "20:30"] },
         { screen: "中スクリーン1", times: ["11:30", "15:00", "18:30"] },
+        { screen: "小スクリーン1", times: ["12:00", "16:00", "19:30"] },
       ],
     },
     {
@@ -337,6 +342,7 @@ export const mockSchedules: Record<string, ScheduleDay[]> = {
       slots: [
         { screen: "大スクリーン1", times: ["10:00", "13:30"] },
         { screen: "中スクリーン1", times: ["11:30", "15:00", "18:30", "21:00"] },
+        { screen: "小スクリーン1", times: ["12:30", "17:00"] },
       ],
     },
   ],
