@@ -141,30 +141,46 @@ def youtube_subscriptions():
     res = requests.get(url, params=params, headers=headers)
     return jsonify(res.json())
 
+# ============================================
+# 映画推薦の候補をフィルタリング
+# ============================================
+def filter_candidates(movies, likes, subs):
+    # 超簡易フィルタ（後で強化できる）
+    keywords = ["ホラー", "サスペンス", "アニメ", "恋愛"]
+
+    filtered = []
+    for m in movies:
+        if any(g in m["genre"] for g in keywords):
+            filtered.append(m)
+
+    return filtered[:15]  # 上位15本だけ渡す
+
+
 
 # ==================================================
-# ollamaのgemmaにプロンプトを投げる
+# ollamaのmovie-recにプロンプトを投げる
 # ==================================================
-def ask_gemma(prompt: str) -> str:
+def ask_movie_rec(prompt: str) -> str:
     url = "http://localhost:11434/api/generate"
     payload = {
-        "model": "gemma3:4b",
+        "model": "movie-rec",
         "prompt": prompt,
         "stream": False,
     }
     res = requests.post(url, json=payload)
-    print("Gemma raw response:", res.json())
     return res.json().get("response", "")
+
+
 
 
 # ====================================================================
 # テスト用エンドポイント
 # ====================================================================
-@app.route("/test/gemma")
-def test_gemma():
+@app.route("/test/movie-rec")
+def test_movie_rec():
     test_prompt = "こんにちは。あなたは動作していますか？短く答えてください。"
-    response = ask_gemma(test_prompt)
-    return jsonify({"gemma_response": response})
+    response = ask_movie_rec(test_prompt)
+    return jsonify({"movie_rec_response": response})
 
 
 # ==================================================
@@ -178,46 +194,22 @@ def recommend_movies():
 
         body = request.json or {}
         movies_list = body.get("movies", [])
-        coming = body.get("comingSoonMovies", [])
+        coming = body.get("comingSoonMovies", [])   
 
         # YouTubeデータ取得
         likes = requests.get("http://localhost:5000/youtube/likes").json()
         subs = requests.get("http://localhost:5000/youtube/subscriptions").json()
 
         # プロンプト生成
-        prompt_text = f"""
-あなたは映画推薦AIです。
+        filtered_movies = filter_candidates(movies_list, likes, subs)
+        prompt_text = json.dumps({
+            "user_profile": {
+                "youtube_likes": likes.get("items", []),
+                "youtube_subs": subs.get("items", []),
+            },
+            "candidates": filtered_movies
+        }, ensure_ascii=False)
 
-【ユーザーのYouTubeデータ】
-高評価動画:
-{json.dumps(likes, ensure_ascii=False)}
-
-登録チャンネル:
-{json.dumps(subs, ensure_ascii=False)}
-
-【映画館の上映作品】
-{json.dumps(movies_list, ensure_ascii=False)}
-
-【近日公開作品】
-{json.dumps(coming, ensure_ascii=False)}
-
-上記の情報からユーザーの嗜好を推定し、
-映画館のラインナップの中から最適な映画を推薦してください。
-
-出力形式は以下のJSON：
-
-{{
-  "reason": "ユーザーの好みの分析",
-  "recommendations": [
-    {{
-      "id": "映画ID",
-      "title": "映画タイトル",
-      "score": 数値,
-      "why": "選んだ理由"
-    }}
-  ]
-}}
-"""
 
         print("\n" + "=" * 80)
         print("🎬 映画推薦リクエスト開始")
@@ -228,7 +220,8 @@ def recommend_movies():
         print(f"近日公開映画数: {len(coming)}")
         print("\n📝 プロンプトをGemmaに送信中...")
 
-        ai_response = ask_gemma(prompt_text)
+        ai_response = ask_movie_rec(prompt_text)
+
 
         print("\n✅ AIレスポンス取得完了")
         print(f"レスポンス長: {len(ai_response)} 文字")

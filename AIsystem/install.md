@@ -47,12 +47,11 @@ http://localhost:5000/login
 現在は私のgoogleアカウントのみが入れます。他入りたい方いればgmailのアドレスと共に申請してください
 
 
-
-## 今後の予定
-- FastAPIを使用してREST APIを構築し、フロントエンドと連携させる。
-
-
-
-## wakameKメモ
-複数のpythonファイルが競合しているため、main.pyを起動する際は以下のコマンドを使用してください。
-C:\Users\black\AppData\Local\Programs\Python\Python312\python.exe main.py
+modelfileからmovie-recをcreateする
+```terminal
+ollama create movie-rec -f Modelfile
+```
+映画推薦用に加工したのでこれを使用する
+```terminal
+ollama run movie-rec
+```
