@@ -14,6 +14,7 @@ export default function MovieDetailPage() {
   const schedules = mockSchedules[params.id as string] || mockSchedules["1"];
   const [selectedDate, setSelectedDate] = useState(schedules[0]?.date ?? "");
   const [selectedTheater, setSelectedTheater] = useState(theaters[0]);
+  const [selectedScreen, setSelectedScreen] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
   if (!movie) {
@@ -28,6 +29,7 @@ export default function MovieDetailPage() {
   }
 
   const selectedSchedule = schedules.find((s) => s.date === selectedDate);
+  const selectedSlot = selectedSchedule?.slots.find((s) => s.screen === selectedScreen);
 
   return (
     <div className="min-h-screen bg-[#0f0f0f]">
@@ -129,7 +131,7 @@ export default function MovieDetailPage() {
             {schedules.map((s) => (
               <button
                 key={s.date}
-                onClick={() => { setSelectedDate(s.date); setSelectedTime(null); }}
+                onClick={() => { setSelectedDate(s.date); setSelectedScreen(null); setSelectedTime(null); }}
                 className={`flex-shrink-0 px-5 py-3 rounded text-base transition-colors border ${
                   s.date === selectedDate
                     ? "border-white text-white"
@@ -141,50 +143,64 @@ export default function MovieDetailPage() {
             ))}
           </div>
 
-          {/* Slots + booking panel */}
+          {/* Screen selection */}
           {selectedSchedule && (
-            <div className="flex gap-6">
-              <div className="flex-1">
+            <div className="mb-4">
+              <div className="text-sm text-gray-500 mb-2">スクリーン</div>
+              <div className="flex gap-2 flex-wrap">
                 {selectedSchedule.slots.map((slot) => (
-                  <div key={slot.screen} className="mb-4">
-                    <div className="text-sm text-gray-500 mb-2">{slot.screen}</div>
-                    <div className="flex flex-wrap gap-2">
-                      {slot.times.map((time) => (
-                        <button
-                          key={time}
-                          onClick={() => setSelectedTime(time)}
-                          className={`px-5 py-3 rounded text-base transition-colors border ${
-                            selectedTime === time
-                              ? "border-white text-white bg-[#2a2a2a]"
-                              : "border-[#555] text-gray-400 hover:border-white hover:text-white"
-                          }`}
-                        >
-                          {time}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  <button
+                    key={slot.screen}
+                    onClick={() => { setSelectedScreen(slot.screen); setSelectedTime(null); }}
+                    className={`px-4 py-2 rounded text-sm border transition-colors ${
+                      selectedScreen === slot.screen
+                        ? "border-white text-white bg-[#2a2a2a]"
+                        : "border-[#555] text-gray-400 hover:border-white hover:text-white"
+                    }`}
+                  >
+                    {slot.screen}
+                  </button>
                 ))}
               </div>
+            </div>
+          )}
 
-              {/* Booking summary panel */}
-              {selectedTime && (
-                <div className="w-48 flex-shrink-0 border border-[#333] rounded p-3 bg-[#1a1a1a] text-sm self-start">
-                  <div className="text-gray-400 mb-2">選択内容</div>
-                  <div className="text-gray-300 mb-1">作品：{movie.title}</div>
-                  <div className="text-gray-300 mb-1">日時：{selectedDate} {selectedTime}</div>
-                  <div className="text-gray-300 mb-1">劇場：{selectedTheater}</div>
-                  <div className="text-gray-300 mb-3">
-                    SCREEN：{selectedSchedule.slots.find(s => s.times.includes(selectedTime))?.screen}
-                  </div>
-                  <Link
-                    href={`/tickets?movieId=${params.id}&date=${encodeURIComponent(selectedDate)}&time=${encodeURIComponent(selectedTime ?? "")}&screen=${encodeURIComponent(selectedSchedule?.slots.find(s => s.times.includes(selectedTime ?? ""))?.screen ?? "")}`}
-                    className="block text-center bg-white text-black py-3 rounded font-medium hover:bg-gray-200 transition-colors"
+          {/* Time selection */}
+          {selectedSlot && (
+            <div className="mb-4">
+              <div className="text-sm text-gray-500 mb-2">時間</div>
+              <div className="flex gap-2 flex-wrap">
+                {selectedSlot.times.map((time) => (
+                  <button
+                    key={time}
+                    onClick={() => setSelectedTime(time)}
+                    className={`px-5 py-3 rounded text-base border transition-colors ${
+                      selectedTime === time
+                        ? "border-white text-white bg-[#2a2a2a]"
+                        : "border-[#555] text-gray-400 hover:border-white hover:text-white"
+                    }`}
                   >
-                    席を選択する
-                  </Link>
-                </div>
-              )}
+                    {time}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Booking summary panel */}
+          {selectedTime && selectedScreen && (
+            <div className="w-48 border border-[#333] rounded p-3 bg-[#1a1a1a] text-sm">
+              <div className="text-gray-400 mb-2">選択内容</div>
+              <div className="text-gray-300 mb-1">作品：{movie.title}</div>
+              <div className="text-gray-300 mb-1">日時：{selectedDate} {selectedTime}</div>
+              <div className="text-gray-300 mb-1">劇場：{selectedTheater}</div>
+              <div className="text-gray-300 mb-3">SCREEN：{selectedScreen}</div>
+              <Link
+                href={`/tickets?movieId=${params.id}&date=${encodeURIComponent(selectedDate)}&time=${encodeURIComponent(selectedTime)}&screen=${encodeURIComponent(selectedScreen)}`}
+                className="block text-center bg-white text-black py-3 rounded font-medium hover:bg-gray-200 transition-colors"
+              >
+                席を選択する
+              </Link>
             </div>
           )}
         </div>
