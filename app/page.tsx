@@ -68,7 +68,7 @@ export default function HomePage() {
           hasRecs が false のとき: 全映画の先頭10本を「映画ランキング」として表示 */}
       <div className="max-w-6xl mx-auto px-4 py-4">
         <div className="border border-[#333] rounded overflow-hidden">
-          <div className="px-4 py-2 section-title bg-[#1a1a1a] border-b border-[#333]">
+          <div className="px-4 py-2 section-title bg-[#1a1a1a] border-b border-[#333] text-base">
             {hasRecs ? "あなたにオススメの映画" : "映画ランキング"}
           </div>
 
@@ -81,7 +81,7 @@ export default function HomePage() {
                 return (
                   <div key={movie.id} className="flex flex-col items-center gap-1 group relative">
                     {/* 順位番号 */}
-                    <div className="text-xs font-bold text-gray-600">{i + 1}</div>
+                    <div className="text-sm font-bold text-gray-600">{i + 1}</div>
                     <Link href={`/movies/${movie.id}`} className="w-full block transition-[transform,opacity] duration-200 hover:scale-[1.03] hover:opacity-90">
                       <div className="w-full rounded overflow-hidden relative" style={{ aspectRatio: "2/3" }}>
                         {movie.poster ? (
@@ -97,7 +97,7 @@ export default function HomePage() {
                         )}
                       </div>
                     </Link>
-                    <div className="text-[9px] text-gray-500 text-center truncate w-full ">
+                    <div className="text-xs text-gray-600 text-center truncate w-full">
                       {movie.title}
                     </div>
                     {/* ホバー時に表示するAI推薦理由ツールチップ */}
