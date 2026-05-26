@@ -22,6 +22,11 @@ export default function RootLayout({
       {/* bg-[#0f0f0f] をbodyに当てることで全ページ共通のダークテーマ背景を確保 */}
       <body className="min-h-full flex flex-col bg-[#0f0f0f] text-white">
         {children}
+        <footer className="border-t border-[#2a2a2a] bg-[#0f0f0f] py-4 mt-auto">
+          <p className="text-center text-xs text-gray-600">
+            &copy; {new Date().getFullYear()} HAL CINEMA. All rights reserved.
+          </p>
+        </footer>
       </body>
     </html>
   );
