@@ -335,6 +335,7 @@ function TicketsContent() {
             </div>
             <div className="text-center text-sm text-gray-400 mb-4">{selectedScreen}</div>
 
+            <div className="flex flex-col items-center">
             {/* Top rows */}
             <div className="mb-1">
               <div className="flex items-center mb-1">
@@ -422,6 +423,7 @@ function TicketsContent() {
                 )}
               </div>
             </div>
+            </div> {/* end flex flex-col items-center */}
 
             {/* Seat count + selected chips */}
             <div className="flex items-center gap-4 mt-4 border-t border-[#333] pt-3">
