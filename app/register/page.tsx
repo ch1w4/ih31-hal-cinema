@@ -1,7 +1,15 @@
-﻿import Header from "@/components/Header";
+﻿"use client";
+import Header from "@/components/Header";
 import Link from "next/link";
 
+
+
+
 export default function RegisterPage() {
+  const handleGoogleLogin = () =>{
+    window.location.href = "http://localhost:5000/login";
+  };
+
   return (
     <div className="min-h-screen bg-[#0f0f0f]">
       <Header />
@@ -50,7 +58,10 @@ export default function RegisterPage() {
           </div>
 
           <div className="space-y-3">
-            <button className="w-full bg-[#f0f0f0] text-black py-4 rounded text-base font-medium hover:bg-white transition-colors flex items-center justify-center gap-2">
+            <button
+              onClick={handleGoogleLogin}
+              className="w-full bg-[#f0f0f0] text-black py-4 rounded text-base font-medium hover:bg-white transition-colors flex items-center justify-center gap-2"
+            >
               <span className="text-base">G</span>
               Googleアカウント
             </button>
