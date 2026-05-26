@@ -3,6 +3,7 @@
 // カテゴリフィルターボタンはUI表示のみ（現在はクリックしても絞り込まれない）
 
 import Link from "next/link";
+import Image from "next/image";
 import Header from "@/components/Header";
 import { campaigns } from "@/lib/mockData";
 
@@ -46,19 +47,15 @@ export default function CampaignPage() {
               className="block border border-[#333] rounded-lg overflow-hidden bg-[#1a1a1a] hover:border-[#555] transition-colors"
             >
               <div className="flex gap-4 p-4">
-                {/* タイトル冒頭8文字を表示する色付きアクセントバー（ポスター代わり） */}
-                <div
-                  className="flex-shrink-0 rounded flex items-center justify-center"
-                  style={{
-                    width: "120px",
-                    height: "80px",
-                    background: `linear-gradient(135deg, ${campaign.accentColor}cc, ${campaign.accentColor}44)`,
-                    borderLeft: `3px solid ${campaign.accentColor}`,
-                  }}
-                >
-                  <span className="text-[10px] text-white text-center px-2 leading-tight font-medium">
-                    {campaign.title.slice(0, 8)}
-                  </span>
+                {/* キャンペーン画像サムネイル */}
+                <div className="relative flex-shrink-0 w-[150px] h-16 rounded overflow-hidden bg-[#0f0f0f] border border-[#2a2a2a]">
+                  <Image
+                    src={campaign.imageSrc}
+                    alt={campaign.title}
+                    fill
+                    sizes="150px"
+                    className="object-contain"
+                  />
                 </div>
 
                 {/* キャンペーン本文情報 */}

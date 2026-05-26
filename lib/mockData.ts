@@ -357,6 +357,7 @@ export type Campaign = {
   period: string;
   category: "キャンペーン" | "割引情報" | "会員情報" | "お知らせ";
   accentColor: string;
+  imageSrc: string;
 };
 
 export const campaigns: Campaign[] = [
@@ -387,6 +388,7 @@ export const campaigns: Campaign[] = [
     period: "3.3(金)〜5.14(日)",
     category: "キャンペーン",
     accentColor: "#c0392b",
+    imageSrc: "/images/hero/わくわく.png",
   },
   {
     id: "2",
@@ -416,6 +418,7 @@ export const campaigns: Campaign[] = [
     period: "随時受付中",
     category: "会員情報",
     accentColor: "#2980b9",
+    imageSrc: "/images/hero/HAL友.png",
   },
   {
     id: "3",
@@ -438,6 +441,7 @@ export const campaigns: Campaign[] = [
     period: "毎週水曜日",
     category: "割引情報",
     accentColor: "#8e44ad",
+    imageSrc: "/images/hero/レディース.png",
   },
   {
     id: "4",
@@ -463,6 +467,7 @@ export const campaigns: Campaign[] = [
     period: "毎日",
     category: "割引情報",
     accentColor: "#27ae60",
+    imageSrc: "/images/hero/シニア.png",
   },
   {
     id: "5",
@@ -493,6 +498,7 @@ export const campaigns: Campaign[] = [
     period: "毎日",
     category: "割引情報",
     accentColor: "#e67e22",
+    imageSrc: "/images/hero/学生.png",
   },
   {
     id: "6",
@@ -526,5 +532,6 @@ export const campaigns: Campaign[] = [
     period: "2024年1月オープン",
     category: "お知らせ",
     accentColor: "#1a6ea8",
+    imageSrc: "/images/hero/4dx.png",
   },
 ];
