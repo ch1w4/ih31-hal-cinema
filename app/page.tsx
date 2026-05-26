@@ -27,8 +27,8 @@ export default function HomePage() {
     setLoading(false);
   }, []);
 
+  const hasRecs = recommendedMovies.length > 0 && !loading;
   const nowShowingMovies = movies.slice(0, 8);
-  const top3 = [movies[1], movies[0], movies[2]];
 
   return (
     <div className="min-h-screen bg-[#0f0f0f]">
@@ -54,12 +54,12 @@ export default function HomePage() {
       <div className="max-w-6xl mx-auto px-4 py-4">
         <div className="border border-[#333] rounded overflow-hidden">
           <div className="px-4 py-2 section-title bg-[#1a1a1a] border-b border-[#333]">
-            {recommendedMovies.length > 0 && !loading ? "あなたにオススメの映画" : "映画ランキング"}
+            {hasRecs ? "あなたにオススメの映画" : "映画ランキング"}
           </div>
 
           <div className="placeholder-box" style={{ overflow: "visible" }}>
             <div className="p-6 grid grid-cols-5 gap-3 relative">
-              {(recommendedMovies.length > 0 && !loading ? recommendedMovies.slice(0, 10) : movies.slice(0, 10)).map((movie, i) => {
+              {(hasRecs ? recommendedMovies.slice(0, 10) : movies.slice(0, 10)).map((movie, i) => {
                 const rec = movie as any;
                 return (
                   <div key={movie.id} className="flex flex-col items-center gap-1 group relative">
