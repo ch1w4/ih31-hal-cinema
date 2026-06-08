@@ -110,7 +110,7 @@ export default function Header() {
                 className={`nav-item text-center ${isActive ? "active" : ""}`}
               >
                 {/* 英語ラベル（小さいサブテキスト）*/}
-                <span className="nav-label-en" style={{ fontSize: "9px" }}>
+                <span className="nav-label-en" style={{ fontSize: "14px" }}>
                   {item.labelEn}
                 </span>
                 {/* 日本語ラベル（メインテキスト）*/}
