@@ -143,28 +143,26 @@ def youtube_subscriptions():
 
 
 # ==================================================
-# ollamaのgemmaにプロンプトを投げる
+# Colab の ngrok URL（Colab 起動後に /set-colab-url で更新する）
 # ==================================================
-def ask_gemma(prompt: str) -> str:
-    url = "http://localhost:11434/api/generate"
-    payload = {
-        "model": "gemma3:4b",
-        "prompt": prompt,
-        "stream": False,
-    }
-    res = requests.post(url, json=payload)
-    print("Gemma raw response:", res.json())
-    return res.json().get("response", "")
+COLAB_URL = ""
 
 
-# ====================================================================
-# テスト用エンドポイント
-# ====================================================================
-@app.route("/test/gemma")
-def test_gemma():
-    test_prompt = "こんにちは。あなたは動作していますか？短く答えてください。"
-    response = ask_gemma(test_prompt)
-    return jsonify({"gemma_response": response})
+@app.route("/set-colab-url", methods=["POST"])
+def set_colab_url():
+    global COLAB_URL
+    body = request.json or {}
+    url = body.get("url", "").rstrip("/")
+    if not url:
+        return jsonify({"error": "url が空です"}), 400
+    COLAB_URL = url
+    print(f"[colab] URL を更新: {COLAB_URL}")
+    return jsonify({"message": f"Colab URL を設定しました: {COLAB_URL}"})
+
+
+@app.route("/colab-url", methods=["GET"])
+def get_colab_url():
+    return jsonify({"url": COLAB_URL or None})
 
 
 # ==================================================
@@ -176,120 +174,84 @@ def recommend_movies():
         if "access_token" not in session:
             return jsonify({"error": "Not authenticated"}), 401
 
+        if not COLAB_URL:
+            return jsonify({"error": "Colab が起動していません。Colab を実行してから /set-colab-url で URL を登録してください。"}), 503
+
         body = request.json or {}
         movies_list = body.get("movies", [])
         coming = body.get("comingSoonMovies", [])
 
-        # YouTubeデータ取得
-        likes = requests.get("http://localhost:5000/youtube/likes").json()
-        subs = requests.get("http://localhost:5000/youtube/subscriptions").json()
-
-        # プロンプト生成
-        prompt_text = f"""
-あなたは映画推薦AIです。
-
-【ユーザーのYouTubeデータ】
-高評価動画:
-{json.dumps(likes, ensure_ascii=False)}
-
-登録チャンネル:
-{json.dumps(subs, ensure_ascii=False)}
-
-【映画館の上映作品】
-{json.dumps(movies_list, ensure_ascii=False)}
-
-【近日公開作品】
-{json.dumps(coming, ensure_ascii=False)}
-
-上記の情報からユーザーの嗜好を推定し、
-映画館のラインナップの中から最適な映画を推薦してください。
-
-出力形式は以下のJSON：
-
-{{
-  "reason": "ユーザーの好みの分析",
-  "recommendations": [
-    {{
-      "id": "映画ID",
-      "title": "映画タイトル",
-      "score": 数値,
-      "why": "選んだ理由"
-    }}
-  ]
-}}
-"""
-
-        print("\n" + "=" * 80)
-        print("🎬 映画推薦リクエスト開始")
-        print("=" * 80)
-        print(f"YouTube高評価動画数: {len(likes.get('items', []))}")
-        print(f"登録チャンネル数: {len(subs.get('items', []))}")
-        print(f"対象映画数: {len(movies_list)}")
-        print(f"近日公開映画数: {len(coming)}")
-        print("\n📝 プロンプトをGemmaに送信中...")
-
-        ai_response = ask_gemma(prompt_text)
-
-        print("\n✅ AIレスポンス取得完了")
-        print(f"レスポンス長: {len(ai_response)} 文字")
-        print(f"レスポンス内容:\n{ai_response}\n")
-
-        # AIレスポンスをJSON として解析# AIレスポンスをJSON として解析
+        # YouTubeデータを直接 Google API から取得
+        access_token = session["access_token"]
+        headers = {"Authorization": f"Bearer {access_token}"}
         try:
-            cleaned = ai_response.strip()
+            likes = requests.get(
+                "https://www.googleapis.com/youtube/v3/videos",
+                params={"part": "snippet", "myRating": "like", "maxResults": 50},
+                headers=headers, timeout=5
+            ).json()
+        except Exception:
+            likes = {"items": []}
+        try:
+            subs = requests.get(
+                "https://www.googleapis.com/youtube/v3/subscriptions",
+                params={"part": "snippet", "mine": "true", "maxResults": 50},
+                headers=headers, timeout=5
+            ).json()
+        except Exception:
+            subs = {"items": []}
 
-            # 🔥 コードブロック除去（Gemma が返す ```json ... ``` を削除）
-            if cleaned.startswith("```"):
-                cleaned = cleaned.split("```")[1]  # 最初の ``` を除去
-                cleaned = cleaned.replace("json", "", 1).strip()  # ```json の json を除去
-                cleaned = cleaned.split("```")[0].strip()  # 最後の ``` を除去
-
-            ai_json = json.loads(cleaned)
-            recommendations = ai_json.get("recommendations", [])
-            print(f"✅ JSON解析成功: {len(recommendations)}件の推薦を取得")
-
-        except json.JSONDecodeError as e:
-            print(f"❌ JSON解析失敗: {str(e)}")
-            print(f"レスポンス内容: {ai_response}")
-            recommendations = []
-
-        # 映画データを全て結合
-        all_movies = {movie["id"]: movie for movie in movies_list + coming}
-
-        # レコメンデーションに映画の詳細情報を付与
-        enriched_recommendations = []
-        for rec in recommendations:
-            movie_id = rec.get("id")
-            if movie_id in all_movies:
-                movie_data = all_movies[movie_id]
-                enriched_recommendations.append(
-                    {
-                        "id": movie_data.get("id"),
-                        "title": movie_data.get("title"),
-                        "posterColor": movie_data.get("posterColor", "#666"),
-                        "score": rec.get("score", 0),
-                        "why": rec.get("why", ""),
-                    }
-                )
-            else:
-                print(f"⚠️  映画IDが見つかりません: {movie_id}")
-
-        print(f"\n🎯 最終的な推薦映画数: {len(enriched_recommendations)}")
-        for i, movie in enumerate(enriched_recommendations, 1):
-            print(f"  {i}. {movie['title']} (スコア: {movie['score']}) - {movie['why']}")
-
-        result = {
-            "reason": ai_json.get("reason", "") if "ai_json" in locals() else "",
-            "recommended_movies": enriched_recommendations[:10],  # Top 10 の推薦
+        # Colab に渡す user_history
+        user_history = {
+            "liked_videos": [v.get("snippet", {}).get("title", "") for v in likes.get("items", [])][:20],
+            "subscriptions": [v.get("snippet", {}).get("title", "") for v in subs.get("items", [])][:20],
         }
-        print(f"\n✨ レスポンス送信: {len(result['recommended_movies'])}件の推薦を返却")
-        print("=" * 80 + "\n")
 
-        return jsonify(result)
+        # 候補映画リスト（最大15本）
+        all_movies = {m["id"]: m for m in movies_list + coming}
+        movie_list = [
+            {"id": m["id"], "title": m.get("title", ""), "genre": m.get("genre", [])}
+            for m in (movies_list + coming)[:15]
+        ]
+
+        print(f"[colab] 推薦リクエスト送信 - 候補: {len(movie_list)}本")
+
+        # Colab の /recommend を呼ぶ
+        colab_res = requests.post(
+            f"{COLAB_URL}/recommend",
+            json={"user_history": user_history, "movie_list": movie_list},
+            timeout=180
+        )
+        colab_json = colab_res.json()
+        print(f"[colab] レスポンス: {colab_json}")
+
+        if "error" in colab_json:
+            return jsonify({"error": colab_json["error"]}), 500
+
+        rec_id = str(colab_json.get("recommended_movie_id", ""))
+        reason = colab_json.get("reason", "")
+
+        # 推薦された映画の詳細情報を付与
+        recommended = []
+        if rec_id in all_movies:
+            m = all_movies[rec_id]
+            recommended.append({
+                "id": m.get("id"),
+                "title": m.get("title"),
+                "posterColor": m.get("posterColor", "#666"),
+                "poster": m.get("poster", ""),
+                "score": 1.0,
+                "why": reason,
+            })
+
+        return jsonify({
+            "reason": reason,
+            "recommended_movies": recommended,
+        })
+
+    except requests.exceptions.Timeout:
+        return jsonify({"error": "Colab への接続がタイムアウトしました（180秒）"}), 504
     except Exception as e:
-        print("=" * 80)
-        print(f"❌ /recommend/movies エラー発生: {str(e)}")
-        print("=" * 80)
         import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500

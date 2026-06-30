@@ -17,17 +17,22 @@ import { movies, Movie } from "@/lib/mockData";
 export default function HomePage() {
   const [recommendedMovies, setRecommendedMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     // localStorage の recommendedMovies は /auth/success でGoogle OAuth後にAIが生成したリスト
     // 各要素は { id, score, why } 形式なので、id をキーに movies 配列から Movie オブジェクトへ変換する
     try {
+      setIsLoggedIn(!!localStorage.getItem("userInfo"));
       const stored = localStorage.getItem("recommendedMovies");
       if (stored) {
         const raw = JSON.parse(stored);
-        const converted: Movie[] = raw
-          .map((item: any) => movies.find((m) => m.id === item.id) || null)
-          .filter(Boolean);
+        const converted = raw
+          .map((item: any) => {
+            const movie = movies.find((m) => m.id === item.id);
+            return movie ? { ...movie, score: item.score, why: item.why } : null;
+          })
+          .filter(Boolean) as Movie[];
         setRecommendedMovies(converted);
       }
     } catch {
@@ -48,20 +53,22 @@ export default function HomePage() {
 
       <HeroSlider />
 
-      {/* 会員ログイン/新規登録ボタン */}
-      <div className="max-w-6xl mx-auto px-4 py-3">
-        <div className="flex items-stretch border border-[#333] rounded overflow-hidden w-fit">
-          <div className="px-4 py-2.5 text-sm text-gray-300 bg-[#1a1a1a] border-r border-[#333] whitespace-nowrap">
-            HAL CINEMA会員
+      {/* 会員ログイン/新規登録ボタン（ログアウト中のみ表示） */}
+      {!isLoggedIn && (
+        <div className="max-w-6xl mx-auto px-4 py-3">
+          <div className="flex items-stretch border border-[#333] rounded overflow-hidden w-fit">
+            <div className="px-4 py-2.5 text-sm text-gray-300 bg-[#1a1a1a] border-r border-[#333] whitespace-nowrap">
+              HAL CINEMA会員
+            </div>
+            <Link href="/login" className="px-6 py-2.5 text-sm text-white bg-[#555] hover:bg-[#666] transition-colors border-r border-[#333]">
+              ログイン
+            </Link>
+            <Link href="/register" className="px-6 py-2.5 text-sm text-white hover:bg-[#222] transition-colors">
+              新規登録
+            </Link>
           </div>
-          <Link href="/login" className="px-6 py-2.5 text-sm text-white bg-[#555] hover:bg-[#666] transition-colors border-r border-[#333]">
-            ログイン
-          </Link>
-          <Link href="/register" className="px-6 py-2.5 text-sm text-white hover:bg-[#222] transition-colors">
-            新規登録
-          </Link>
         </div>
-      </div>
+      )}
 
       {/* 映画ランキング / AIおすすめセクション
           hasRecs が true のとき: AI推薦リストを「あなたにオススメ」として表示
@@ -73,43 +80,58 @@ export default function HomePage() {
           </div>
 
           <div className="placeholder-box" style={{ overflow: "visible" }}>
-            <div className="p-6 grid grid-cols-5 gap-3 relative">
-              {(hasRecs ? recommendedMovies.slice(0, 5) : movies.slice(0, 5)).map((movie, i) => {
-                // rec は Movie に AI追加フィールド { score, why } が乗った拡張オブジェクト
-                // 型定義を増やさないために any キャストで参照する
-                const rec = movie as any;
-                return (
-                  <div key={movie.id} className="flex flex-col items-center gap-1 group relative">
-                    {/* 順位番号 */}
+            {hasRecs ? (
+              /* AIおすすめ: MovieCard と同じスタイル */
+              <div className="p-4 grid grid-cols-4 gap-3">
+                {recommendedMovies.slice(0, 4).map((movie) => {
+                  const rec = movie as any;
+                  return (
+                    <div key={movie.id} className="group relative">
+                      <Link href={`/movies/${movie.id}`} className="block movie-card">
+                        <div className="w-full relative" style={{ aspectRatio: "2/3" }}>
+                          {movie.poster ? (
+                            <img src={movie.poster} alt={movie.title} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full" style={{ background: `linear-gradient(160deg, ${movie.posterColor} 0%, #0a0a0a 100%)` }} />
+                          )}
+                          {/* AI推薦バッジ */}
+                          <div className="absolute top-1 right-1 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                            AI推薦
+                          </div>
+                        </div>
+                        <div className="p-2 bg-[#1a1a1a]">
+                          <div className="text-xs text-white font-medium truncate">{movie.title}</div>
+                          <div className="text-[10px] text-gray-400 mt-0.5">{movie.genre[0]} · {movie.rating}</div>
+                          {/* 推薦理由 */}
+                          {rec.why && (
+                            <div className="text-[10px] text-gray-500 mt-1 line-clamp-2">{rec.why}</div>
+                          )}
+                        </div>
+                      </Link>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              /* ランキング: 従来の5列レイアウト */
+              <div className="p-6 grid grid-cols-5 gap-3">
+                {movies.slice(0, 5).map((movie, i) => (
+                  <div key={movie.id} className="flex flex-col items-center gap-1">
                     <div className="text-sm font-bold text-gray-600">{i + 1}</div>
                     <Link href={`/movies/${movie.id}`} className="w-full block transition-[transform,opacity] duration-200 hover:scale-[1.03] hover:opacity-90">
-                      <div className="w-full rounded overflow-hidden relative" style={{ aspectRatio: "2/3" }}>
+                      <div className="w-full rounded overflow-hidden" style={{ aspectRatio: "2/3" }}>
                         {movie.poster ? (
                           <img src={movie.poster} alt={movie.title} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full" style={{ background: `linear-gradient(160deg, ${movie.posterColor} 0%, #1a1a1a 100%)` }} />
                         )}
-                        {/* AIスコアバッジ（推薦モードのときのみ表示） */}
-                        {rec.score !== undefined && (
-                          <div className="absolute top-1 right-1 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
-                            {rec.score}点
-                          </div>
-                        )}
                       </div>
                     </Link>
-                    <div className="text-xs text-gray-600 text-center truncate w-full">
-                      {movie.title}
-                    </div>
-                    {/* ホバー時に表示するAI推薦理由ツールチップ */}
-                    {rec.why && (
-                      <div className="absolute bottom-[calc(100%+10px)] left-1/2 -translate-x-1/2 hidden group-hover:block bg-gray-800 text-gray-100 text-[8px] px-2 py-1 rounded whitespace-nowrap z-20 border border-gray-600 pointer-events-none">
-                        {rec.why}
-                      </div>
-                    )}
+                    <div className="text-xs text-gray-600 text-center truncate w-full">{movie.title}</div>
                   </div>
-                );
-              })}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

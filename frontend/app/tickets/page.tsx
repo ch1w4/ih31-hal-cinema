@@ -123,7 +123,9 @@ function TicketsContent() {
   const initTime = searchParams.get("time") ?? "";
   const initScreen = searchParams.get("screen") ?? "";
   const initStep: Step =
-    initMovieId && initDate && initTime ? "seat" : "select-movie";
+    initMovieId && initDate && initTime ? "seat" :
+    initMovieId ? "select-time" :
+    "select-movie";
 
   // ウィザードの現在ステップ
   const [step, setStep] = useState<Step>(initStep);

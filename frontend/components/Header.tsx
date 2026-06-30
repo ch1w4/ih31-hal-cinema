@@ -53,6 +53,7 @@ export default function Header() {
     // localStorage をクリアしてUIをリセット
     localStorage.removeItem("authToken");
     localStorage.removeItem("userInfo");
+    localStorage.removeItem("recommendedMovies");
     setUser(null);
     router.push("/login");
   };

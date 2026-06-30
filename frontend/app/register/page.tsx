@@ -1,11 +1,14 @@
 // 新規会員登録ページ
-// 現時点ではフォーム送信・Googleボタンともにモック（非機能）
 // 将来的にはFastAPI /register エンドポイントへPOSTする予定
 
+"use client";
 import Header from "@/components/Header";
 import Link from "next/link";
 
 export default function RegisterPage() {
+  const handleGoogleLogin = () => {
+    window.location.href = "http://localhost:5000/login";
+  };
   return (
     <div className="min-h-screen bg-[#0f0f0f]">
       <Header />
@@ -54,9 +57,8 @@ export default function RegisterPage() {
             <div className="flex-1 h-px bg-[#444]" />
           </div>
 
-          {/* Google連携ボタン（現在はモックのみ、onClick未実装） */}
           <div className="space-y-3">
-            <button className="w-full bg-[#f0f0f0] text-black py-4 rounded text-base font-medium hover:bg-white transition-colors flex items-center justify-center gap-2">
+            <button onClick={handleGoogleLogin} className="w-full bg-[#f0f0f0] text-black py-4 rounded text-base font-medium hover:bg-white transition-colors flex items-center justify-center gap-2">
               <span className="text-base">G</span>
               Googleアカウント
             </button>
