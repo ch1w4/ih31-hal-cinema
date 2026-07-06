@@ -295,59 +295,114 @@ function TicketsContent() {
           </div>
 
           <h2 className="text-base text-gray-300 mb-3">日付を選択してください</h2>
-          <div className="flex gap-2 flex-wrap mb-5">
-            {schedules.map((s) => (
-              <button
-                key={s.date}
-                onClick={() => {
-                  setSelectedDate(s.date);
-                  setSelectedTime("");
-                  setSelectedScreen("");
-                }}
-                className={`px-5 py-3 rounded text-base border transition-colors ${
-                  selectedDate === s.date
-                    ? "border-white text-white bg-[#2a2a2a]"
-                    : "border-[#444] text-gray-400 hover:border-[#777]"
-                }`}
-              >
-                {s.date}
-              </button>
-            ))}
-          </div>
+          {/* 今日の日付文字列を "M/DD" 形式で生成し、API の date と照合する */}
+          {(() => {
+            // "M/DD" 文字列 → その日の 00:00:00 の Date オブジェクト
+            function parseDateStr(dateStr: string): Date {
+              const [m, d] = dateStr.split("/").map(Number);
+              const dt = new Date();
+              dt.setMonth(m - 1, d);
+              dt.setHours(0, 0, 0, 0);
+              return dt;
+            }
 
-          {/* 日付選択後に時間帯一覧を表示（スクリーンごとにグループ化） */}
-          {selectedDate && (
-            <>
-              <h2 className="text-base text-gray-300 mb-3">時間帯を選択してください</h2>
-              {schedules
-                .find((s) => s.date === selectedDate)
-                ?.slots.map((slot) => (
-                  <div key={slot.screen} className="mb-4">
-                    <div className="text-sm text-gray-500 mb-2">{slot.screen}</div>
-                    <div className="flex flex-wrap gap-2">
-                      {slot.times.map((time) => (
-                        <button
-                          key={time}
-                          onClick={() => {
-                            setSelectedTime(time);
-                            setSelectedScreen(slot.screen);
-                            // スクリーン名から種別を判定し、対応する座席マップを生成する
-                            setSeatMap(buildSeatMap(SCREEN_CONFIGS[getScreenType(slot.screen)]));
-                          }}
-                          className={`px-4 py-2 rounded text-sm border transition-colors ${
-                            selectedTime === time && selectedScreen === slot.screen
-                              ? "border-white text-white bg-[#2a2a2a]"
-                              : "border-[#555] text-gray-400 hover:border-white hover:text-white"
-                          }`}
-                        >
-                          {time}
-                        </button>
+            const todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
+            const weekLater = new Date(todayStart);
+            weekLater.setDate(weekLater.getDate() + 7);
+
+            // 今日〜今日+6日のみ表示
+            const visibleSchedules = schedules.filter((s) => {
+              const d = parseDateStr(s.date);
+              return d >= todayStart && d < weekLater;
+            });
+
+            // schedDate("M/DD") と slotTime("HH:MM") が現在より過去か判定
+            // 前日以前の日付は問答無用で過去、今日は時間比較
+            function isPast(schedDate: string, slotTime: string): boolean {
+              const schedDay = parseDateStr(schedDate);
+              if (schedDay < todayStart) return true;
+              if (schedDay > todayStart) return false;
+              const [h, m] = slotTime.split(":").map(Number);
+              const slot = new Date();
+              slot.setHours(h, m, 0, 0);
+              return new Date() >= slot;
+            }
+
+            // その日の全時間が過去かどうか（日付ボタンの無効化判定）
+            function allPast(s: { date: string; slots: { times: string[] }[] }): boolean {
+              return s.slots.every((sl) => sl.times.every((t) => isPast(s.date, t)));
+            }
+
+            return (
+              <>
+                <div className="flex gap-2 flex-wrap mb-5">
+                  {visibleSchedules.map((s) => {
+                    const past = allPast(s);
+                    return (
+                      <button
+                        key={s.date}
+                        disabled={past}
+                        onClick={() => {
+                          setSelectedDate(s.date);
+                          setSelectedTime("");
+                          setSelectedScreen("");
+                        }}
+                        className={`px-5 py-3 rounded text-base border transition-colors ${
+                          past
+                            ? "border-[#333] text-gray-600 cursor-not-allowed opacity-40"
+                            : selectedDate === s.date
+                            ? "border-white text-white bg-[#2a2a2a]"
+                            : "border-[#444] text-gray-400 hover:border-[#777]"
+                        }`}
+                      >
+                        {s.date}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* 日付選択後に時間帯一覧を表示（スクリーンごとにグループ化） */}
+                {selectedDate && (
+                  <>
+                    <h2 className="text-base text-gray-300 mb-3">時間帯を選択してください</h2>
+                    {visibleSchedules
+                      .find((s) => s.date === selectedDate)
+                      ?.slots.map((slot) => (
+                        <div key={slot.screen} className="mb-4">
+                          <div className="text-sm text-gray-500 mb-2">{slot.screen}</div>
+                          <div className="flex flex-wrap gap-2">
+                            {slot.times.map((t) => {
+                              const past = isPast(selectedDate, t);
+                              return (
+                                <button
+                                  key={t}
+                                  disabled={past}
+                                  onClick={() => {
+                                    setSelectedTime(t);
+                                    setSelectedScreen(slot.screen);
+                                    setSeatMap(buildSeatMap(SCREEN_CONFIGS[getScreenType(slot.screen)]));
+                                  }}
+                                  className={`px-4 py-2 rounded text-sm border transition-colors ${
+                                    past
+                                      ? "border-[#333] text-gray-600 cursor-not-allowed opacity-40 line-through"
+                                      : selectedTime === t && selectedScreen === slot.screen
+                                      ? "border-white text-white bg-[#2a2a2a]"
+                                      : "border-[#555] text-gray-400 hover:border-white hover:text-white"
+                                  }`}
+                                >
+                                  {t}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
                       ))}
-                    </div>
-                  </div>
-                ))}
-            </>
-          )}
+                  </>
+                )}
+              </>
+            );
+          })()}
 
           <div className="flex gap-3 mt-4">
             <button

@@ -36,6 +36,7 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/halcinema
       FLASK_ENV: development
+      TZ: Asia/Tokyo
     ports:
       - "5000:5000"
     depends_on:

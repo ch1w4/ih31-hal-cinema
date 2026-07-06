@@ -31,7 +31,8 @@ def init_db():
 
     db = SessionLocal()
     try:
-        from seed_data import seed
+        from seed_data import seed, refresh_showings
         seed(db)
+        refresh_showings(db)
     finally:
         db.close()

@@ -5,6 +5,57 @@ main.py の init_db() から呼ばれる。
 from datetime import date, timedelta, time
 
 
+def refresh_showings(db):
+    """
+    起動のたびに呼ばれ、今日〜今日+6日の上映を補完し、過去日の上映を削除する。
+    """
+    from models import Screen, Showing
+    from sqlalchemy import text
+
+    today = date.today()
+    cutoff = today + timedelta(days=7)
+
+    # 過去の上映を削除
+    db.query(Showing).filter(Showing.show_date < today).delete()
+
+    # スクリーン一覧を取得
+    screen_rows = db.query(Screen).all()
+    screens = {s.name: s for s in screen_rows}
+    if not screens:
+        db.commit()
+        return
+
+    L1 = screens.get("大スクリーン1"); L2 = screens.get("大スクリーン2"); L3 = screens.get("大スクリーン3")
+    M1 = screens.get("中スクリーン1"); M2 = screens.get("中スクリーン2")
+    S1 = screens.get("小スクリーン1"); S2 = screens.get("小スクリーン2"); S3 = screens.get("小スクリーン3")
+    if not all([L1, L2, L3, M1, M2, S1, S2, S3]):
+        db.commit()
+        return
+
+    slots = [
+        (L1, time(8,0)),  (L1, time(10,30)), (L1, time(13,30)), (L1, time(16,30)), (L1, time(19,30)),
+        (L2, time(8,0)),  (L2, time(10,30)), (L2, time(13,30)), (L2, time(16,30)), (L2, time(19,30)),
+        (L3, time(8,0)),  (L3, time(10,30)), (L3, time(13,30)), (L3, time(16,30)), (L3, time(19,30)),
+        (M1, time(10,0)), (M1, time(13,0)),  (M1, time(16,0)),  (M1, time(19,0)),
+        (M2, time(10,0)), (M2, time(13,0)),  (M2, time(16,0)),  (M2, time(19,0)),
+        (S1, time(11,0)), (S1, time(14,0)),  (S1, time(17,0)),  (S1, time(20,0)),
+        (S2, time(11,0)), (S2, time(14,0)),  (S2, time(17,0)),  (S2, time(20,0)),
+        (S3, time(11,0)), (S3, time(14,0)),  (S3, time(17,0)),  (S3, time(20,0)),
+    ]
+
+    for delta in range(7):
+        d = today + timedelta(days=delta)
+        # その日に既に上映があればスキップ
+        if db.query(Showing).filter(Showing.show_date == d).count() > 0:
+            continue
+        for i, (screen, start) in enumerate(slots):
+            mid = (i + delta) % 12 + 1
+            db.add(Showing(movie_id=mid, screen_id=screen.screen_id, show_date=d, start_time=start))
+
+    db.commit()
+    print(f"[refresh_showings] {today} 〜 {today + timedelta(days=6)} の上映を確認・補完しました。")
+
+
 def seed(db):
     from models import (
         Genre, CastMember, Movie, MovieGenre, MovieCast,
