@@ -66,8 +66,13 @@ def seed(db):
     # ──────────────────────────────────────────────
     screens_def = [
         ("大スクリーン1", "large",  [("A","B","C"), 16, ("D","E","F","G","H","I"), 13]),
+        ("大スクリーン2", "large",  [("A","B","C"), 16, ("D","E","F","G","H","I"), 13]),
+        ("大スクリーン3", "large",  [("A","B","C"), 16, ("D","E","F","G","H","I"), 13]),
         ("中スクリーン1", "medium", [("A","B","C","D","E","F","G","H"), 15]),
+        ("中スクリーン2", "medium", [("A","B","C","D","E","F","G","H"), 15]),
         ("小スクリーン1", "small",  [("A","B","C","D","E","F","G"), 10]),
+        ("小スクリーン2", "small",  [("A","B","C","D","E","F","G"), 10]),
+        ("小スクリーン3", "small",  [("A","B","C","D","E","F","G"), 10]),
     ]
     screens = {}
     for name, stype, layout in screens_def:
@@ -156,12 +161,12 @@ def seed(db):
 
         (11, "ラストマン FIRST LOVE", "Last Man FIRST LOVE",
          "特殊能力を持つ探偵が、難解な事件を次々と解決するアクションコメディ。",
-         116, "G", "平野監督", _ns_start, _ns_end, "/moviesamune/eiga11.jpg", "#1a2a3a", 11,
+         116, "G", "平野監督", _ns_start, _ns_end, "/moviesamune/eiga12.jpg", "#1a2a3a", 11,
          ["サスペンス","ミステリー"], ["福山雅治","大泉洋","永瀬廉"]),
 
         (12, "えんとつ町のプペル", "Poupelle of Chimney Town",
          "えんとつ町が星空に包まれた奇跡の夜から1年が過ぎた。大切な親友プペルを失った少年ルビッチは再会を信じ続けていたが、前へ進むためあきらめてしまう。",
-         135, "G", "廣田監督", _ns_start, _ns_end, "/moviesamune/eiga12.jpg", "#2a2a3a", 12,
+         135, "G", "廣田監督", _ns_start, _ns_end, "/moviesamune/eiga11.jpg", "#2a2a3a", 12,
          ["アニメ","ファンタジー"], ["窪田正孝(声)","永瀬ゆずな(声)","立川志の輔(声)"]),
 
         # 上映予定
@@ -220,35 +225,29 @@ def seed(db):
     db.flush()
 
     # ──────────────────────────────────────────────
-    # 上映スケジュール（今日から7日間、映画ごとに専用スロット）
-    # UNIQUE制約 (screen_id, show_date, start_time) に違反しないよう
-    # 各映画を異なるスクリーン・時間帯に割り当てる
+    # 上映スケジュール（今日から7日間 × 8スクリーン × ローテーション）
+    # 35スロット/日 を12映画でローテーション → 各映画 約20回/7日
     # ──────────────────────────────────────────────
-    large  = screens["大スクリーン1"]
-    medium = screens["中スクリーン1"]
-    small  = screens["小スクリーン1"]
+    L1 = screens["大スクリーン1"]; L2 = screens["大スクリーン2"]; L3 = screens["大スクリーン3"]
+    M1 = screens["中スクリーン1"]; M2 = screens["中スクリーン2"]
+    S1 = screens["小スクリーン1"]; S2 = screens["小スクリーン2"]; S3 = screens["小スクリーン3"]
 
-    # movie_id → (screen, start_time) の固定割り当て
-    slot_map = {
-        1:  (large,  time(10, 0)),
-        2:  (large,  time(13, 30)),
-        3:  (large,  time(17, 0)),
-        4:  (large,  time(20, 30)),
-        5:  (medium, time(11, 30)),
-        6:  (medium, time(15, 0)),
-        7:  (medium, time(18, 30)),
-        8:  (small,  time(12, 0)),
-        9:  (small,  time(16, 0)),
-        10: (small,  time(19, 30)),
-        11: (large,  time(8, 0)),
-        12: (small,  time(10, 0)),
-    }
+    # 35スロット定義: (screen, start_time)
+    slots = [
+        (L1, time(8,0)),  (L1, time(10,30)), (L1, time(13,30)), (L1, time(16,30)), (L1, time(19,30)),
+        (L2, time(8,0)),  (L2, time(10,30)), (L2, time(13,30)), (L2, time(16,30)), (L2, time(19,30)),
+        (L3, time(8,0)),  (L3, time(10,30)), (L3, time(13,30)), (L3, time(16,30)), (L3, time(19,30)),
+        (M1, time(10,0)), (M1, time(13,0)),  (M1, time(16,0)),  (M1, time(19,0)),
+        (M2, time(10,0)), (M2, time(13,0)),  (M2, time(16,0)),  (M2, time(19,0)),
+        (S1, time(11,0)), (S1, time(14,0)),  (S1, time(17,0)),  (S1, time(20,0)),
+        (S2, time(11,0)), (S2, time(14,0)),  (S2, time(17,0)),  (S2, time(20,0)),
+        (S3, time(11,0)), (S3, time(14,0)),  (S3, time(17,0)),  (S3, time(20,0)),
+    ]
 
-    for mid, (screen, start) in slot_map.items():
-        if mid not in movie_objs:
-            continue
-        for delta in range(7):
-            d = today + timedelta(days=delta)
+    for delta in range(7):
+        d = today + timedelta(days=delta)
+        for i, (screen, start) in enumerate(slots):
+            mid = (i + delta) % 12 + 1
             db.add(Showing(movie_id=mid, screen_id=screen.screen_id, show_date=d, start_time=start))
     db.flush()
 
