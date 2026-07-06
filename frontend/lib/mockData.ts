@@ -1,4 +1,4 @@
-// 型定義のみ。データは backend/db/movies_seed.sql → Flask API → lib/api.ts から取得する。
+// 型定義のみ。データは backend/seed_data.py → Flask API → lib/api.ts から取得する。
 
 export type Movie = {
   id: string;

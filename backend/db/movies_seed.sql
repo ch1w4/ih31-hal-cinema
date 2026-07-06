@@ -306,3 +306,17 @@ OVERRIDING SYSTEM VALUE VALUES
 ON CONFLICT (campaign_id) DO NOTHING;
 
 SELECT setval(pg_get_serial_sequence('campaigns', 'campaign_id'), 10, true);
+
+-- ──────────────────────────────────────────────
+-- 映画の公開日・終映日を現在日付基準に更新
+-- （固定日付だと経年で全映画が終映済みになるため）
+-- ──────────────────────────────────────────────
+UPDATE movies SET
+    release_date = CURRENT_DATE - INTERVAL '30 days',
+    end_date     = CURRENT_DATE + INTERVAL '90 days'
+WHERE movie_id BETWEEN 1 AND 12;
+
+UPDATE movies SET release_date = CURRENT_DATE + INTERVAL '30 days',  end_date = CURRENT_DATE + INTERVAL '120 days' WHERE movie_id = 13;
+UPDATE movies SET release_date = CURRENT_DATE + INTERVAL '45 days',  end_date = CURRENT_DATE + INTERVAL '135 days' WHERE movie_id = 14;
+UPDATE movies SET release_date = CURRENT_DATE + INTERVAL '60 days',  end_date = CURRENT_DATE + INTERVAL '150 days' WHERE movie_id = 15;
+UPDATE movies SET release_date = CURRENT_DATE + INTERVAL '75 days',  end_date = CURRENT_DATE + INTERVAL '165 days' WHERE movie_id = 16;

@@ -1,8 +1,8 @@
 from datetime import date, datetime, time
 from typing import Optional, List
 from sqlalchemy import (
-    BigInteger, Boolean, Date, ForeignKey, Integer, String, Text, Time,
-    Timestamp, UniqueConstraint, func
+    BigInteger, Boolean, Date, DateTime, ForeignKey, Integer, String, Text, Time,
+    UniqueConstraint, func
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from database import Base
@@ -141,7 +141,7 @@ class Member(Base):
     gender:          Mapped[Optional[str]]   = mapped_column(String(10))   # male/female/other
     phone:           Mapped[Optional[str]]   = mapped_column(String(20))
     auth_provider:   Mapped[str]             = mapped_column(String(20), nullable=False, default="local")
-    created_at:      Mapped[datetime]        = mapped_column(Timestamp, nullable=False, server_default=func.now())
+    created_at:      Mapped[datetime]        = mapped_column(DateTime, nullable=False, server_default=func.now())
     age:             Mapped[Optional[str]]   = mapped_column(String(3))
 
     bookings:           Mapped[List["Booking"]]          = relationship(back_populates="member")
@@ -202,9 +202,9 @@ class Booking(Base):
     showing_id: Mapped[int]              = mapped_column(BigInteger, ForeignKey("showings.showing_id"), nullable=False)
     coupon_id:  Mapped[Optional[int]]    = mapped_column(BigInteger, ForeignKey("coupons.coupon_id"))
     booking_no: Mapped[str]              = mapped_column(String(20), nullable=False, unique=True)
-    booked_at:  Mapped[datetime]         = mapped_column(Timestamp, nullable=False, server_default=func.now())
+    booked_at:  Mapped[datetime]         = mapped_column(DateTime, nullable=False, server_default=func.now())
     status:     Mapped[str]              = mapped_column(String(20), nullable=False, default="pending")  # pending/confirmed/cancelled
-    expires_at: Mapped[Optional[datetime]] = mapped_column(Timestamp)  # 仮予約TTL
+    expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime)  # 仮予約TTL
 
     member:        Mapped[Optional["Member"]]   = relationship(back_populates="bookings")
     showing:       Mapped["Showing"]            = relationship(back_populates="bookings")
@@ -245,7 +245,7 @@ class Payment(Base):
     method:         Mapped[str]              = mapped_column(String(20), nullable=False)   # credit/emoney/qr
     amount:         Mapped[int]              = mapped_column(Integer, nullable=False)
     status:         Mapped[str]              = mapped_column(String(20), nullable=False, default="unpaid")  # unpaid/paid/refunded/failed
-    paid_at:        Mapped[Optional[datetime]] = mapped_column(Timestamp)
+    paid_at:        Mapped[Optional[datetime]] = mapped_column(DateTime)
     transaction_id: Mapped[Optional[str]]    = mapped_column(String(100))  # Stripe PaymentIntent ID
 
     booking: Mapped["Booking"] = relationship(back_populates="payment")
@@ -258,7 +258,7 @@ class Ticket(Base):
     booking_seat_id: Mapped[int]             = mapped_column(BigInteger, ForeignKey("booking_seats.booking_seat_id"), nullable=False, unique=True)
     qr_token:        Mapped[str]             = mapped_column(String(64), nullable=False, unique=True)
     status:          Mapped[str]             = mapped_column(String(20), nullable=False, default="unused")  # unused/used
-    used_at:         Mapped[Optional[datetime]] = mapped_column(Timestamp)
+    used_at:         Mapped[Optional[datetime]] = mapped_column(DateTime)
 
     booking_seat: Mapped["BookingSeat"] = relationship(back_populates="ticket")
 
@@ -275,7 +275,7 @@ class PointTransaction(Base):
     booking_id:  Mapped[Optional[int]]   = mapped_column(BigInteger, ForeignKey("bookings.booking_id"))
     amount:      Mapped[int]             = mapped_column(Integer, nullable=False)  # 正=獲得 / 負=利用
     tx_type:     Mapped[str]             = mapped_column(String(20), nullable=False)  # earn/use/expire
-    created_at:  Mapped[datetime]        = mapped_column(Timestamp, nullable=False, server_default=func.now())
+    created_at:  Mapped[datetime]        = mapped_column(DateTime, nullable=False, server_default=func.now())
 
     member:  Mapped["Member"]           = relationship(back_populates="point_transactions")
     booking: Mapped[Optional["Booking"]] = relationship(back_populates="point_transactions")
@@ -289,7 +289,7 @@ class Notification(Base):
     booking_id:      Mapped[Optional[int]]   = mapped_column(BigInteger, ForeignKey("bookings.booking_id"))
     type:            Mapped[str]             = mapped_column(String(20), nullable=False)  # confirm/reminder/cancel
     body:            Mapped[str]             = mapped_column(Text, nullable=False)
-    sent_at:         Mapped[Optional[datetime]] = mapped_column(Timestamp)
+    sent_at:         Mapped[Optional[datetime]] = mapped_column(DateTime)
     is_read:         Mapped[bool]            = mapped_column(Boolean, nullable=False, default=False)
 
     member:  Mapped["Member"]           = relationship(back_populates="notifications")
