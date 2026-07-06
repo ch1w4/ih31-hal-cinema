@@ -170,48 +170,36 @@ JOIN cast_members c ON c.name = v.cast_name
 ON CONFLICT DO NOTHING;
 
 -- ──────────────────────────────────────────────
--- 上映スケジュール（今日から7日間、各映画を各スクリーンで）
+-- 上映スケジュール（今日から7日間、映画ごとに専用スロット）
+-- UNIQUE制約 (screen_id, show_date, start_time) に違反しないよう
+-- 各映画を異なるスクリーン・時間帯に割り当てる
 -- ──────────────────────────────────────────────
 DO $$
 DECLARE
     large_id  BIGINT;
     medium_id BIGINT;
     small_id  BIGINT;
-    mid       INTEGER;
     d         DATE;
 BEGIN
     SELECT screen_id INTO large_id  FROM screens WHERE name = '大スクリーン1' LIMIT 1;
     SELECT screen_id INTO medium_id FROM screens WHERE name = '中スクリーン1' LIMIT 1;
     SELECT screen_id INTO small_id  FROM screens WHERE name = '小スクリーン1' LIMIT 1;
 
-    -- 上映中の映画 (movie_id 1〜12) に対してスケジュールを生成
-    FOR mid IN 1..12 LOOP
-        FOR d IN SELECT generate_series(current_date, current_date + 6, '1 day')::date LOOP
-            -- 大スクリーン
-            INSERT INTO showings (movie_id, screen_id, show_date, start_time)
-            VALUES
-                (mid, large_id, d, '10:00'),
-                (mid, large_id, d, '13:30'),
-                (mid, large_id, d, '17:00'),
-                (mid, large_id, d, '20:30')
-            ON CONFLICT DO NOTHING;
-
-            -- 中スクリーン
-            INSERT INTO showings (movie_id, screen_id, show_date, start_time)
-            VALUES
-                (mid, medium_id, d, '11:30'),
-                (mid, medium_id, d, '15:00'),
-                (mid, medium_id, d, '18:30')
-            ON CONFLICT DO NOTHING;
-
-            -- 小スクリーン
-            INSERT INTO showings (movie_id, screen_id, show_date, start_time)
-            VALUES
-                (mid, small_id, d, '12:00'),
-                (mid, small_id, d, '16:00'),
-                (mid, small_id, d, '19:30')
-            ON CONFLICT DO NOTHING;
-        END LOOP;
+    FOR d IN SELECT generate_series(current_date, current_date + 6, '1 day')::date LOOP
+        INSERT INTO showings (movie_id, screen_id, show_date, start_time) VALUES
+            (1,  large_id,  d, '10:00'),
+            (2,  large_id,  d, '13:30'),
+            (3,  large_id,  d, '17:00'),
+            (4,  large_id,  d, '20:30'),
+            (5,  medium_id, d, '11:30'),
+            (6,  medium_id, d, '15:00'),
+            (7,  medium_id, d, '18:30'),
+            (8,  small_id,  d, '12:00'),
+            (9,  small_id,  d, '16:00'),
+            (10, small_id,  d, '19:30'),
+            (11, large_id,  d, '08:00'),
+            (12, small_id,  d, '10:00')
+        ON CONFLICT DO NOTHING;
     END LOOP;
 END $$;
 

@@ -1,6 +1,11 @@
 import type { Movie, Campaign, ScheduleDay } from "@/lib/mockData";
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
+// サーバー側（Docker内）は INTERNAL_API_URL（backend サービス名）、
+// ブラウザ側は NEXT_PUBLIC_API_URL（localhost）を使う
+const API =
+  typeof window === "undefined"
+    ? (process.env.INTERNAL_API_URL ?? "http://localhost:5000")
+    : (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000");
 
 async function get<T>(path: string): Promise<T | null> {
   try {

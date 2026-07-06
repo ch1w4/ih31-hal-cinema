@@ -220,24 +220,36 @@ def seed(db):
     db.flush()
 
     # ──────────────────────────────────────────────
-    # 上映スケジュール（今日から7日間、上映中映画のみ）
+    # 上映スケジュール（今日から7日間、映画ごとに専用スロット）
+    # UNIQUE制約 (screen_id, show_date, start_time) に違反しないよう
+    # 各映画を異なるスクリーン・時間帯に割り当てる
     # ──────────────────────────────────────────────
     large  = screens["大スクリーン1"]
     medium = screens["中スクリーン1"]
     small  = screens["小スクリーン1"]
-    today  = date.today()
 
-    now_showing_ids = [mid for mid, (m, _, _) in movie_objs.items() if m.ranking is not None]
-    for mid in now_showing_ids:
+    # movie_id → (screen, start_time) の固定割り当て
+    slot_map = {
+        1:  (large,  time(10, 0)),
+        2:  (large,  time(13, 30)),
+        3:  (large,  time(17, 0)),
+        4:  (large,  time(20, 30)),
+        5:  (medium, time(11, 30)),
+        6:  (medium, time(15, 0)),
+        7:  (medium, time(18, 30)),
+        8:  (small,  time(12, 0)),
+        9:  (small,  time(16, 0)),
+        10: (small,  time(19, 30)),
+        11: (large,  time(8, 0)),
+        12: (small,  time(10, 0)),
+    }
+
+    for mid, (screen, start) in slot_map.items():
+        if mid not in movie_objs:
+            continue
         for delta in range(7):
             d = today + timedelta(days=delta)
-            for screen, times in [
-                (large,  [time(10,0), time(13,30), time(17,0), time(20,30)]),
-                (medium, [time(11,30), time(15,0), time(18,30)]),
-                (small,  [time(12,0), time(16,0), time(19,30)]),
-            ]:
-                for t in times:
-                    db.add(Showing(movie_id=mid, screen_id=screen.screen_id, show_date=d, start_time=t))
+            db.add(Showing(movie_id=mid, screen_id=screen.screen_id, show_date=d, start_time=start))
     db.flush()
 
     # ──────────────────────────────────────────────
