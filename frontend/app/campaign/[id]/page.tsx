@@ -1,25 +1,38 @@
-// キャンペーン詳細ページ
-// URLの [id] パラメータで campaigns 配列から該当キャンペーンを取得して表示する
-
 "use client";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Header from "@/components/Header";
-import { campaigns } from "@/lib/mockData";
+import { Campaign } from "@/lib/mockData";
+import { fetchCampaignById } from "@/lib/api";
+import { useEffect, useState } from "react";
 
 export default function CampaignDetailPage() {
-  // URLパラメータ（例: /campaign/camp-1 → params.id = "camp-1"）
   const params = useParams();
-  const campaign = campaigns.find((c) => c.id === params.id);
+  const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const [notFound, setNotFound] = useState(false);
 
-  // 存在しないIDの場合は404相当のフォールバック表示
+  useEffect(() => {
+    if (!params.id) return;
+    fetchCampaignById(String(params.id)).then((c) => {
+      if (c) setCampaign(c);
+      else setNotFound(true);
+    });
+  }, [params.id]);
+
+  if (notFound) {
+    return (
+      <div className="min-h-screen bg-[#0f0f0f]">
+        <Header />
+        <div className="max-w-4xl mx-auto px-4 py-12 text-center text-gray-400">キャンペーン情報が見つかりませんでした</div>
+      </div>
+    );
+  }
+
   if (!campaign) {
     return (
       <div className="min-h-screen bg-[#0f0f0f]">
         <Header />
-        <div className="max-w-4xl mx-auto px-4 py-12 text-center text-gray-400">
-          キャンペーン情報が見つかりませんでした
-        </div>
+        <div className="max-w-4xl mx-auto px-4 py-12 text-center text-gray-500">読み込み中...</div>
       </div>
     );
   }
@@ -29,25 +42,18 @@ export default function CampaignDetailPage() {
       <Header />
 
       <main className="max-w-3xl mx-auto px-4 py-6">
-        {/* パンくずナビ: キャンペーン一覧 → 現在のタイトル */}
         <div className="flex items-center gap-2 text-xs text-gray-500 mb-6">
-          <Link href="/campaign" className="hover:text-gray-300 transition-colors">
-            キャンペーン・ニュース
-          </Link>
+          <Link href="/campaign" className="hover:text-gray-300 transition-colors">キャンペーン・ニュース</Link>
           <span>/</span>
           <span className="text-gray-400">{campaign.title}</span>
         </div>
 
-        {/* ヘッダーバナー: accentColor でグラデーションと左ボーダーを生成 */}
         <div
           className="rounded-lg p-6 mb-6"
           style={{ background: `linear-gradient(135deg, ${campaign.accentColor}cc, ${campaign.accentColor}44)`, borderLeft: `4px solid ${campaign.accentColor}` }}
         >
           <div className="flex items-center gap-2 mb-3">
-            <span
-              className="text-xs px-2 py-1 rounded font-medium text-white"
-              style={{ background: campaign.accentColor }}
-            >
+            <span className="text-xs px-2 py-1 rounded font-medium text-white" style={{ background: campaign.accentColor }}>
               {campaign.category}
             </span>
             <span className="text-sm text-gray-300">{campaign.period}</span>
@@ -56,24 +62,16 @@ export default function CampaignDetailPage() {
           <p className="text-sm text-gray-300">{campaign.subtitle}</p>
         </div>
 
-        {/* 概要テキスト */}
         <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-4 mb-6">
           <p className="text-sm text-gray-200 leading-relaxed">{campaign.description}</p>
         </div>
 
-        {/* 本文: whitespace-pre-line で改行文字（\n）をそのまま表示 */}
         <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-6 mb-8">
-          <p className="text-sm text-gray-200 leading-relaxed whitespace-pre-line">
-            {campaign.body}
-          </p>
+          <p className="text-sm text-gray-200 leading-relaxed whitespace-pre-line">{campaign.body}</p>
         </div>
 
-        {/* 一覧に戻るボタン */}
         <div className="flex justify-center">
-          <Link
-            href="/campaign"
-            className="px-8 py-3 border border-[#555] text-gray-300 rounded hover:border-[#888] hover:text-white transition-colors text-sm"
-          >
+          <Link href="/campaign" className="px-8 py-3 border border-[#555] text-gray-300 rounded hover:border-[#888] hover:text-white transition-colors text-sm">
             一覧に戻る
           </Link>
         </div>

@@ -1,16 +1,12 @@
 "use client";
 
-import { movies, comingSoonMovies } from "@/lib/mockData";
-
 export default function TestSend() {
   async function sendData() {
     const res = await fetch("http://localhost:5000/recommend/movies", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        movies,
-        comingSoonMovies
-      })
+      credentials: "include",
+      body: JSON.stringify({}),  // 映画リストは Flask が DB から取得
     });
 
     const json = await res.json();

@@ -1,19 +1,19 @@
-// 上映予定ページ（サーバーコンポーネント）
-// comingSoonMovies を月別グループに分けてグリッド表示する
-// 各映画カードをクリックすると /coming-soon/[id] の詳細ページへ遷移
-
 import Header from "@/components/Header";
 import Link from "next/link";
-import { comingSoonMovies } from "@/lib/mockData";
+import { fetchComingSoon } from "@/lib/api";
 
-// 月ごとのグループ定義（ラベルと映画IDのリスト）
-// 新しい映画を追加するときはここにIDを追記する
-const monthGroups = [
-  { label: "近日公開", ids: ["cs1", "cs2", "cs3"] },
-  { label: "三月公開", ids: ["cs4"] },
-];
+export default async function ComingSoonPage() {
+  const movies = await fetchComingSoon();
 
-export default function ComingSoonPage() {
+  // 公開月でグループ化
+  const byMonth = movies.reduce<Record<string, typeof movies>>((acc, m) => {
+    const label = m.releaseDate
+      ? `${m.releaseDate.slice(0, 7).replace("-", "年")}月公開`
+      : "近日公開";
+    acc[label] = [...(acc[label] ?? []), m];
+    return acc;
+  }, {});
+
   return (
     <div className="min-h-screen bg-[#0f0f0f]">
       <Header />
@@ -24,49 +24,46 @@ export default function ComingSoonPage() {
           上映予定
         </h1>
 
-        {monthGroups.map((group) => {
-          // グループに属する映画だけをIDで絞り込む
-          const films = comingSoonMovies.filter((m) => group.ids.includes(m.id));
-          return (
-            <div key={group.label} className="mb-10">
-              <div className="text-sm text-gray-400 text-center mb-4">{group.label}</div>
-              <div className="grid grid-cols-3 gap-4">
-                {films.map((movie) => (
-                  <div key={movie.id} className="flex flex-col">
-                    {/* "YYYY-MM-DD" → "MM月DD日" に変換して公開日を表示 */}
-                    <div className="text-sm text-gray-400 mb-1">
-                      {movie.releaseDate.replace(/-/g, "/").slice(5).replace("/", "月")}日公開
-                    </div>
-                    {/* ポスター画像クリックで詳細ページへ */}
-                    <Link
-                      href={`/coming-soon/${movie.id}`}
-                      className="w-full rounded-sm mb-2 block overflow-hidden hover:opacity-75 transition-opacity"
-                      style={{ aspectRatio: "2/3" }}
-                    >
-                      {movie.poster ? (
-                        <img src={movie.poster} alt={movie.title} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full" style={{ background: `linear-gradient(160deg, ${movie.posterColor} 0%, #1a1a1a 100%)` }} />
-                      )}
-                    </Link>
-                    <div className="text-sm text-gray-300 mb-1 truncate">{movie.title}</div>
-                    <div className="flex gap-1 flex-wrap mb-2">
-                      {movie.genre.map((g) => (
-                        <span key={g} className="text-sm px-1.5 py-0.5 border border-[#444] text-gray-500 rounded">
-                          {g}
-                        </span>
-                      ))}
-                    </div>
-                    {/* あらすじは2行に切り詰めて一覧の可読性を保つ */}
-                    <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed mb-2">
-                      {movie.synopsis}
-                    </p>
+        {Object.entries(byMonth).map(([label, films]) => (
+          <div key={label} className="mb-10">
+            <div className="text-sm text-gray-400 text-center mb-4">{label}</div>
+            <div className="grid grid-cols-3 gap-4">
+              {films.map((movie) => (
+                <div key={movie.id} className="flex flex-col">
+                  <div className="text-sm text-gray-400 mb-1">
+                    {movie.releaseDate.replace(/-/g, "/").slice(5).replace("/", "月")}日公開
                   </div>
-                ))}
-              </div>
+                  <Link
+                    href={`/coming-soon/${movie.id}`}
+                    className="w-full rounded-sm mb-2 block overflow-hidden hover:opacity-75 transition-opacity"
+                    style={{ aspectRatio: "2/3" }}
+                  >
+                    {movie.poster ? (
+                      <img src={movie.poster} alt={movie.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full" style={{ background: `linear-gradient(160deg, ${movie.posterColor} 0%, #1a1a1a 100%)` }} />
+                    )}
+                  </Link>
+                  <div className="text-sm text-gray-300 mb-1 truncate">{movie.title}</div>
+                  <div className="flex gap-1 flex-wrap mb-2">
+                    {movie.genre.map((g) => (
+                      <span key={g} className="text-sm px-1.5 py-0.5 border border-[#444] text-gray-500 rounded">
+                        {g}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed">
+                    {movie.synopsis}
+                  </p>
+                </div>
+              ))}
             </div>
-          );
-        })}
+          </div>
+        ))}
+
+        {movies.length === 0 && (
+          <div className="text-gray-500 text-center py-16">上映予定作品はありません</div>
+        )}
       </main>
     </div>
   );

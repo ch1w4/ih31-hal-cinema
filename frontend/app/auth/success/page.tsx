@@ -14,7 +14,6 @@
 
 import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { movies, comingSoonMovies } from "@/lib/mockData";
 
 function AuthSuccessContent() {
   const router = useRouter();
@@ -48,7 +47,7 @@ function AuthSuccessContent() {
             headers: { "Content-Type": "application/json" },
             credentials: "include",
             // 全映画リストをPOSTしてユーザーの好みに合わせたランキングを取得
-            body: JSON.stringify({ movies, comingSoonMovies }),
+            body: JSON.stringify({}),
           });
           if (res.ok) {
             const data = await res.json();

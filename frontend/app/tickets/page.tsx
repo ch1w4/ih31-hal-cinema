@@ -4,10 +4,11 @@
 // /movies/[id] ページからURLパラメータ（movieId・date・time・screen）を受け取った場合は
 // 座席選択ステップから開始する。
 "use client";
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
-import { movies, mockSchedules } from "@/lib/mockData";
+import { Movie, ScheduleDay } from "@/lib/mockData";
+import { fetchMovies, fetchShowings } from "@/lib/api";
 
 // ウィザードの各ステップを表すユニオン型
 type Step = "select-movie" | "select-time" | "seat" | "ticket-type" | "customer-info" | "confirm" | "complete";
@@ -136,6 +137,21 @@ function TicketsContent() {
   const [selectedScreen, setSelectedScreen] = useState(initScreen);
   const [selectedTime, setSelectedTime] = useState(initTime);
 
+  // APIから取得するデータ
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [schedules, setSchedules] = useState<ScheduleDay[]>([]);
+
+  // 映画一覧をAPIから取得
+  useEffect(() => {
+    fetchMovies().then(setMovies);
+  }, []);
+
+  // 映画が選択されたらスケジュールをAPIから取得
+  useEffect(() => {
+    if (!selectedMovieId) return;
+    fetchShowings(selectedMovieId).then(setSchedules);
+  }, [selectedMovieId]);
+
   // 選択中スクリーンのレイアウト設定（selectedScreen 変化に追従）
   const screenConfig = SCREEN_CONFIGS[getScreenType(selectedScreen)];
 
@@ -159,9 +175,6 @@ function TicketsContent() {
 
   // 選択中の映画オブジェクト
   const movie = movies.find((m) => m.id === selectedMovieId);
-
-  // 選択中映画のスケジュール（未定義の場合はid=1のスケジュールをフォールバック）
-  const schedules = mockSchedules[selectedMovieId] || mockSchedules["1"] || [];
 
   // 現在 "selected" 状態の座席IDリスト
   const selectedSeats = Object.entries(seatMap)

@@ -9,6 +9,13 @@ import random
 app = Flask(__name__)
 app.secret_key = "super_secret_random_key_12345"
 
+# DB初期化（PostgreSQL接続が通っていればテーブルを自動作成）
+try:
+    from database import init_db
+    init_db()
+except Exception as _db_err:
+    print(f"[db] 初期化スキップ（PostgreSQL未接続の可能性）: {_db_err}")
+
 # CORS設定（Next.jsからのリクエストを許可）
 CORS(
     app,
@@ -177,9 +184,19 @@ def recommend_movies():
         if not COLAB_URL:
             return jsonify({"error": "Colab が起動していません。Colab を実行してから /set-colab-url で URL を登録してください。"}), 503
 
-        body = request.json or {}
-        movies_list = body.get("movies", [])
-        coming = body.get("comingSoonMovies", [])
+        # 映画リストを DB から取得（フロントエンドからの body は不要）
+        try:
+            from models import Movie as MovieModel
+            from datetime import date as _date
+            db = _get_db()
+            all_rows = db.query(MovieModel).order_by(MovieModel.ranking).all()
+            db.close()
+            movies_list = [_movie_to_dict(m) for m in all_rows if m.release_date and m.release_date <= _date.today()]
+            coming = [_movie_to_dict(m) for m in all_rows if m.release_date and m.release_date > _date.today()]
+        except Exception:
+            body = request.json or {}
+            movies_list = body.get("movies", [])
+            coming = body.get("comingSoonMovies", [])
 
         # YouTubeデータを直接 Google API から取得
         access_token = session["access_token"]
@@ -254,6 +271,202 @@ def recommend_movies():
     except Exception as e:
         import traceback
         traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================================
+# REST API（DB連携）
+# ============================================
+def _get_db():
+    from database import SessionLocal
+    return SessionLocal()
+
+
+def _movie_to_dict(m):
+    """SQLAlchemy Movie → フロントエンドの Movie 型"""
+    genres = [mg.genre.name for mg in m.genres]
+    casts  = [mc.cast_member.name for mc in m.casts]
+    return {
+        "id":          str(m.movie_id),
+        "title":       m.title,
+        "titleEn":     m.title_en or "",
+        "genre":       genres,
+        "releaseDate": m.release_date.isoformat() if m.release_date else "",
+        "endDate":     m.end_date.isoformat() if m.end_date else "",
+        "duration":    m.duration or 0,
+        "rating":      m.rating or "G",
+        "synopsis":    m.synopsis or "",
+        "cast":        casts,
+        "director":    m.director or "",
+        "posterColor": m.poster_color or "#1a1a1a",
+        "poster":      m.poster_path or "",
+        "ranking":     m.ranking,
+    }
+
+
+@app.route("/api/movies")
+def api_movies():
+    """上映中の映画一覧（end_date >= 今日 または NULL）"""
+    try:
+        from models import Movie
+        from datetime import date
+        db = _get_db()
+        try:
+            today = date.today()
+            rows = (db.query(Movie)
+                    .filter((Movie.end_date >= today) | (Movie.end_date == None))
+                    .filter(Movie.release_date <= today)
+                    .order_by(Movie.ranking)
+                    .all())
+            return jsonify([_movie_to_dict(m) for m in rows])
+        finally:
+            db.close()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/movies/coming-soon")
+def api_movies_coming_soon():
+    """上映予定（release_date > 今日）"""
+    try:
+        from models import Movie
+        from datetime import date
+        db = _get_db()
+        try:
+            today = date.today()
+            rows = (db.query(Movie)
+                    .filter(Movie.release_date > today)
+                    .order_by(Movie.release_date)
+                    .all())
+            return jsonify([_movie_to_dict(m) for m in rows])
+        finally:
+            db.close()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/movies/all")
+def api_movies_all():
+    """全映画（AI推薦用）"""
+    try:
+        from models import Movie
+        db = _get_db()
+        try:
+            rows = db.query(Movie).order_by(Movie.ranking, Movie.release_date).all()
+            return jsonify([_movie_to_dict(m) for m in rows])
+        finally:
+            db.close()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/movies/<int:movie_id>")
+def api_movie_detail(movie_id):
+    """映画詳細"""
+    try:
+        from models import Movie
+        db = _get_db()
+        try:
+            m = db.query(Movie).filter(Movie.movie_id == movie_id).first()
+            if not m:
+                return jsonify({"error": "Not found"}), 404
+            return jsonify(_movie_to_dict(m))
+        finally:
+            db.close()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/showings/<int:movie_id>")
+def api_showings(movie_id):
+    """
+    映画IDに対する上映スケジュール（チケット購入ページ用）
+    レスポンス形式: ScheduleDay[] = [{ date: "MM/DD", slots: [{ screen, times }] }]
+    """
+    try:
+        from models import Showing, Screen
+        from datetime import date
+        db = _get_db()
+        try:
+            today = date.today()
+            rows = (db.query(Showing)
+                    .filter(Showing.movie_id == movie_id)
+                    .filter(Showing.show_date >= today)
+                    .order_by(Showing.show_date, Showing.start_time)
+                    .all())
+
+            # { date_str: { screen_name: [time_str, ...] } }
+            grouped: dict = {}
+            for s in rows:
+                date_str = f"{s.show_date.month}/{s.show_date.day:02d}"
+                screen_name = s.screen.name
+                time_str = s.start_time.strftime("%H:%M")
+                grouped.setdefault(date_str, {}).setdefault(screen_name, []).append(time_str)
+
+            schedule = [
+                {
+                    "date": d,
+                    "slots": [{"screen": scr, "times": times}
+                              for scr, times in screens.items()]
+                }
+                for d, screens in grouped.items()
+            ]
+            return jsonify(schedule)
+        finally:
+            db.close()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/campaigns")
+def api_campaigns():
+    """キャンペーン一覧"""
+    try:
+        from models import Campaign
+        db = _get_db()
+        try:
+            rows = db.query(Campaign).order_by(Campaign.campaign_id).all()
+            return jsonify([{
+                "id":          str(c.campaign_id),
+                "title":       c.title,
+                "subtitle":    c.subtitle or "",
+                "description": c.description or "",
+                "body":        c.body or "",
+                "period":      c.period or "",
+                "category":    c.category,
+                "imageSrc":    c.image_path or "",
+                "accentColor": c.accent_color or "#555",
+            } for c in rows])
+        finally:
+            db.close()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/campaigns/<int:campaign_id>")
+def api_campaign_detail(campaign_id):
+    """キャンペーン詳細"""
+    try:
+        from models import Campaign
+        db = _get_db()
+        try:
+            c = db.query(Campaign).filter(Campaign.campaign_id == campaign_id).first()
+            if not c:
+                return jsonify({"error": "Not found"}), 404
+            return jsonify({
+                "id":          str(c.campaign_id),
+                "title":       c.title,
+                "subtitle":    c.subtitle or "",
+                "description": c.description or "",
+                "body":        c.body or "",
+                "period":      c.period or "",
+                "category":    c.category,
+                "imageSrc":    c.image_path or "",
+                "accentColor": c.accent_color or "#555",
+            })
+        finally:
+            db.close()
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
