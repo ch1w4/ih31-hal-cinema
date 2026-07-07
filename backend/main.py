@@ -185,50 +185,122 @@ def get_colab_url():
 # ==================================================
 # Ollama 直接呼び出しヘルパー
 # ==================================================
+
+def _fix_and_parse_json(raw: str):
+    """Colabの fix_and_parse_json と同等の堅牢なJSONパーサー。"""
+    if not raw:
+        return None
+    text = raw.strip()
+    # 全角クォートを半角に統一
+    for s, r in [("「", '"'), ("」", '"'), ("“", '"'), ("”", '"'), ("’", "'")]:
+        text = text.replace(s, r)
+
+    start = text.find("{")
+    if start == -1:
+        return None
+
+    # 対応する閉じ括弧を深さカウントで正確に探す
+    depth, end, in_str, esc = 0, None, False, False
+    for i in range(start, len(text)):
+        ch = text[i]
+        if esc:
+            esc = False; continue
+        if ch == "\\":
+            esc = True; continue
+        if ch == '"':
+            in_str = not in_str; continue
+        if in_str:
+            continue
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                end = i; break
+
+    candidate = text[start: end + 1] if end is not None else text[start:]
+
+    # そのままパース
+    try:
+        return json.loads(candidate)
+    except json.JSONDecodeError:
+        pass
+
+    # 末尾ゴミを削ってリトライ
+    lb = candidate.rfind("}")
+    if lb != -1:
+        try:
+            return json.loads(candidate[:lb + 1])
+        except json.JSONDecodeError:
+            pass
+
+    # 最終手段：正規表現でキーを個別救出
+    id_m  = _re.search(r'"recommended_movie_id"\s*:\s*"?([^",}\n]+)"?', candidate)
+    rsn_m = _re.search(r'"reason"\s*:\s*"([^"]*)"', candidate)
+    if id_m:
+        return {
+            "recommended_movie_id": id_m.group(1).strip(),
+            "reason": rsn_m.group(1).strip() if rsn_m else "おすすめの映画です。",
+        }
+    return None
+
+
 def _recommend_via_ollama(user_history: dict, movie_list: list, all_movies: dict):
-    """Ollama に直接問い合わせて映画を推薦する。失敗時はランダム選択にフォールバック。"""
-    system_prompt = (
-        "あなたは映画推薦AIです。"
-        "ユーザーのYouTube視聴履歴と映画候補リストを受け取り、最も合う映画を1本選んで推薦してください。"
-        "必ず以下のJSON形式のみで返してください（他のテキストは絶対に含めないこと）:\n"
-        '{"recommended_movie_id": "映画のID（数字）", "reason": "推薦理由を2〜3文で"}'
-    )
+    """Ollama に直接問い合わせて映画を推薦する。失敗時は先頭の映画にフォールバック。"""
     liked = user_history.get("liked_videos", [])
     subs  = user_history.get("subscriptions", [])
-    prompt = (
-        f"ユーザー情報:\n"
-        f"- YouTubeいいね動画: {', '.join(liked[:10]) or 'なし'}\n"
-        f"- チャンネル登録: {', '.join(subs[:10]) or 'なし'}\n\n"
-        f"映画候補:\n{json.dumps(movie_list, ensure_ascii=False, indent=2)}\n\n"
-        f"上記ユーザーに最も合う映画を1本選んでください。"
-    )
-    rec_id, reason = "", ""
+
+    prompt = f"""あなたは優秀な映画推薦AIです。
+以下の【ユーザーの視聴傾向】と【映画リスト】を分析し、ユーザーに最もおすすめの映画を【必ず1つ】選んでください。
+
+【絶対ルール】
+1. 出力は必ず以下のJSON形式のみとすること。
+2. 余計な挨拶や ```json などのマークダウン記法は絶対に含めないこと。
+3. クォーテーションは必ず半角の " を使用し、全角の「」は絶対に使わないこと。
+4. JSONオブジェクトの閉じ括弧 }} の後には、いかなる文字も絶対に出力しないこと。
+
+{{
+  "recommended_movie_id": "選んだ映画のid",
+  "reason": "視聴傾向からなぜこの映画を選んだのかの理由（日本語で100文字程度）"
+}}
+
+【ユーザーの視聴傾向】
+YouTubeいいね動画: {', '.join(liked[:10]) or 'なし'}
+チャンネル登録: {', '.join(subs[:10]) or 'なし'}
+
+【映画リスト】
+{json.dumps(movie_list, ensure_ascii=False)}"""
+
+    raw = ""
     try:
         res = requests.post(
             f"{OLLAMA_URL}/api/generate",
             json={
                 "model":  OLLAMA_MODEL,
                 "prompt": prompt,
-                "system": system_prompt,
                 "stream": False,
-                "options": {"temperature": 0.1, "num_predict": 300},
+                "format": "json",
+                "options": {"num_ctx": 8192, "temperature": 0.3},
             },
             timeout=180,
         )
-        text = res.json().get("response", "")
-        m = _re.search(r'\{.*?\}', text, _re.DOTALL)
-        if m:
-            parsed = json.loads(m.group())
-            rec_id = str(parsed.get("recommended_movie_id", ""))
-            reason = parsed.get("reason", "")
-        print(f"[ollama] 推薦結果: id={rec_id} reason={reason[:40]}")
+        raw = res.json().get("response", "")
+        print(f"[ollama] 生レスポンス: {raw[:200]}")
     except Exception as e:
         print(f"[ollama] エラー: {e}")
 
-    if not rec_id or rec_id not in all_movies:
-        pick   = random.choice(movie_list) if movie_list else {"id": "1"}
-        rec_id = str(pick["id"])
-        reason = reason or "あなたにおすすめの映画です。"
+    parsed = _fix_and_parse_json(raw)
+    rec_id = str(parsed.get("recommended_movie_id", "")) if parsed else ""
+    reason = parsed.get("reason", "") if parsed else ""
+
+    # rec_id が候補リストにない → 先頭にフォールバック
+    valid_ids = {str(m.get("id")) for m in movie_list if isinstance(m, dict)}
+    if rec_id not in valid_ids and movie_list:
+        print(f"[ollama] id={rec_id} が候補外のため先頭にフォールバック")
+        rec_id = str(movie_list[0].get("id", "1"))
+        reason = reason or "本日のイチオシ作品としてピックアップしました。"
+
+    print(f"[ollama] 推薦: id={rec_id} reason={reason[:60]}")
 
     recommended = []
     if rec_id in all_movies:
