@@ -6,6 +6,8 @@ import json
 import base64
 import random
 import string
+import os
+import re as _re
 
 app = Flask(__name__)
 app.secret_key = "super_secret_random_key_12345"
@@ -155,6 +157,13 @@ def youtube_subscriptions():
 # ==================================================
 COLAB_URL = ""
 
+# ==================================================
+# Ollama（Docker 内 LLM）設定
+# OLLAMA_URL が設定されている場合は Colab より優先して使用する
+# ==================================================
+OLLAMA_URL   = os.getenv("OLLAMA_URL", "")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:3b")
+
 
 @app.route("/set-colab-url", methods=["POST"])
 def set_colab_url():
@@ -174,6 +183,69 @@ def get_colab_url():
 
 
 # ==================================================
+# Ollama 直接呼び出しヘルパー
+# ==================================================
+def _recommend_via_ollama(user_history: dict, movie_list: list, all_movies: dict):
+    """Ollama に直接問い合わせて映画を推薦する。失敗時はランダム選択にフォールバック。"""
+    system_prompt = (
+        "あなたは映画推薦AIです。"
+        "ユーザーのYouTube視聴履歴と映画候補リストを受け取り、最も合う映画を1本選んで推薦してください。"
+        "必ず以下のJSON形式のみで返してください（他のテキストは絶対に含めないこと）:\n"
+        '{"recommended_movie_id": "映画のID（数字）", "reason": "推薦理由を2〜3文で"}'
+    )
+    liked = user_history.get("liked_videos", [])
+    subs  = user_history.get("subscriptions", [])
+    prompt = (
+        f"ユーザー情報:\n"
+        f"- YouTubeいいね動画: {', '.join(liked[:10]) or 'なし'}\n"
+        f"- チャンネル登録: {', '.join(subs[:10]) or 'なし'}\n\n"
+        f"映画候補:\n{json.dumps(movie_list, ensure_ascii=False, indent=2)}\n\n"
+        f"上記ユーザーに最も合う映画を1本選んでください。"
+    )
+    rec_id, reason = "", ""
+    try:
+        res = requests.post(
+            f"{OLLAMA_URL}/api/generate",
+            json={
+                "model":  OLLAMA_MODEL,
+                "prompt": prompt,
+                "system": system_prompt,
+                "stream": False,
+                "options": {"temperature": 0.1, "num_predict": 300},
+            },
+            timeout=180,
+        )
+        text = res.json().get("response", "")
+        m = _re.search(r'\{.*?\}', text, _re.DOTALL)
+        if m:
+            parsed = json.loads(m.group())
+            rec_id = str(parsed.get("recommended_movie_id", ""))
+            reason = parsed.get("reason", "")
+        print(f"[ollama] 推薦結果: id={rec_id} reason={reason[:40]}")
+    except Exception as e:
+        print(f"[ollama] エラー: {e}")
+
+    if not rec_id or rec_id not in all_movies:
+        pick   = random.choice(movie_list) if movie_list else {"id": "1"}
+        rec_id = str(pick["id"])
+        reason = reason or "あなたにおすすめの映画です。"
+
+    recommended = []
+    if rec_id in all_movies:
+        m = all_movies[rec_id]
+        recommended.append({
+            "id":          m.get("id"),
+            "title":       m.get("title"),
+            "posterColor": m.get("posterColor", "#666"),
+            "poster":      m.get("poster", ""),
+            "score":       1.0,
+            "why":         reason,
+        })
+
+    return jsonify({"reason": reason, "recommended_movies": recommended})
+
+
+# ==================================================
 # 映画推薦エンドポイント（フロントからJSONを受け取る）
 # ==================================================
 @app.route("/recommend/movies", methods=["POST"])
@@ -182,8 +254,8 @@ def recommend_movies():
         if "access_token" not in session:
             return jsonify({"error": "Not authenticated"}), 401
 
-        if not COLAB_URL:
-            return jsonify({"error": "Colab が起動していません。Colab を実行してから /set-colab-url で URL を登録してください。"}), 503
+        if not OLLAMA_URL and not COLAB_URL:
+            return jsonify({"error": "AI推薦サービスが設定されていません。"}), 503
 
         # 映画リストを DB から取得（フロントエンドからの body は不要）
         try:
@@ -232,9 +304,13 @@ def recommend_movies():
             for m in (movies_list + coming)[:15]
         ]
 
-        print(f"[colab] 推薦リクエスト送信 - 候補: {len(movie_list)}本")
+        # ── Ollama（Docker内LLM）優先 ──────────────────
+        if OLLAMA_URL:
+            print(f"[ollama] 推薦リクエスト送信 - 候補: {len(movie_list)}本 model={OLLAMA_MODEL}")
+            return _recommend_via_ollama(user_history, movie_list, all_movies)
 
-        # Colab の /recommend を呼ぶ
+        # ── Colab 経由（フォールバック） ────────────────
+        print(f"[colab] 推薦リクエスト送信 - 候補: {len(movie_list)}本")
         colab_res = requests.post(
             f"{COLAB_URL}/recommend",
             json={"user_history": user_history, "movie_list": movie_list},
@@ -249,7 +325,6 @@ def recommend_movies():
         rec_id = str(colab_json.get("recommended_movie_id", ""))
         reason = colab_json.get("reason", "")
 
-        # 推薦された映画の詳細情報を付与
         recommended = []
         if rec_id in all_movies:
             m = all_movies[rec_id]
@@ -262,13 +337,10 @@ def recommend_movies():
                 "why": reason,
             })
 
-        return jsonify({
-            "reason": reason,
-            "recommended_movies": recommended,
-        })
+        return jsonify({"reason": reason, "recommended_movies": recommended})
 
     except requests.exceptions.Timeout:
-        return jsonify({"error": "Colab への接続がタイムアウトしました（180秒）"}), 504
+        return jsonify({"error": "AI推薦サービスへの接続がタイムアウトしました（180秒）"}), 504
     except Exception as e:
         import traceback
         traceback.print_exc()

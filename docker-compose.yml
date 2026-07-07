@@ -25,6 +25,36 @@ services:
       retries: 10
 
   # ──────────────────────────────────────────────
+  # Ollama（ローカルLLM）
+  # ──────────────────────────────────────────────
+  ollama:
+    image: ollama/ollama
+    container_name: halcinema-ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # 初回起動時にモデルをダウンロードする（モデルが既にあればスキップ）
+  ollama-setup:
+    image: ollama/ollama
+    container_name: halcinema-ollama-setup
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    entrypoint: ["ollama", "pull", "qwen2.5:3b"]
+    restart: "no"
+
+  # ──────────────────────────────────────────────
   # Flask バックエンド
   # ──────────────────────────────────────────────
   backend:
@@ -37,6 +67,8 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/halcinema
       FLASK_ENV: development
       TZ: Asia/Tokyo
+      OLLAMA_URL: http://ollama:11434
+      OLLAMA_MODEL: qwen2.5:3b
     ports:
       - "5000:5000"
     depends_on:
@@ -64,3 +96,4 @@ services:
 
 volumes:
   postgres_data:
+  ollama_data:
