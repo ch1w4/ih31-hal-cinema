@@ -5,6 +5,7 @@ import urllib.parse
 import json
 import base64
 import random
+import string
 
 app = Flask(__name__)
 app.secret_key = "super_secret_random_key_12345"
@@ -277,6 +278,25 @@ def recommend_movies():
 # ============================================
 # REST API（DB連携）
 # ============================================
+
+def _parse_date_str(date_str: str):
+    """
+    "M/DD" 形式の文字列を date オブジェクトに変換する。
+    上映は今後7日以内なので、今年か来年で判断する。
+    """
+    from datetime import date, timedelta
+    try:
+        parts = date_str.split("/")
+        m, d = int(parts[0]), int(parts[1])
+        today = date.today()
+        candidate = date(today.year, m, d)
+        if abs((candidate - today).days) > 15:
+            candidate = date(today.year + 1, m, d)
+        return candidate
+    except Exception:
+        return None
+
+
 def _get_db():
     from database import SessionLocal
     return SessionLocal()
@@ -468,6 +488,259 @@ def api_campaign_detail(campaign_id):
             db.close()
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/showings/find")
+def api_find_showing():
+    """
+    映画ID・日付・スクリーン名・時刻から上映を特定し、予約済み座席を返す
+    Query: movieId, date (M/DD), screen, time (HH:MM)
+    Returns: { showingId, bookedSeats: ["A-1", ...] }
+    """
+    from models import Showing, Screen, BookingSeat, Seat
+    from datetime import time as time_type
+
+    movie_id = request.args.get("movieId", type=int)
+    date_str  = request.args.get("date", "")
+    screen_name = request.args.get("screen", "")
+    time_str  = request.args.get("time", "")
+
+    if not all([movie_id, date_str, screen_name, time_str]):
+        return jsonify({"error": "パラメータが不足しています"}), 400
+
+    show_date = _parse_date_str(date_str)
+    if not show_date:
+        return jsonify({"error": "日付の形式が正しくありません"}), 400
+
+    try:
+        h, m = map(int, time_str.split(":"))
+        start_time = time_type(h, m)
+    except Exception:
+        return jsonify({"error": "時刻の形式が正しくありません"}), 400
+
+    db = _get_db()
+    try:
+        screen = db.query(Screen).filter(Screen.name == screen_name).first()
+        if not screen:
+            return jsonify({"error": "スクリーンが見つかりません"}), 404
+
+        showing = db.query(Showing).filter(
+            Showing.movie_id == movie_id,
+            Showing.screen_id == screen.screen_id,
+            Showing.show_date == show_date,
+            Showing.start_time == start_time,
+        ).first()
+        if not showing:
+            return jsonify({"error": "上映が見つかりません"}), 404
+
+        booked = (db.query(BookingSeat)
+                  .join(Seat, BookingSeat.seat_id == Seat.seat_id)
+                  .filter(BookingSeat.showing_id == showing.showing_id)
+                  .all())
+        booked_seats = [f"{bs.seat.seat_row}-{bs.seat.seat_col}" for bs in booked]
+
+        return jsonify({"showingId": showing.showing_id, "bookedSeats": booked_seats})
+    finally:
+        db.close()
+
+
+@app.route("/api/bookings", methods=["POST"])
+def api_create_booking():
+    """
+    座席予約を作成する
+    Body: { showingId, seats, ticketTypes, userEmail, lastName, firstName,
+            lastNameKana, firstNameKana, gender, phone, payment }
+    Returns: { bookingNo, bookingId, totalPrice }
+    """
+    from models import Showing, Seat, Member, Booking, BookingSeat, TicketType
+    from sqlalchemy.exc import IntegrityError
+
+    body = request.json or {}
+    showing_id = body.get("showingId")
+    seats = body.get("seats", [])
+    ticket_types_map = body.get("ticketTypes", {})
+    user_email   = body.get("userEmail", "")
+    last_name    = body.get("lastName", "ゲスト")
+    first_name   = body.get("firstName", "")
+    last_name_kana  = body.get("lastNameKana", "")
+    first_name_kana = body.get("firstNameKana", "")
+    gender       = body.get("gender", "other")
+    phone        = body.get("phone", "")
+
+    if not showing_id or not seats:
+        return jsonify({"error": "showingId と seats は必須です"}), 400
+
+    ticket_type_name_map = {
+        "general": "一般",
+        "student": "大学生・専門学生",
+        "senior":  "シニア",
+        "child":   "小学生以下",
+    }
+    gender_map = {"男": "male", "女": "female", "どちらでもない": "other"}
+
+    db = _get_db()
+    try:
+        showing = db.query(Showing).filter(Showing.showing_id == showing_id).first()
+        if not showing:
+            return jsonify({"error": "上映が見つかりません"}), 404
+
+        # 会員ルックアップ（なければ作成）
+        member = None
+        if user_email:
+            member = db.query(Member).filter(Member.email == user_email).first()
+            if not member:
+                member = Member(
+                    email=user_email,
+                    last_name=last_name or "ゲスト",
+                    first_name=first_name or "",
+                    last_name_kana=last_name_kana or "",
+                    first_name_kana=first_name_kana or "",
+                    gender=gender_map.get(gender, "other"),
+                    phone=phone or "",
+                    auth_provider="google",
+                )
+                db.add(member)
+                db.flush()
+
+        ticket_types = {t.name: t for t in db.query(TicketType).all()}
+
+        # 予約番号を生成（重複時は再試行）
+        for _ in range(5):
+            booking_no = "HC-" + "".join(random.choices(string.ascii_uppercase + string.digits, k=8))
+            if not db.query(Booking).filter(Booking.booking_no == booking_no).first():
+                break
+
+        booking = Booking(
+            member_id=member.member_id if member else None,
+            showing_id=showing_id,
+            booking_no=booking_no,
+            status="confirmed",
+        )
+        db.add(booking)
+        db.flush()
+
+        total_price = 0
+        for seat_key in seats:
+            try:
+                row, col_str = seat_key.split("-")
+                col = int(col_str)
+            except Exception:
+                db.rollback()
+                return jsonify({"error": f"座席形式が正しくありません: {seat_key}"}), 400
+
+            seat = db.query(Seat).filter(
+                Seat.screen_id == showing.screen_id,
+                Seat.seat_row == row,
+                Seat.seat_col == col,
+            ).first()
+            if not seat:
+                db.rollback()
+                return jsonify({"error": f"座席 {seat_key} が見つかりません"}), 404
+
+            tt_key  = ticket_types_map.get(seat_key, "general")
+            tt_name = ticket_type_name_map.get(tt_key, "一般")
+            tt      = ticket_types.get(tt_name)
+            if not tt:
+                db.rollback()
+                return jsonify({"error": f"チケット種別が見つかりません: {tt_name}"}), 404
+
+            db.add(BookingSeat(
+                booking_id=booking.booking_id,
+                showing_id=showing_id,
+                seat_id=seat.seat_id,
+                ticket_type_id=tt.ticket_type_id,
+                applied_price=tt.unit_price,
+            ))
+            total_price += tt.unit_price
+
+        db.commit()
+        return jsonify({
+            "bookingNo":  booking_no,
+            "bookingId":  booking.booking_id,
+            "totalPrice": total_price,
+        })
+
+    except IntegrityError:
+        db.rollback()
+        return jsonify({"error": "選択した座席はすでに予約済みです。別の座席をお選びください。"}), 409
+    except Exception as e:
+        db.rollback()
+        import traceback; traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        db.close()
+
+
+@app.route("/api/bookings/me")
+def api_my_bookings():
+    """
+    ログインユーザーの予約一覧を返す
+    Query: email
+    Returns: [{ bookingNo, movieTitle, moviePoster, posterColor,
+                showDate, startTime, screenName, seats, totalPrice, status, isPast }]
+    """
+    from models import Member, Booking, BookingSeat, Showing, Screen, Movie, Seat
+    from datetime import datetime, timedelta, date
+
+    email = request.args.get("email", "")
+    if not email:
+        return jsonify({"error": "email パラメータが必要です"}), 400
+
+    db = _get_db()
+    try:
+        member = db.query(Member).filter(Member.email == email).first()
+        if not member:
+            return jsonify([])
+
+        two_days_ago = date.today() - timedelta(days=2)
+
+        bookings = (
+            db.query(Booking)
+            .filter(
+                Booking.member_id == member.member_id,
+                Booking.status != "cancelled",
+            )
+            .join(Showing, Booking.showing_id == Showing.showing_id)
+            .filter(Showing.show_date >= two_days_ago)
+            .order_by(Showing.show_date.desc(), Showing.start_time.desc())
+            .all()
+        )
+
+        now = datetime.now()
+        result = []
+        for b in bookings:
+            showing = b.showing
+            screen  = showing.screen
+            movie   = showing.movie
+
+            booking_seats = (db.query(BookingSeat)
+                             .join(Seat, BookingSeat.seat_id == Seat.seat_id)
+                             .filter(BookingSeat.booking_id == b.booking_id)
+                             .all())
+            seats = [f"{bs.seat.seat_row}-{bs.seat.seat_col}" for bs in booking_seats]
+            total = sum(bs.applied_price for bs in booking_seats)
+
+            show_dt = datetime.combine(showing.show_date, showing.start_time)
+            is_past = show_dt < now
+
+            result.append({
+                "bookingNo":  b.booking_no,
+                "bookingId":  b.booking_id,
+                "movieTitle": movie.title,
+                "moviePoster": movie.poster_path or "",
+                "posterColor": movie.poster_color or "#1a1a1a",
+                "showDate":   showing.show_date.isoformat(),
+                "startTime":  showing.start_time.strftime("%H:%M"),
+                "screenName": screen.name,
+                "seats":      seats,
+                "totalPrice": total,
+                "status":     b.status,
+                "isPast":     is_past,
+            })
+
+        return jsonify(result)
+    finally:
+        db.close()
 
 
 # Flaskアプリの起動（最後に1回だけ）

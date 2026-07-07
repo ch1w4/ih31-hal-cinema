@@ -8,7 +8,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
 import { Movie, ScheduleDay } from "@/lib/mockData";
-import { fetchMovies, fetchShowings } from "@/lib/api";
+import { fetchMovies, fetchShowings, fetchOccupiedSeats, createBooking } from "@/lib/api";
 
 // ウィザードの各ステップを表すユニオン型
 type Step = "select-movie" | "select-time" | "seat" | "ticket-type" | "customer-info" | "confirm" | "complete";
@@ -141,17 +141,6 @@ function TicketsContent() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [schedules, setSchedules] = useState<ScheduleDay[]>([]);
 
-  // 映画一覧をAPIから取得
-  useEffect(() => {
-    fetchMovies().then(setMovies);
-  }, []);
-
-  // 映画が選択されたらスケジュールをAPIから取得
-  useEffect(() => {
-    if (!selectedMovieId) return;
-    fetchShowings(selectedMovieId).then(setSchedules);
-  }, [selectedMovieId]);
-
   // 選択中スクリーンのレイアウト設定（selectedScreen 変化に追従）
   const screenConfig = SCREEN_CONFIGS[getScreenType(selectedScreen)];
 
@@ -173,6 +162,49 @@ function TicketsContent() {
   const [emailConfirm, setEmailConfirm] = useState("");
   const [payment, setPayment] = useState<"credit" | "paypay">("credit");
 
+  // 予約API 関連
+  const [showingId, setShowingId] = useState<number | null>(null);
+  const [loadingSeats, setLoadingSeats] = useState(false);
+  const [confirmedBookingNo, setConfirmedBookingNo] = useState("");
+  const [bookingError, setBookingError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // 映画一覧をAPIから取得
+  useEffect(() => {
+    fetchMovies().then(setMovies);
+  }, []);
+
+  // 映画が選択されたらスケジュールをAPIから取得
+  useEffect(() => {
+    if (!selectedMovieId) return;
+    fetchShowings(selectedMovieId).then(setSchedules);
+  }, [selectedMovieId]);
+
+  // 座席ステップに入ったとき予約済み座席をAPIから取得してマップに反映する
+  useEffect(() => {
+    if (step !== "seat") return;
+    if (!selectedMovieId || !selectedDate || !selectedTime || !selectedScreen) return;
+    setLoadingSeats(true);
+    setShowingId(null);
+    fetchOccupiedSeats({
+      movieId: selectedMovieId,
+      date: selectedDate,
+      screen: selectedScreen,
+      time: selectedTime,
+    }).then((result) => {
+      setLoadingSeats(false);
+      if (!result) return;
+      setShowingId(result.showingId);
+      setSeatMap((prev) => {
+        const next = { ...prev };
+        for (const seatKey of result.bookedSeats) {
+          if (seatKey in next) next[seatKey] = "purchased";
+        }
+        return next;
+      });
+    });
+  }, [step, selectedMovieId, selectedDate, selectedTime, selectedScreen]);
+
   // 選択中の映画オブジェクト
   const movie = movies.find((m) => m.id === selectedMovieId);
 
@@ -189,6 +221,43 @@ function TicketsContent() {
     const t = ticketTypes.find((t) => t.id === (ticketSelections[id] || "general"));
     return sum + (t?.price ?? 1900);
   }, 0);
+
+  // ログインユーザーのメールアドレスを localStorage から取得する
+  function getLoginEmail(): string {
+    try {
+      const u = localStorage.getItem("userInfo");
+      if (u) return (JSON.parse(u) as { email?: string }).email ?? "";
+    } catch {}
+    return "";
+  }
+
+  // 購入確定処理：APIを呼び出して予約を作成する
+  async function handlePurchase() {
+    if (!showingId || isSubmitting) return;
+    setIsSubmitting(true);
+    setBookingError("");
+    const loginEmail = getLoginEmail();
+    const result = await createBooking({
+      showingId,
+      seats: selectedSeats,
+      ticketTypes: ticketSelections,
+      userEmail: loginEmail || email,
+      lastName,
+      firstName,
+      lastNameKana,
+      firstNameKana,
+      gender,
+      phone,
+      payment,
+    });
+    setIsSubmitting(false);
+    if (result.error) {
+      setBookingError(result.error);
+      return;
+    }
+    setConfirmedBookingNo(result.bookingNo);
+    setStep("complete");
+  }
 
   // 座席ボタンをクリックしたときの状態トグル
   // 購入済み座席（blue）は変更不可
@@ -434,6 +503,11 @@ function TicketsContent() {
             <div>{movie.title}</div>
             <div>{selectedDate}　{selectedTime}　{selectedScreen}</div>
           </div>
+
+          {/* 予約済み座席の読み込み中表示 */}
+          {loadingSeats && (
+            <div className="text-sm text-gray-400 mb-3 animate-pulse">座席の空き状況を確認中...</div>
+          )}
 
           {/* 座席色の凡例 */}
           <div className="flex gap-6 text-sm text-gray-300 mb-5">
@@ -822,6 +896,11 @@ function TicketsContent() {
               </div>
             ))}
           </div>
+          {bookingError && (
+            <div className="mb-4 p-3 rounded border border-red-700 bg-[#2a1a1a] text-red-400 text-sm">
+              {bookingError}
+            </div>
+          )}
           <div className="flex gap-3">
             <button
               onClick={() => setStep("customer-info")}
@@ -830,10 +909,15 @@ function TicketsContent() {
               戻る
             </button>
             <button
-              onClick={() => setStep("complete")}
-              className="px-8 py-2 bg-red-600 text-white rounded text-sm font-medium hover:bg-red-700 transition-colors"
+              onClick={handlePurchase}
+              disabled={isSubmitting || !showingId}
+              className={`px-8 py-2 rounded text-sm font-medium transition-colors ${
+                isSubmitting || !showingId
+                  ? "bg-[#444] text-gray-600 cursor-not-allowed"
+                  : "bg-red-600 text-white hover:bg-red-700"
+              }`}
             >
-              購入する
+              {isSubmitting ? "処理中..." : "購入する"}
             </button>
           </div>
         </div>
@@ -854,7 +938,7 @@ function TicketsContent() {
           <div className="border border-[#333] rounded p-4 bg-[#1a1a1a] mb-6 text-left space-y-2 text-sm">
             <div className="text-gray-400 text-sm mb-3">予約内容</div>
             {[
-              { label: "予約番号", value: `HC-${Math.random().toString(36).slice(2, 8).toUpperCase()}` },
+              { label: "予約番号", value: confirmedBookingNo },
               { label: "作品", value: movie.title },
               { label: "日時", value: `${selectedDate}　${selectedTime}` },
               { label: "SCREEN", value: selectedScreen },
