@@ -20,9 +20,18 @@ except Exception as _db_err:
 # CORS設定（Next.jsからのリクエストを許可）
 CORS(
     app,
-    resources={r"/*": {"origins": ["http://localhost:3000"]}},
+    resources={r"/*": {"origins": ["http://localhost:3000", "http://localhost:3001"]}},
     supports_credentials=True,
 )
+
+
+
+try:
+    from chatbot import chatbot_bp
+    app.register_blueprint(chatbot_bp)
+    print("[chatbot] ローカルAIチャットエンドポイント (/api/chat) を登録しました")
+except Exception as e:
+    print(f"[chatbot] 読み込みエラー: {e}")
 
 # Google OAuth 設定
 CLIENT_ID = "757540546817-41rbdtbel91le8956kri1nqpno7qmqq0.apps.googleusercontent.com"

@@ -4,6 +4,7 @@
 
 import type { Metadata } from "next";
 import "./globals.css";
+import Chatbot from "@/app/chat/chatbot"; // ★追加：チャットボットを読み込む（ファイル名に合わせて ./chatbot としています）
 
 // ブラウザタブのタイトルとSEO用メタデータ
 export const metadata: Metadata = {
@@ -27,6 +28,9 @@ export default function RootLayout({
             &copy; {new Date().getFullYear()} HAL CINEMA. All rights reserved.
           </p>
         </footer>
+        
+        {/* ★追加：全ページにチャットボットを表示する */}
+        <Chatbot />
       </body>
     </html>
   );
