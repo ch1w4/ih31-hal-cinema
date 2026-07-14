@@ -1,86 +1,99 @@
 from flask import Blueprint, request, jsonify
-from sqlalchemy import create_engine, text
 import requests
-import json
+from datetime import date
 
-# Blueprintの作成。main.pyでこれを読み込みます。
+# Blueprintの作成
 chatbot_bp = Blueprint('chatbot', __name__)
 
-# データベース接続情報 (Docker環境の環境変数などから取得できるように調整してください)
-DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/halcinema"
-engine = create_engine(DATABASE_URL)
-
-# ローカルのOllamaサーバーのURLとモデル名
+# DockerからWindowsのOllamaに接続するためのURLとモデル名
 OLLAMA_API_URL = "http://host.docker.internal:11434/api/chat"
 MODEL_NAME = "movie-rec"
 
 
 def get_now_showing_movies():
-    """現在上映中の映画一覧を取得"""
-    # 🌟 synopsis(あらすじ)の取得をやめて軽量化
-    query = """
-        SELECT title, rating, duration 
-        FROM movies 
-        WHERE release_date <= CURRENT_DATE AND end_date >= CURRENT_DATE
-        ORDER BY ranking ASC;
-    """
-    with engine.connect() as conn:
-        result = conn.execute(text(query))
+    """データベースから現在上映中の映画一覧を取得（軽量版）"""
+    from database import SessionLocal
+    from models import Movie
+
+    db = SessionLocal()
+    try:
+        today = date.today()
+        # 上映終了日が今日以降、かつ上映開始が今日以前の映画を取得
+        rows = (
+            db.query(Movie)
+            .filter((Movie.end_date >= today) | (Movie.end_date == None))
+            .filter(Movie.release_date <= today)
+            .order_by(Movie.ranking)
+            .all()
+        )
+        if not rows:
+            return "現在上映中の作品はありません。"
+
         movies = []
-        for row in result:
-            # 🌟 1行あたりの情報量をコンパクトに
-            movies.append(f"・『{row.title}』({row.rating} / {row.duration}分)")
-        return "\n".join(movies) if movies else "現在上映中の作品はありません。"
-    
-    
+        for m in rows:
+            movies.append(f"・『{m.title}』({m.rating or 'G'} / {m.duration or 0}分)")
+        return "\n".join(movies)
+    except Exception as e:
+        print(f"[chatbot db error] 映画取得失敗: {e}")
+        return "映画情報の取得に失敗しました。"
+    finally:
+        db.close()
 
-def get_campaigns():
-    """実施中のキャンペーンや割引情報を取得"""
-    with engine.connect() as conn:
-        result = conn.execute(text("SELECT title, subtitle, period, description FROM campaigns;"))
-        campaigns = []
-        for row in result:
-            campaigns.append(f"★{row.title} ({row.subtitle})\n  期間: {row.period}\n  内容: {row.description}")
-        return "\n\n".join(campaigns)
 
-# 2. メインのチャットAPI
+def get_ticket_prices():
+    """データベースからチケットの料金一覧を取得"""
+    from database import SessionLocal
+    from models import TicketType
+
+    db = SessionLocal()
+    try:
+        rows = db.query(TicketType).order_by(TicketType.ticket_type_id).all()
+        if not rows:
+            return "料金情報が登録されていません。"
+
+        prices = []
+        for tt in rows:
+            prices.append(f"・{tt.name}: {tt.unit_price}円")
+        return "\n".join(prices)
+    except Exception as e:
+        print(f"[chatbot db error] 料金取得失敗: {e}")
+        return "料金情報の取得に失敗しました。"
+    finally:
+        db.close()
+
+
 @chatbot_bp.route('/api/chat', methods=['POST'])
 def chat():
+    """
+    フロントエンドからのチャット履歴に、DBから取得したリアルタイム情報を付与して
+    ローカルのOllamaに送信する
+    """
     data = request.json or {}
     messages = data.get("messages", [])
-    
+
     if not messages:
         return jsonify({"error": "メッセージが空です"}), 400
 
-    # ユーザーの最新の質問を取得
-    user_message = messages[-1]["content"]
+    # 1. データベースから最新の映画情報と料金情報を取得
+    movies_info = get_now_showing_movies()
+    prices_info = get_ticket_prices()
 
-    # 🌟【動的情報の取得】質問内容に応じてDBからコンテキストを引っ張る
-    db_context = ""
-    
-    if any(k in user_message for k in ["料金", "いくら", "チケット", "学生", "シニア"]):
-        db_context += f"\n【現在の基本チケット料金】\n{get_ticket_prices()}"
-        
-    if any(k in user_message for k in ["映画", "上映中", "おすすめ", "何やってる", "作品"]):
-        db_context += f"\n【現在上映中の映画リスト】\n{get_now_showing_movies()}"
-        
-    if any(k in user_message for k in ["キャンペーン", "割引", "お得", "レディースデー", "友の会"]):
-        db_context += f"\n【実施中のキャンペーン・割引情報】\n{get_campaigns()}"
+    # 2. Ollama（AI）に与えるシステム指示書（前提知識）を作成
+    system_prompt = f"""あなたはHALCINEMA（ハルシネマ）の優秀な予約アシスタント「シネマ・コンシェルジュ」です。
+以下の映画情報と料金情報に基づいて、お客様の質問に親切かつ丁寧、そして簡潔に回答してください。
+掲載されていない映画や、わからない質問には無理に答えず、一般論として答えるか確認を促してください。
 
-    # 🌟【システムプロンプト（固定ルール）】
-    # AIのキャラクター設定や、基本ルールをここに定義します。
-    system_prompt = (
-        "あなたは映画館「HAL CINEMA（ハルシネマ）」の親切なAIコンシェルジュです。\n"
-        "以下の【提供された最新情報】がある場合は、必ずそのデータに基づいて回答してください。\n"
-        "データベースにない情報（上映時間など）を聞かれた場合は、「公式サイトの上映スケジュールをご確認いただくか、直接劇場までお問い合わせください」と丁寧にお伝えしてください。\n"
-        f"接客は丁寧に行い、語尾は「〜です」「〜ます」を統一してください。\n"
-        f"{db_context}"
-    )
+【現在上映中の映画一覧】
+{movies_info}
 
-    # Ollamaに渡すメッセージリストを構築
-    # 過去の会話履歴を維持しつつ、先頭にシステムプロンプトを差し込む
+【チケット料金一覧】
+{prices_info}
+"""
+
+    # 3. チャット履歴の先頭にシステム指示を挿入する
     ollama_messages = [{"role": "system", "content": system_prompt}] + messages
 
+    # 4. Ollamaにリクエストを送信
     try:
         response = requests.post(
             OLLAMA_API_URL,
@@ -89,14 +102,22 @@ def chat():
                 "messages": ollama_messages,
                 "stream": False
             },
-            timeout=120  # 🌟 30から120（2分）に延長
+            timeout=120  # AIの思考時間を考慮して2分まで待つ
         )
         response.raise_for_status()
-        ollama_data = response.json()
         
+        result = response.json()
+        ai_message = result.get("message", {})
+
         return jsonify({
-            "message": ollama_data.get("message", {}).get("content", "")
+            "reply": ai_message
         })
 
-    except requests.exceptions.RequestException as e:
-        return jsonify({"error": f"Ollamaとの通信に失敗しました: {str(e)}"}), 500
+    except requests.exceptions.ConnectionError:
+        return jsonify({"error": "ローカルAI（Ollama）に接続できません。Windows側でOllamaが起動しているか、OLLAMA_HOST環境変数が設定されているか確認してください。"}), 503
+    except requests.exceptions.Timeout:
+        return jsonify({"error": "AIからの応答がタイムアウトしました。しばらく待ってからもう一度お試しください。"}), 504
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
