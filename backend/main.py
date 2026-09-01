@@ -212,8 +212,9 @@ def test_movie_rec():
 
 # ==================================================
 # Colab の ngrok URL（Colab 起動後に /set-colab-url で更新する）
+# *colabのターミナルでは/recommendまで表示されますが外してください
 # ==================================================
-COLAB_URL = ""
+COLAB_URL = "https://human-dropbox-dividend.ngrok-free.dev"
 
 
 @app.route("/set-colab-url", methods=["POST"])
@@ -250,11 +251,16 @@ def recommend_movies():
             from models import Movie as MovieModel
             from datetime import date as _date
             db = _get_db()
-            all_rows = db.query(MovieModel).order_by(MovieModel.ranking).all()
-            db.close()
-            movies_list = [_movie_to_dict(m) for m in all_rows if m.release_date and m.release_date <= _date.today()]
-            coming = [_movie_to_dict(m) for m in all_rows if m.release_date and m.release_date > _date.today()]
-        except Exception:
+            try:
+                all_rows = db.query(MovieModel).order_by(MovieModel.ranking).all()
+                movies_list = [_movie_to_dict(m) for m in all_rows if m.release_date and m.release_date <= _date.today()]
+                coming = [_movie_to_dict(m) for m in all_rows if m.release_date and m.release_date > _date.today()]
+            finally:
+                db.close()
+        except Exception as e:
+            import traceback
+            print("❌❌❌ movies_list/coming の取得に失敗しました:", repr(e))
+            traceback.print_exc()
             body = request.json or {}
             movies_list = body.get("movies", [])
             coming = body.get("comingSoonMovies", [])
@@ -288,7 +294,12 @@ def recommend_movies():
         # 候補映画リスト（最大15本）
         all_movies = {m["id"]: m for m in movies_list + coming}
         movie_list = [
-            {"id": m["id"], "title": m.get("title", ""), "genre": m.get("genre", [])}
+            {
+                "id": m["id"],
+                "title": m.get("title", ""),
+                "genre": m.get("genre", []),
+                "synopsis": (m.get("synopsis", "") or "")[:200],  # 長すぎるとColab側のトークン圧迫するので200字程度に切る
+            }
             for m in (movies_list + coming)[:15]
         ]
 

@@ -65,6 +65,8 @@ def seed(db):
     # 既にデータがあればスキップ
     if db.query(Movie).count() > 0:
         return
+    
+    today = date.today()
 
     print("[seed] 初期データを投入します...")
 
