@@ -160,6 +160,28 @@ def youtube_subscriptions():
 
 
 # ==================================================
+# ローカル ollama の movie-rec モデル（疎通確認用）
+# 本番の推薦は下の /recommend/movies（Colab 経由）を使う
+# ==================================================
+def ask_movie_rec(prompt: str) -> str:
+    url = "http://localhost:11434/api/generate"
+    payload = {
+        "model": "movie-rec",
+        "prompt": prompt,
+        "stream": False,
+    }
+    res = requests.post(url, json=payload)
+    return res.json().get("response", "")
+
+
+@app.route("/test/movie-rec")
+def test_movie_rec():
+    test_prompt = "こんにちは。短く返事してください。"
+    response = ask_movie_rec(test_prompt)
+    return jsonify({"movie_rec_response": response})
+
+
+# ==================================================
 # Colab の ngrok URL（Colab 起動後に /set-colab-url で更新する）
 # ==================================================
 COLAB_URL = ""
