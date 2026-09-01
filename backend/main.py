@@ -33,6 +33,35 @@ try:
 except Exception as e:
     print(f"[chatbot] 読み込みエラー: {e}")
 
+
+# ==================================================
+# 上映日の自動ローテーション
+# refresh_showings() はプロセス起動時にしか実行されないため、
+# コンテナを再起動しないまま日付が変わると上映日が古いまま残ってしまう。
+# リクエストごとに「今日」をチェックし、日付が変わっていたら補完し直す。
+# ==================================================
+_last_showings_refresh = None
+
+
+@app.before_request
+def _refresh_showings_daily():
+    global _last_showings_refresh
+    from datetime import date
+    today = date.today()
+    if _last_showings_refresh == today:
+        return
+    _last_showings_refresh = today
+    try:
+        from seed_data import refresh_showings
+        db = _get_db()
+        try:
+            refresh_showings(db)
+        finally:
+            db.close()
+    except Exception as e:
+        print(f"[refresh_showings] 自動更新エラー: {e}")
+
+
 # Google OAuth 設定
 CLIENT_ID = "757540546817-41rbdtbel91le8956kri1nqpno7qmqq0.apps.googleusercontent.com"
 CLIENT_SECRET = "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"
