@@ -27,6 +27,11 @@
 | Google Colab + Ollama (qwen2.5:3b) | AI映画推薦生成 |
 | ngrok | Colab のAPIをローカルに公開 |
 
+### インフラ
+| 技術 | 用途 |
+|------|------|
+| Docker / Docker Compose | コンテナ化・ローカル起動一括管理 |
+
 ### 今後導入予定
 | 技術 | 用途 |
 |------|------|
@@ -40,7 +45,9 @@
 
 ```
 ih31-hal-cinema/
+├── docker-compose.yml              # 全サービス一括起動
 ├── frontend/                       # Next.js フロントエンド
+│   ├── Dockerfile
 │   ├── app/
 │   │   ├── page.tsx                # ホーム（スライダー・ランキング/AI推薦・上映中グリッド）
 │   │   ├── layout.tsx
@@ -60,13 +67,15 @@ ih31-hal-cinema/
 │       ├── api.ts                  # バックエンドAPIクライアント（全fetch関数）
 │       └── mockData.ts             # 型定義のみ（Movie・Campaign・ScheduleDay 等）
 ├── backend/                        # Flask バックエンド
+│   ├── Dockerfile
 │   ├── main.py                     # 全エンドポイント（OAuth・AI推薦・REST API）
 │   ├── models.py                   # SQLAlchemy ORM モデル（19テーブル）
-│   ├── database.py                 # DB接続・セッション管理
+│   ├── database.py                 # DB接続・セッション管理・起動時シード呼び出し
+│   ├── seed_data.py                # 初期データ投入 & 上映スケジュール日次補完
 │   ├── db/
 │   │   ├── schema.sql              # PostgreSQL DDL（19テーブル＋インデックス）
 │   │   ├── seed.sql                # 初期データ（券種・スクリーン・座席・ジャンル）
-│   │   └── movies_seed.sql         # 映画・キャンペーン・上映スケジュール初期データ
+│   │   └── movies_seed.sql         # 映画・キャンペーン・上映スケジュール
 │   ├── migrations/                 # Alembic マイグレーション
 │   ├── alembic.ini
 │   ├── requirements.txt
@@ -78,78 +87,43 @@ ih31-hal-cinema/
 
 ---
 
-## ページ一覧
+## 起動方法
 
-| URL | ページ名 | データソース |
-|-----|---------|------------|
-| `/` | ホーム | `GET /api/movies` |
-| `/now-showing` | 上映中 | `GET /api/movies` |
-| `/coming-soon` | 上映予定 | `GET /api/movies/coming-soon` |
-| `/coming-soon/[id]` | 上映予定詳細 | `GET /api/movies/<id>` |
-| `/campaign` | キャンペーン/ニュース | `GET /api/campaigns` |
-| `/campaign/[id]` | キャンペーン詳細 | `GET /api/campaigns/<id>` |
-| `/movies/[id]` | 映画詳細 | `GET /api/movies/<id>` |
-| `/tickets` | チケット購入 | `GET /api/movies` + `GET /api/showings/<id>` |
-| `/login` | ログイン | Google OAuth |
-| `/register` | 新規登録 | Google OAuth |
-| `/auth/success` | OAuth完了 | `POST /recommend/movies` |
+### Docker で起動（推奨）
 
----
+Docker Desktop がインストールされていれば、コマンド1つで全サービスが起動します。
 
-## DBスキーマ（19テーブル）
-
+```bash
+docker compose up --build
 ```
-movies          上映映画
-genres          ジャンル
-movie_genres    映画×ジャンル（多対多）
-cast_members    キャスト
-movie_casts     映画×キャスト（多対多）
-screens         スクリーン（大・中・小）
-seats           座席（行・列）
-showings        上映スケジュール
-ticket_types    券種（一般・学生・シニア・小学生以下）
-members         会員
-likes           AIスコア（会員×映画）
-bookings        予約
-booking_seats   予約座席（1行=1席）
-payments        支払い
-tickets         チケット（QRトークン）
-coupons         クーポン
-point_transactions ポイント履歴
-notifications   通知
-campaigns       キャンペーン・お知らせ
+
+| サービス | URL |
+|---------|-----|
+| フロントエンド | http://localhost:3000 |
+| バックエンド API | http://localhost:5000 |
+| PostgreSQL | localhost:5432 |
+
+初回起動時にDBのスキーマ作成・初期データ投入が自動で行われます。
+
+> **AI推薦を使う場合は追加手順が必要です。** 下記「AI映画推薦フロー」を参照してください。
+
+停止する場合:
+```bash
+docker compose down
+```
+
+DBデータも含めて完全に削除する場合:
+```bash
+docker compose down -v
 ```
 
 ---
 
-## AI映画推薦フロー
+### ローカルで起動（Docker不使用）
 
-```
-ユーザー (ブラウザ)       Flask (localhost:5000)        Google Colab (ngrok)
-       │                          │                              │
-       │── Googleログイン ──────► │                              │
-       │                          │── DB から全映画取得           │
-       │                          │── YouTube いいね・登録取得    │
-       │                          │── POST /recommend ─────────► │
-       │                          │   (user_history, movie_list) │── Ollama(qwen2.5:3b) で推薦生成
-       │                          │◄─ { recommended_movie_id,    │
-       │                          │     reason } ───────────────  │
-       │◄── /auth/success ──────  │                              │
-       │  (localStorage に保存)   │                              │
-```
+#### 毎回の起動順序
 
-localStorage に保存されるキー:
-- `authToken` — アクセストークン
-- `userInfo` — Googleアカウント情報 `{ name, email, picture }`
-- `recommendedMovies` — AI推薦映画リスト `[{ id, score, why }, ...]`
-
----
-
-## 起動手順
-
-### 毎回の起動順序
-
-**① PostgreSQL を起動・接続確認**（初回はDB作成 → 下記「初回セットアップ」参照）
+**① PostgreSQL を起動**（初回はDB作成 → 下記「初回セットアップ」参照）
 
 **② Google Colab を実行する**
 
@@ -183,7 +157,7 @@ npm run dev
 
 ---
 
-### 初回セットアップ
+#### 初回セットアップ
 
 **フロントエンド**
 ```powershell
@@ -201,16 +175,9 @@ pip install -r requirements.txt
 
 **PostgreSQL DB 作成・初期データ投入**
 ```powershell
-# DB作成（PostgreSQL インストール済みの前提）
 psql -U postgres -c "CREATE DATABASE halcinema;"
-
-# スキーマ（テーブル定義）適用
 psql -U postgres -d halcinema -f backend/db/schema.sql
-
-# 初期データ（スクリーン・座席・券種・ジャンル）
 psql -U postgres -d halcinema -f backend/db/seed.sql
-
-# 映画・キャンペーン・上映スケジュール投入
 psql -U postgres -d halcinema -f backend/db/movies_seed.sql
 ```
 
@@ -222,8 +189,49 @@ psql -U postgres -d halcinema -f backend/db/movies_seed.sql
 Colab の 🔑 Secrets に以下を登録する:
 | 名前 | 値 |
 |------|----|
-| `NGROK_TOKEN` | [ngrok ダッシュボード](https://dashboard.ngrok.com/get-started/your-authtoken) で取得 |
+| `NGROK_TOKEN` | ngrok ダッシュボードで取得 |
 | `HF_TOKEN` | Hugging Face アクセストークン |
+
+---
+
+## AI映画推薦フロー
+
+```
+ユーザー (ブラウザ)       Flask (localhost:5000)        Google Colab (ngrok)
+       │                          │                              │
+       │── Googleログイン ──────► │                              │
+       │                          │── DB から全映画取得           │
+       │                          │── YouTube いいね・登録取得    │
+       │                          │── POST /recommend ─────────► │
+       │                          │   (user_history, movie_list) │── Ollama(qwen2.5:3b) で推薦生成
+       │                          │◄─ { recommended_movie_id,    │
+       │                          │     reason } ───────────────  │
+       │◄── /auth/success ──────  │                              │
+       │  (localStorage に保存)   │                              │
+```
+
+localStorage に保存されるキー:
+- `authToken` — アクセストークン
+- `userInfo` — Googleアカウント情報 `{ name, email, picture }`
+- `recommendedMovies` — AI推薦映画リスト `[{ id, score, why }, ...]`
+
+---
+
+## ページ一覧
+
+| URL | ページ名 | データソース |
+|-----|---------|------------|
+| `/` | ホーム | `GET /api/movies` |
+| `/now-showing` | 上映中 | `GET /api/movies` |
+| `/coming-soon` | 上映予定 | `GET /api/movies/coming-soon` |
+| `/coming-soon/[id]` | 上映予定詳細 | `GET /api/movies/<id>` |
+| `/campaign` | キャンペーン/ニュース | `GET /api/campaigns` |
+| `/campaign/[id]` | キャンペーン詳細 | `GET /api/campaigns/<id>` |
+| `/movies/[id]` | 映画詳細 | `GET /api/movies/<id>` |
+| `/tickets` | チケット購入 | `GET /api/movies` + `GET /api/showings/<id>` |
+| `/login` | ログイン | Google OAuth |
+| `/register` | 新規登録 | Google OAuth |
+| `/auth/success` | OAuth完了 | `POST /recommend/movies` |
 
 ---
 
@@ -246,13 +254,39 @@ Colab の 🔑 Secrets に以下を登録する:
 
 ---
 
+## DBスキーマ（19テーブル）
+
+```
+movies              上映映画
+genres              ジャンル
+movie_genres        映画×ジャンル（多対多）
+cast_members        キャスト
+movie_casts         映画×キャスト（多対多）
+screens             スクリーン（大・中・小）
+seats               座席（行・列）
+showings            上映スケジュール
+ticket_types        券種（一般・学生・シニア・小学生以下）
+members             会員
+likes               AIスコア（会員×映画）
+bookings            予約
+booking_seats       予約座席（1行=1席）
+payments            支払い
+tickets             チケット（QRトークン）
+coupons             クーポン
+point_transactions  ポイント履歴
+notifications       通知
+campaigns           キャンペーン・お知らせ
+```
+
+---
+
 ## スクリーン構成（チケット購入 座席マップ）
 
-| スクリーン | 総席数 | 構成 | 出入り口 |
-|-----------|--------|------|---------|
-| 大スクリーン1 | 200席 | A〜C列(各16席) + D〜I列(各13席、左2席+通路+右11席) | 右側 |
-| 中スクリーン1 | 120席 | A〜H列(各15席) | 左側 |
-| 小スクリーン1 | 70席 | A〜G列(各10席) | 右側 |
+| スクリーン | 種別 | 総席数 | 構成 |
+|-----------|------|--------|------|
+| 大スクリーン1〜3 | large | 各126席 | A〜C列(各16席) + D〜I列(各13席) |
+| 中スクリーン1〜2 | medium | 各120席 | A〜H列(各15席) |
+| 小スクリーン1〜3 | small | 各70席 | A〜G列(各10席) |
 
 ---
 
@@ -273,6 +307,10 @@ Colab の 🔑 Secrets に以下を登録する:
 - [x] SQLAlchemy ORM モデル・Alembic マイグレーション
 - [x] 映画・キャンペーン・スケジュールデータのDB管理
 - [x] フロントエンドのデータソースをDB（Flask API）に移行
+- [x] Docker Compose によるコンテナ化
+- [x] スクリーン8館構成（大×3・中×2・小×3）、35スロット/日 × 12映画ローテーション
+- [x] 上映スケジュールの日次自動補完（起動時に今日〜今日+6日を常に維持）
+- [x] チケット購入：過去の日付・時間帯をグレーアウトして選択不可
 
 ## 今後の実装予定
 

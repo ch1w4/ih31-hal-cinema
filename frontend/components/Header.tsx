@@ -80,12 +80,19 @@ export default function Header() {
                 )}
                 <span className="text-sm">{user.email}</span>
               </button>
-              {/* ドロップダウンメニュー: ログアウトのみ */}
+              {/* ドロップダウンメニュー */}
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-[#1a1a1a] border border-[#333] rounded-lg shadow-lg z-50">
+                  <a
+                    href="/reservations"
+                    onClick={() => setIsDropdownOpen(false)}
+                    className="block px-4 py-2 text-sm text-gray-300 hover:bg-[#2a2a2a] transition-colors rounded-t-lg"
+                  >
+                    予約済み座席
+                  </a>
                   <button
                     onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-[#2a2a2a] transition-colors rounded-lg"
+                    className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-[#2a2a2a] transition-colors rounded-b-lg border-t border-[#333]"
                   >
                     ログアウト
                   </button>

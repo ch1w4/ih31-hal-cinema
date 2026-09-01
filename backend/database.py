@@ -25,6 +25,14 @@ def get_db():
 
 
 def init_db():
-    """起動時にテーブルを作成する（未存在のみ）"""
+    """起動時にテーブルを作成し、空なら初期データを投入する"""
     from models import Base as ModelBase  # noqa: F401 – import to register mappers
     ModelBase.metadata.create_all(bind=engine)
+
+    db = SessionLocal()
+    try:
+        from seed_data import seed, refresh_showings
+        seed(db)
+        refresh_showings(db)
+    finally:
+        db.close()

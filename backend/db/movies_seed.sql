@@ -84,11 +84,11 @@ OVERRIDING SYSTEM VALUE VALUES
 
 (11, 'ラストマン FIRST LOVE',         'Last Man FIRST LOVE',
  '特殊能力を持つ探偵が、難解な事件を次々と解決するアクションコメディ。',
- 116, 'G',    '平野監督',         '2025-12-24', '2026-02-28', '/moviesamune/eiga11.jpg', '#1a2a3a', 11),
+ 116, 'G',    '平野監督',         '2025-12-24', '2026-02-28', '/moviesamune/eiga12.jpg', '#1a2a3a', 11),
 
 (12, 'えんとつ町のプペル',             'Poupelle of Chimney Town',
  'えんとつ町が星空に包まれた奇跡の夜から1年が過ぎた。大切な親友プペルを失った少年ルビッチは再会を信じ続けていたが、前へ進むためあきらめてしまう。',
- 135, 'G',    '廣田監督',         '2026-03-27', '2026-05-31', '/moviesamune/eiga12.jpg', '#2a2a3a', 12)
+ 135, 'G',    '廣田監督',         '2026-03-27', '2026-05-31', '/moviesamune/eiga11.jpg', '#2a2a3a', 12)
 
 ON CONFLICT (movie_id) DO NOTHING;
 
@@ -170,48 +170,65 @@ JOIN cast_members c ON c.name = v.cast_name
 ON CONFLICT DO NOTHING;
 
 -- ──────────────────────────────────────────────
--- 上映スケジュール（今日から7日間、各映画を各スクリーンで）
+-- 上映スケジュール（今日から7日間 × 8スクリーン × ローテーション）
+-- 35スロット/日 を12映画でローテーション → 各映画 約20回/7日
 -- ──────────────────────────────────────────────
 DO $$
 DECLARE
-    large_id  BIGINT;
-    medium_id BIGINT;
-    small_id  BIGINT;
-    mid       INTEGER;
-    d         DATE;
+    L1 BIGINT; L2 BIGINT; L3 BIGINT;
+    M1 BIGINT; M2 BIGINT;
+    S1 BIGINT; S2 BIGINT; S3 BIGINT;
+    d          DATE;
+    day_offset INTEGER;
 BEGIN
-    SELECT screen_id INTO large_id  FROM screens WHERE name = '大スクリーン1' LIMIT 1;
-    SELECT screen_id INTO medium_id FROM screens WHERE name = '中スクリーン1' LIMIT 1;
-    SELECT screen_id INTO small_id  FROM screens WHERE name = '小スクリーン1' LIMIT 1;
+    SELECT screen_id INTO L1 FROM screens WHERE name = '大スクリーン1';
+    SELECT screen_id INTO L2 FROM screens WHERE name = '大スクリーン2';
+    SELECT screen_id INTO L3 FROM screens WHERE name = '大スクリーン3';
+    SELECT screen_id INTO M1 FROM screens WHERE name = '中スクリーン1';
+    SELECT screen_id INTO M2 FROM screens WHERE name = '中スクリーン2';
+    SELECT screen_id INTO S1 FROM screens WHERE name = '小スクリーン1';
+    SELECT screen_id INTO S2 FROM screens WHERE name = '小スクリーン2';
+    SELECT screen_id INTO S3 FROM screens WHERE name = '小スクリーン3';
 
-    -- 上映中の映画 (movie_id 1〜12) に対してスケジュールを生成
-    FOR mid IN 1..12 LOOP
-        FOR d IN SELECT generate_series(current_date, current_date + 6, '1 day')::date LOOP
-            -- 大スクリーン
-            INSERT INTO showings (movie_id, screen_id, show_date, start_time)
-            VALUES
-                (mid, large_id, d, '10:00'),
-                (mid, large_id, d, '13:30'),
-                (mid, large_id, d, '17:00'),
-                (mid, large_id, d, '20:30')
-            ON CONFLICT DO NOTHING;
-
-            -- 中スクリーン
-            INSERT INTO showings (movie_id, screen_id, show_date, start_time)
-            VALUES
-                (mid, medium_id, d, '11:30'),
-                (mid, medium_id, d, '15:00'),
-                (mid, medium_id, d, '18:30')
-            ON CONFLICT DO NOTHING;
-
-            -- 小スクリーン
-            INSERT INTO showings (movie_id, screen_id, show_date, start_time)
-            VALUES
-                (mid, small_id, d, '12:00'),
-                (mid, small_id, d, '16:00'),
-                (mid, small_id, d, '19:30')
-            ON CONFLICT DO NOTHING;
-        END LOOP;
+    FOR day_offset IN 0..6 LOOP
+        d := current_date + day_offset;
+        INSERT INTO showings (movie_id, screen_id, show_date, start_time) VALUES
+            ((0+day_offset)%12+1,  L1, d, '08:00'),
+            ((1+day_offset)%12+1,  L1, d, '10:30'),
+            ((2+day_offset)%12+1,  L1, d, '13:30'),
+            ((3+day_offset)%12+1,  L1, d, '16:30'),
+            ((4+day_offset)%12+1,  L1, d, '19:30'),
+            ((5+day_offset)%12+1,  L2, d, '08:00'),
+            ((6+day_offset)%12+1,  L2, d, '10:30'),
+            ((7+day_offset)%12+1,  L2, d, '13:30'),
+            ((8+day_offset)%12+1,  L2, d, '16:30'),
+            ((9+day_offset)%12+1,  L2, d, '19:30'),
+            ((10+day_offset)%12+1, L3, d, '08:00'),
+            ((11+day_offset)%12+1, L3, d, '10:30'),
+            ((0+day_offset)%12+1,  L3, d, '13:30'),
+            ((1+day_offset)%12+1,  L3, d, '16:30'),
+            ((2+day_offset)%12+1,  L3, d, '19:30'),
+            ((3+day_offset)%12+1,  M1, d, '10:00'),
+            ((4+day_offset)%12+1,  M1, d, '13:00'),
+            ((5+day_offset)%12+1,  M1, d, '16:00'),
+            ((6+day_offset)%12+1,  M1, d, '19:00'),
+            ((7+day_offset)%12+1,  M2, d, '10:00'),
+            ((8+day_offset)%12+1,  M2, d, '13:00'),
+            ((9+day_offset)%12+1,  M2, d, '16:00'),
+            ((10+day_offset)%12+1, M2, d, '19:00'),
+            ((11+day_offset)%12+1, S1, d, '11:00'),
+            ((0+day_offset)%12+1,  S1, d, '14:00'),
+            ((1+day_offset)%12+1,  S1, d, '17:00'),
+            ((2+day_offset)%12+1,  S1, d, '20:00'),
+            ((3+day_offset)%12+1,  S2, d, '11:00'),
+            ((4+day_offset)%12+1,  S2, d, '14:00'),
+            ((5+day_offset)%12+1,  S2, d, '17:00'),
+            ((6+day_offset)%12+1,  S2, d, '20:00'),
+            ((7+day_offset)%12+1,  S3, d, '11:00'),
+            ((8+day_offset)%12+1,  S3, d, '14:00'),
+            ((9+day_offset)%12+1,  S3, d, '17:00'),
+            ((10+day_offset)%12+1, S3, d, '20:00')
+        ON CONFLICT DO NOTHING;
     END LOOP;
 END $$;
 
@@ -306,3 +323,17 @@ OVERRIDING SYSTEM VALUE VALUES
 ON CONFLICT (campaign_id) DO NOTHING;
 
 SELECT setval(pg_get_serial_sequence('campaigns', 'campaign_id'), 10, true);
+
+-- ──────────────────────────────────────────────
+-- 映画の公開日・終映日を現在日付基準に更新
+-- （固定日付だと経年で全映画が終映済みになるため）
+-- ──────────────────────────────────────────────
+UPDATE movies SET
+    release_date = CURRENT_DATE - INTERVAL '30 days',
+    end_date     = CURRENT_DATE + INTERVAL '90 days'
+WHERE movie_id BETWEEN 1 AND 12;
+
+UPDATE movies SET release_date = CURRENT_DATE + INTERVAL '30 days',  end_date = CURRENT_DATE + INTERVAL '120 days' WHERE movie_id = 13;
+UPDATE movies SET release_date = CURRENT_DATE + INTERVAL '45 days',  end_date = CURRENT_DATE + INTERVAL '135 days' WHERE movie_id = 14;
+UPDATE movies SET release_date = CURRENT_DATE + INTERVAL '60 days',  end_date = CURRENT_DATE + INTERVAL '150 days' WHERE movie_id = 15;
+UPDATE movies SET release_date = CURRENT_DATE + INTERVAL '75 days',  end_date = CURRENT_DATE + INTERVAL '165 days' WHERE movie_id = 16;
