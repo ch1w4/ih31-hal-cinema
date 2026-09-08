@@ -3,37 +3,46 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
-import { Movie } from "@/lib/mockData";
+import { Movie, RecommendedMovie } from "@/lib/mockData";
 import { fetchMovies } from "@/lib/api";
 
 export default function NowShowingPage() {
   const [movies, setMovies] = useState<Movie[]>([]);
-  const [recommendedMovies, setRecommendedMovies] = useState<Movie[]>([]);
+  const [recommendedMovies, setRecommendedMovies] = useState<RecommendedMovie[]>([]);
   const [userInfo, setUserInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showPanel, setShowPanel] = useState(true);
 
-  useEffect(() => {
-    fetchMovies().then((all) => {
-      setMovies(all);
-      try {
-        const stored = localStorage.getItem("recommendedMovies");
-        if (stored) {
-          const raw: { id: string; score: number; why: string }[] = JSON.parse(stored);
-          const converted: Movie[] = raw
-            .map((item) => {
+    useEffect(() => {
+      fetchMovies().then((all) => {
+        setMovies(all);
+        try {
+          const stored = localStorage.getItem("recommendedMovies");
+          if (stored) {
+            const raw: { id: string; score: number; why: string }[] = JSON.parse(stored);
+          const converted: RecommendedMovie[] = raw
+            .map((item): RecommendedMovie | null => {
               const movie = all.find((m) => m.id === item.id);
-              return movie ? { ...movie, score: item.score, why: item.why } as any : null;
+              if (!movie) return null;
+              return {
+                id: movie.id,
+                title: movie.title,
+                genre: movie.genre,
+                posterColor: movie.posterColor,
+                poster: movie.poster,
+                score: item.score,
+                why: item.why,
+              };
             })
-            .filter(Boolean) as Movie[];
-          setRecommendedMovies(converted);
-        }
-        const user = localStorage.getItem("userInfo");
-        if (user) setUserInfo(JSON.parse(user));
-      } catch {}
-      setLoading(false);
-    });
-  }, []);
+            .filter((m): m is RecommendedMovie => m !== null);
+            setRecommendedMovies(converted);
+          }
+          const user = localStorage.getItem("userInfo");
+          if (user) setUserInfo(JSON.parse(user));
+        } catch {}
+        setLoading(false);
+      });
+    }, []);
 
   const group1 = movies.slice(0, 3);
   const group2 = movies.slice(3, 6);
@@ -98,24 +107,34 @@ export default function NowShowingPage() {
               <span className="text-xs text-gray-400 block mb-1">Recommended For You</span>
               {userInfo?.name ? `${userInfo.name}さんへのおすすめ` : "あなたへのおすすめ"}
             </h1>
-            <div className="grid grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-2 gap-4 mb-8">
               {recommendedMovies.slice(0, 4).map((movie) => (
-                <Link key={movie.id} href={`/movies/${movie.id}`} className="group cursor-pointer">
-                  <div className="w-full rounded-lg mb-2 overflow-hidden" style={{ aspectRatio: "2/3" }}>
+                <Link
+                  key={movie.id}
+                  href={`/movies/${movie.id}`}
+                  className="group cursor-pointer flex gap-3 bg-[#1a1a1a] rounded-lg p-3 hover:bg-[#222] transition-colors"
+                >
+                  <div className="w-20 shrink-0 rounded-lg overflow-hidden" style={{ aspectRatio: "2/3" }}>
                     {movie.poster ? (
-                      <img src={movie.poster} alt={movie.title} className="w-full h-full object-cover hover:opacity-90 transition-opacity" />
+                      <img src={movie.poster} alt={movie.title} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full" style={{ background: `linear-gradient(160deg, ${movie.posterColor} 0%, #1a1a1a 100%)` }} />
                     )}
                   </div>
-                  <h3 className="text-sm font-medium text-white group-hover:text-gray-200 truncate">{movie.title}</h3>
-                  <p className="text-xs text-gray-500">{movie.genre.join("・")}</p>
+                  <div className="flex flex-col min-w-0">
+                    <h3 className="text-sm font-medium text-white group-hover:text-gray-200 truncate">{movie.title}</h3>
+                    <p className="text-xs text-gray-500 mb-1">{movie.genre.join("・")}</p>
+                    {movie.why && (
+                      <p className="text-xs text-gray-400 leading-snug">
+                        {movie.why}
+                      </p>
+                    )}
+                  </div>
                 </Link>
               ))}
             </div>
           </section>
         )}
-
         <h1 className="text-xl font-medium text-white mb-6 pb-2 border-b border-[#333]">
           <span className="text-sm text-gray-400 block mb-1">Now Showing</span>
           上映中

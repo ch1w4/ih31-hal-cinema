@@ -276,6 +276,7 @@ def recommend_movies():
             recommended.append({
                 "id": m.get("id"),
                 "title": m.get("title"),
+                "genre": m.get("genre", []),
                 "posterColor": m.get("posterColor", "#666"),
                 "poster": m.get("poster", ""),
                 "score": 1.0,

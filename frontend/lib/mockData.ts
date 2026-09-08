@@ -17,6 +17,16 @@ export type Movie = {
   ranking?: number;
 };
 
+export type RecommendedMovie = {
+  id: string;
+  title: string;
+  genre: string[];
+  posterColor: string;
+  poster?: string;
+  score: number;
+  why: string;
+};
+
 export type TimeSlot = {
   screen: string;
   times: string[];
