@@ -65,16 +65,14 @@ export default function Header() {
 
   return (
     <>
-      {!isMenuOpen && (
-        <button
-          type="button"
-          onClick={() => setIsMenuOpen(true)}
-          className="sidebar-toggle"
-          aria-label="メニューを開く"
-        >
-          ☰
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={() => setIsMenuOpen(true)}
+        className={`sidebar-toggle ${isMenuOpen ? "sidebar-toggle-hidden" : ""}`}
+        aria-label="メニューを開く"
+      >
+        ☰
+      </button>
 
       <aside className={`sidebar ${isMenuOpen ? "sidebar-open" : "sidebar-closed"}`}>
         <div className="sidebar-header">

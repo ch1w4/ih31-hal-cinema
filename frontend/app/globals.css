@@ -3,14 +3,13 @@
 html {
   font-size: 20px;
   height: 100%;
-  overflow: hidden;
 }
 
 body {
   width: 100%;
   max-width: 100%;
   margin: 0;
-  height: 100%;
+  min-height: 100vh;
   overflow: hidden;
 }
 
@@ -38,25 +37,19 @@ main {
   max-width: 1280px;
   margin: 0 auto;
   height: 100vh;
-  padding-right: 0 !important;
+  padding: 24px 16px 48px;
   overflow-y: auto;
   overflow-x: hidden;
-  scrollbar-gutter: auto;
+  scrollbar-gutter: stable;
 }
 
 @media (min-width: 768px) {
-  body.sidebar-open main {
-    width: calc(100% - 210px);
-    max-width: none;
-    margin-left: 210px;
-    margin-right: 0;
+  body.sidebar-open {
+    padding-left: 210px;
   }
 
-  body.sidebar-collapsed main {
-    width: 100%;
-    max-width: 1280px;
-    margin-left: auto;
-    margin-right: auto;
+  body.sidebar-collapsed {
+    padding-left: 0;
   }
 }
 
@@ -145,7 +138,7 @@ main {
   position: fixed;
   left: 12px;
   top: 12px;
-  z-index: 50;
+  z-index: 100;
   width: 42px;
   height: 42px;
   display: flex;
@@ -158,6 +151,28 @@ main {
   font-size: 28px;
   line-height: 1;
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.sidebar-toggle-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+body.sidebar-open .sidebar-toggle {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+body.sidebar-collapsed .sidebar-toggle {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .sidebar-nav {
