@@ -42,8 +42,17 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
+    const main = document.querySelector("main");
+    const previousScrollTop = main?.scrollTop ?? 0;
+
     document.body.classList.toggle("sidebar-open", isMenuOpen);
     document.body.classList.toggle("sidebar-collapsed", !isMenuOpen);
+
+    requestAnimationFrame(() => {
+      if (main) {
+        main.scrollTop = previousScrollTop;
+      }
+    });
 
     return () => {
       document.body.classList.remove("sidebar-open", "sidebar-collapsed");

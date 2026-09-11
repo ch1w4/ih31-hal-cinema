@@ -14,17 +14,18 @@ body {
 }
 
 :root {
-  --bg-primary: #0f0f0f;
-  --bg-secondary: #1a1a1a;
-  --bg-card: #2a2a2a;
-  --text-primary: #ffffff;
-  --text-muted: #999999;
-  --border-color: #3a3a3a;
+  --bg-primary: #050505;
+  --bg-secondary: #121212;
+  --bg-card: #121212;
+  --text-primary: #f5f5f0;
+  --text-muted: #a8a8a8;
+  --border-color: #2a2a2a;
   --accent: #d9b35a;
+  --accent-strong: #f6d77a;
 }
 
 body {
-  background: #0a0a0a;
+  background: #050505;
   color: var(--text-primary);
   font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, "Yu Gothic", Arial, sans-serif;
   min-height: 100vh;
@@ -34,22 +35,28 @@ body {
 
 main {
   width: 100%;
-  max-width: 1280px;
+  max-width: none;
   margin: 0 auto;
   height: 100vh;
-  padding: 24px 16px 48px;
+  padding: 26px 20px 52px;
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-gutter: stable;
+  transition: width 0.25s ease, margin 0.25s ease;
 }
 
 @media (min-width: 768px) {
-  body.sidebar-open {
-    padding-left: 210px;
+  body.sidebar-open main {
+    width: calc(100% - 214px);
+    max-width: auto;
+    margin-left: 214px;
+    margin-right: 0;
   }
 
-  body.sidebar-collapsed {
-    padding-left: 0;
+  body.sidebar-collapsed main {
+    width: auto;
+    margin-left: 214px;
+    margin-right: auto;
   }
 }
 
@@ -58,13 +65,13 @@ main {
   left: 0;
   top: 0;
   z-index: 40;
-  width: 210px;
+  width: 214px;
   height: 100vh;
   overflow: hidden;
-  padding: 16px 12px 18px;
-  background: #0e0e0e;
-  border-right: 1px solid #2a2a2a;
-  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.4);
+  padding: 18px 12px 16px;
+  background: linear-gradient(180deg, rgba(8, 8, 8, 0.98), rgba(12, 12, 12, 0.96));
+  border-right: 1px solid rgba(217, 179, 90, 0.18);
+  box-shadow: 12px 0 30px rgba(0, 0, 0, 0.45);
   transition: transform 0.2s ease;
 }
 
@@ -82,9 +89,9 @@ main {
   justify-content: space-between;
   gap: 8px;
   min-height: 42px;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
   padding: 4px 0 12px;
-  border-bottom: 1px solid #2a2a2a;
+  border-bottom: 1px solid rgba(217, 179, 90, 0.15);
 }
 
 .sidebar-close,
@@ -115,23 +122,24 @@ main {
 
 .sidebar-home-label {
   font-size: 11px;
-  letter-spacing: 0.2em;
-  color: #d8b560;
-  font-weight: 600;
+  letter-spacing: 0.22em;
+  color: var(--accent-strong);
+  font-weight: 700;
 }
 
 .sidebar-brand {
   display: block;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #2a2a2a;
+  margin-bottom: 18px;
+  padding: 0 0 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .sidebar-brand-image {
   display: block;
-  width: auto;
-  height: 48px;
+  width: 128px;
+  height: 42px;
   object-fit: contain;
+  filter: drop-shadow(0 0 10px rgba(217, 179, 90, 0.18));
 }
 
 .sidebar-toggle {
@@ -188,41 +196,45 @@ body.sidebar-collapsed .sidebar-toggle {
   justify-content: left;
   width: 100%;
   min-height: 46px;
-  padding: 0 10px 0 14px;
+  padding: 0 12px 0 16px;
   border-radius: 0;
   color: #f0f0f0;
   text-decoration: none;
   font-size: 17px;
   font-weight: 500;
+  letter-spacing: 0.02em;
   transition: all 0.2s ease;
 }
 
 .sidebar-nav-item {
   position: relative;
+  border-left: 2px solid transparent;
 }
 
 .sidebar-nav-item.active {
-  background: linear-gradient(90deg, rgba(217, 179, 90, 0.2), rgba(217, 179, 90, 0.06));
-  color: #f5d678;
-  box-shadow: inset 3px 0 0 #d9b35a;
+  background: linear-gradient(90deg, rgba(217, 179, 90, 0.14), rgba(217, 179, 90, 0.03));
+  color: var(--accent-strong);
+  border-left-color: var(--accent);
+  box-shadow: inset 0 0 0 1px rgba(217, 179, 90, 0.08);
 }
 
 .sidebar-nav-item:hover,
 .sidebar-login-item:hover {
-  background: rgba(217, 179, 90, 0.12);
-  color: #f5d678;
+  background: rgba(217, 179, 90, 0.08);
+  color: var(--accent-strong);
 }
 
 .sidebar-nav-item:hover span,
 .sidebar-login-item:hover {
-  color: #f5d678;
+  color: var(--accent-strong);
 }
 
 .sidebar-login-item {
   margin: 0 0 12px;
-  border-top: 1px solid #2a2a2a;
-  padding-top: 10px;
-  padding-bottom: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 12px;
+  padding-bottom: 12px;
+  font-weight: 600;
 }
 
 .sidebar-user-menu {
