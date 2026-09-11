@@ -11,13 +11,12 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-// ナビゲーション項目定義（日英2段ラベル）
 const navItems = [
-  { href: "/", labelEn: "Home", labelJa: "ホーム" },
-  { href: "/now-showing", labelEn: "Now Showing", labelJa: "上映中" },
-  { href: "/coming-soon", labelEn: "Coming Soon", labelJa: "上映予定" },
-  { href: "/campaign", labelEn: "Campaign/News", labelJa: "キャンペーンニュース" },
-  { href: "/tickets", labelEn: "Online Tickets", labelJa: "チケット購入" },
+  { href: "/", labelJa: "ホーム" },
+  { href: "/now-showing", labelJa: "上映中" },
+  { href: "/coming-soon", labelJa: "上映予定" },
+  { href: "/campaign", labelJa: "キャンペーン" },
+  { href: "/tickets", labelJa: "チケット予約" },
 ];
 
 interface UserInfo {
@@ -31,9 +30,8 @@ export default function Header() {
   const router = useRouter();
   const [user, setUser] = useState<UserInfo | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(true);
 
-  // マウント時に localStorage からユーザー情報を読み込む
-  // SSR では localStorage が使えないため useEffect 内で実行する
   useEffect(() => {
     const userInfo = localStorage.getItem("userInfo");
     if (userInfo) {
@@ -43,14 +41,21 @@ export default function Header() {
     }
   }, []);
 
+  useEffect(() => {
+    document.body.classList.toggle("sidebar-open", isMenuOpen);
+    document.body.classList.toggle("sidebar-collapsed", !isMenuOpen);
+
+    return () => {
+      document.body.classList.remove("sidebar-open", "sidebar-collapsed");
+    };
+  }, [isMenuOpen]);
+
   const handleLogout = async () => {
     try {
-      // FastAPI 側のセッション破棄（失敗してもフロント側のクリアは続ける）
       await fetch("http://localhost:5000/auth/logout", { method: "POST" });
     } catch {
       // ignore
     }
-    // localStorage をクリアしてUIをリセット
     localStorage.removeItem("authToken");
     localStorage.removeItem("userInfo");
     localStorage.removeItem("recommendedMovies");
@@ -59,75 +64,91 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-[#0f0f0f] border-b border-[#2a2a2a]">
-      <div className="max-w-6xl mx-auto px-4 py-4">
-        <div className="flex items-center justify-between mb-4">
-          {/* ロゴクリックでホームへ */}
-          <Link href="/">
-            <img src="/halcinemalogo.png" alt="HAL CINEMA" style={{ height: "80px", width: "auto" }} />
-          </Link>
+    <>
+      {!isMenuOpen && (
+        <button
+          type="button"
+          onClick={() => setIsMenuOpen(true)}
+          className="sidebar-toggle"
+          aria-label="メニューを開く"
+        >
+          ☰
+        </button>
+      )}
 
-          {/* ログイン済みのときのみユーザーメニューを表示 */}
-          {user && (
-            <div className="relative">
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors"
-              >
-                {/* Google アカウントのプロフィール画像 */}
-                {user.picture && (
-                  <img src={user.picture} alt={user.name || "User"} className="w-8 h-8 rounded-full" />
-                )}
-                <span className="text-sm">{user.email}</span>
-              </button>
-              {/* ドロップダウンメニュー */}
-              {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-[#1a1a1a] border border-[#333] rounded-lg shadow-lg z-50">
-                  <a
-                    href="/reservations"
-                    onClick={() => setIsDropdownOpen(false)}
-                    className="block px-4 py-2 text-sm text-gray-300 hover:bg-[#2a2a2a] transition-colors rounded-t-lg"
-                  >
-                    予約済み座席
-                  </a>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-[#2a2a2a] transition-colors rounded-b-lg border-t border-[#333]"
-                  >
-                    ログアウト
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+      <aside className={`sidebar ${isMenuOpen ? "sidebar-open" : "sidebar-closed"}`}>
+        <div className="sidebar-header">
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen(false)}
+            className="sidebar-close"
+            aria-label="メニューを閉じる"
+          >
+            ×
+          </button>
+          <div className="sidebar-home-label">/HOME</div>
         </div>
 
-        {/* ナビゲーションタブ */}
-        <nav className="flex items-start gap-6 md:gap-10">
+        <Link href="/" className="sidebar-brand">
+          <img src="/halcinemalogo.png" alt="HAL CINEMA" className="sidebar-brand-image" />
+        </Link>
+
+
+
+        <nav className="sidebar-nav">
           {navItems.map((item) => {
-            // ホーム("/")は完全一致、それ以外は前方一致でアクティブ判定
-            // （例: /movies/1 でも /movies アイテムがアクティブにならないよう）
             const isActive =
-              item.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(item.href);
+              item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`nav-item text-center ${isActive ? "active" : ""}`}
+                className={`sidebar-nav-item ${isActive ? "active" : ""}`}
               >
-                {/* 英語ラベル（小さいサブテキスト）*/}
-                <span className="nav-label-en" style={{ fontSize: "14px" }}>
-                  {item.labelEn}
-                </span>
-                {/* 日本語ラベル（メインテキスト）*/}
-                <span className="nav-label-ja">{item.labelJa}</span>
+                <span>{item.labelJa}</span>
               </Link>
+
+              
             );
           })}
         </nav>
-      </div>
-    </header>
+        <Link href="/login" className="sidebar-login-item">
+          ログイン
+        </Link>
+
+        {user && (
+          <div className="sidebar-user-menu">
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="sidebar-user-button"
+            >
+              {user.picture && (
+                <img src={user.picture} alt={user.name || "User"} className="sidebar-user-avatar" />
+              )}
+              <span className="sidebar-user-email">{user.email}</span>
+            </button>
+
+            {isDropdownOpen && (
+              <div className="sidebar-dropdown">
+                <a
+                  href="/reservations"
+                  onClick={() => setIsDropdownOpen(false)}
+                  className="sidebar-dropdown-item"
+                >
+                  予約済み座席
+                </a>
+                <button
+                  onClick={handleLogout}
+                  className="sidebar-dropdown-button"
+                >
+                  ログアウト
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </aside>
+    </>
   );
 }
