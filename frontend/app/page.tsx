@@ -49,7 +49,7 @@ export default function HomePage() {
       <Header />
 
       <main className="mx-auto max-w-[1280px] px-4 pb-12 pt-6 md:px-8">
-        <div className="mb-6 flex items-center gap-2 text-[11px] font-medium tracking-[0.2em] text-[#d9b35a] uppercase">
+        <div className="mb-4 flex items-center gap-2 text-[11px] font-medium tracking-[0.2em] text-[#d9b35a] uppercase" style={{ lineHeight: 1.3 }}>
           <span>ホーム</span>
           <span>/</span>
           <span>HOME</span>
@@ -128,14 +128,21 @@ export default function HomePage() {
           )}
         </div>
 
-        <div className="max-w-6xl">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-xl font-medium text-white">上映中の映画</h2>
-            <Link href="/now-showing" className="text-sm text-gray-400 hover:text-white">
-              すべて見る →
+        <div className="max-w-6xl pt-2">
+          <div className="mb-4 flex items-center justify-between border-b border-[#2a2a2a] pb-3">
+            <div className="flex items-center gap-3">
+              <span className="text-[11px] font-bold tracking-[0.2em] text-[#f5d678] uppercase" style={{ lineHeight: 1.2 }}>
+                Now
+              </span>
+              <h2 className="text-[19px] font-bold tracking-[0.06em] text-white" style={{ lineHeight: 1.2 }}>
+                Showing
+              </h2>
+            </div>
+            <Link href="/now-showing" className="text-[10px] font-medium tracking-[0.14em] text-gray-300 transition-colors hover:text-[#f5d678]">
+              MORE
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-5" style={{ justifyItems: "center" }}>
             {nowShowingMovies.map((movie) => (
               <MovieCard key={movie.id} movie={movie} />
             ))}
