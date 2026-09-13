@@ -30,7 +30,7 @@ export default function Header() {
   const router = useRouter();
   const [user, setUser] = useState<UserInfo | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(true);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     const userInfo = localStorage.getItem("userInfo");
@@ -76,11 +76,16 @@ export default function Header() {
     <>
       <button
         type="button"
-        onClick={() => setIsMenuOpen(true)}
-        className={`sidebar-toggle ${isMenuOpen ? "sidebar-toggle-hidden" : ""}`}
-        aria-label="メニューを開く"
+        onClick={() => setIsMenuOpen((prev) => !prev)}
+        className={`sidebar-toggle ${isMenuOpen ? "sidebar-toggle-open" : ""}`}
+        aria-label={isMenuOpen ? "メニューを閉じる" : "メニューを開く"}
+        aria-expanded={isMenuOpen}
       >
-        ☰
+        <span className="sidebar-toggle-icon" aria-hidden="true">
+          <span className="sidebar-toggle-line" />
+          <span className="sidebar-toggle-line" />
+          <span className="sidebar-toggle-line" />
+        </span>
       </button>
 
       <aside className={`sidebar ${isMenuOpen ? "sidebar-open" : "sidebar-closed"}`}>
@@ -91,9 +96,11 @@ export default function Header() {
             className="sidebar-close"
             aria-label="メニューを閉じる"
           >
-            ×
+            <span className="sidebar-close-icon" aria-hidden="true">
+              <span className="sidebar-close-line" />
+              <span className="sidebar-close-line" />
+            </span>
           </button>
-          <div className="sidebar-home-label">/HOME</div>
         </div>
 
         <Link href="/" className="sidebar-brand">

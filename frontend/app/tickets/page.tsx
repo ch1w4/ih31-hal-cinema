@@ -291,24 +291,56 @@ function TicketsContent() {
   }
 
   return (
-    <main className="max-w-2xl mx-auto px-4 py-6">
-      {/* パンくずナビ：完了済みステップに ✓ を表示 */}
-      <div className="flex items-center gap-1 text-sm text-gray-500 mb-6 overflow-x-auto pb-1">
-        {stepLabels.map((s, i) => (
-          <span key={s.key} className="flex items-center gap-1 flex-shrink-0">
-            {i > 0 && <span className="text-gray-700">›</span>}
-            <span className={step === s.key ? "text-white" : i < currentIdx ? "text-gray-400" : ""}>
-              {i < currentIdx ? "✓ " : ""}{s.label}
-            </span>
-          </span>
-        ))}
-      </div>
+    <main className="mx-auto max-w-5xl px-4 py-6 md:px-6 lg:py-8">
+
+      <div className="overflow-hidden rounded-[10px] border border-[#2a2a2a] bg-[#111111]/95 shadow-[0_18px_50px_rgba(0,0,0,0.35)] backdrop-blur-sm">
+        <div className="border-b border-[#2a2a2a] bg-[linear-gradient(90deg,rgba(217,179,90,0.14),rgba(17,17,17,0.2))] px-5 py-5 md:px-7">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <div className="text-[16px] font-semibold tracking-[0.3em] text-[#d9b35a] uppercase">Ticket</div>
+              <h1 className="mt-2 text-2xl font-bold tracking-[0.08em] text-white">Booking</h1>
+            </div>
+            <div className="rounded-full border border-[#3a3a3a] bg-[#1a1a1a] px-3 py-1.5 text-[14px] font-medium tracking-[0.18em] text-gray-300 uppercase">
+              {stepLabels[currentIdx]?.label ?? "予約"}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {stepLabels.map((s, i) => {
+              const isActive = step === s.key;
+              const isDone = i < currentIdx;
+              return (
+                <div key={s.key} className="flex items-center gap-2">
+                  {i > 0 && <span className="text-[#666]">›</span>}
+                  <span
+                    className={`rounded-full border px-4 py-1.5 text-[16px] font-medium tracking-[0.14em] uppercase transition-colors ${
+                      isActive
+                        ? "border-[#d9b35a] bg-[#d9b35a]/15 text-[#f5d678]"
+                        : isDone
+                        ? "border-[#3a3a3a] bg-[#1b1b1b] text-gray-300"
+                        : "border-[#2a2a2a] bg-[#111111] text-gray-500"
+                    }`}
+                  >
+                    {isDone ? "✓" : ""} {s.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="p-4 md:p-6 lg:p-7">
 
       {/* ── STEP 1: 映画選択 ── */}
       {step === "select-movie" && (
         <div>
-          <h2 className="text-base text-gray-300 mb-4">映画を選択してください</h2>
-          <div className="space-y-2">
+          <div className="mb-5 flex items-center justify-between gap-3 border-b border-[#2a2a2a] pb-3">
+            <div>
+              <div className="text-[14px] font-medium tracking-[0.25em] text-[#d9b35a] uppercase">Step 01</div>
+              <h2 className="mt-1 text-xl font-bold text-white">映画を選択してください</h2>
+            </div>
+          </div>
+          <div className="space-y-3">
             {movies.map((m) => (
               <button
                 key={m.id}
@@ -317,23 +349,27 @@ function TicketsContent() {
                   setSelectedDate("");
                   setSelectedTime("");
                   setSelectedScreen("");
-                  // 映画選択時は大スクリーンの初期マップをセット（時間帯選択後に更新される）
                   setSeatMap(buildSeatMap(SCREEN_CONFIGS.large));
                   setStep("select-time");
                 }}
-                className="w-full flex items-center gap-3 p-3 rounded border border-[#333] bg-[#1a1a1a] hover:border-[#666] transition-colors text-left"
+                className="group w-full overflow-hidden rounded-xl border border-[#2a2a2a] bg-[linear-gradient(180deg,#1a1a1a,#151515)] p-3 text-left transition-all duration-200 hover:border-[#d9b35a]/70 hover:bg-[#1d1d1d] hover:shadow-[0_8px_24px_rgba(217,179,90,0.08)]"
               >
-                <div className="flex-shrink-0 rounded overflow-hidden" style={{ width: "40px", aspectRatio: "2/3" }}>
-                  {m.poster ? (
-                    <img src={m.poster} alt={m.title} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full" style={{ background: `linear-gradient(160deg, ${m.posterColor} 0%, #111 100%)` }} />
-                  )}
-                </div>
-                <div>
-                  <div className="text-white text-sm font-medium">{m.title}</div>
-                  <div className="text-sm text-gray-400 mt-0.5">
-                    {m.genre[0]} · {m.duration}分 · {m.rating}
+                <div className="flex items-center gap-3">
+                  <div className="flex-shrink-0 overflow-hidden rounded-xl border border-[#333] shadow-lg" style={{ width: "52px", aspectRatio: "2/3" }}>
+                    {m.poster ? (
+                      <img src={m.poster} alt={m.title} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="h-full w-full" style={{ background: `linear-gradient(160deg, ${m.posterColor} 0%, #111 100%)` }} />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-base font-semibold text-white">{m.title}</div>
+                    <div className="mt-1 text-sm text-gray-400">
+                      {m.genre[0]} · {m.duration}分 · {m.rating}
+                    </div>
+                  </div>
+                  <div className="rounded-full border border-[#3a3a3a] bg-[#111111] px-2 py-1 text-[10px] font-medium tracking-[0.2em] text-[#d9b35a] uppercase">
+                    Select
                   </div>
                 </div>
               </button>
@@ -346,24 +382,24 @@ function TicketsContent() {
       {/* 日付を選ぶと、その日のスクリーンごとの上映時間一覧が表示される */}
       {step === "select-time" && movie && (
         <div>
-          {/* 選択中映画のサマリーバー */}
-          <div className="flex items-center gap-3 border border-[#333] rounded p-3 bg-[#1a1a1a] mb-5">
-            <div className="flex-shrink-0 rounded overflow-hidden" style={{ width: "36px", aspectRatio: "2/3" }}>
-              {movie.poster ? (
-                <img src={movie.poster} alt={movie.title} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full" style={{ background: `linear-gradient(160deg, ${movie.posterColor} 0%, #111 100%)` }} />
-              )}
-            </div>
-            <div>
-              <div className="text-white text-sm font-medium">{movie.title}</div>
-              <div className="text-sm text-gray-400">
-                {movie.duration}分 · {movie.rating}
+          <div className="mb-5 flex items-center justify-between gap-3 border-b border-[#2a2a2a] pb-3">
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0 overflow-hidden rounded-xl border border-[#333]" style={{ width: "46px", aspectRatio: "2/3" }}>
+                {movie.poster ? (
+                  <img src={movie.poster} alt={movie.title} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="h-full w-full" style={{ background: `linear-gradient(160deg, ${movie.posterColor} 0%, #111 100%)` }} />
+                )}
+              </div>
+              <div>
+                <div className="text-[10px] font-medium tracking-[0.25em] text-[#d9b35a] uppercase">Step 02</div>
+                <div className="mt-1 text-base font-semibold text-white">{movie.title}</div>
+                <div className="text-sm text-gray-400">{movie.duration}分 · {movie.rating}</div>
               </div>
             </div>
           </div>
 
-          <h2 className="text-base text-gray-300 mb-3">日付を選択してください</h2>
+          <h2 className="mb-3 text-base text-gray-300">日付を選択してください</h2>
           {/* 今日の日付文字列を "M/DD" 形式で生成し、API の date と照合する */}
           {(() => {
             // "M/DD" 文字列 → その日の 00:00:00 の Date オブジェクト
@@ -417,12 +453,12 @@ function TicketsContent() {
                           setSelectedTime("");
                           setSelectedScreen("");
                         }}
-                        className={`px-5 py-3 rounded text-base border transition-colors ${
+                        className={`px-5 py-3 rounded-full border text-base font-medium transition-colors ${
                           past
                             ? "border-[#333] text-gray-600 cursor-not-allowed opacity-40"
                             : selectedDate === s.date
-                            ? "border-white text-white bg-[#2a2a2a]"
-                            : "border-[#444] text-gray-400 hover:border-[#777]"
+                            ? "border-[#d9b35a] bg-[#d9b35a]/15 text-[#f5d678]"
+                            : "border-[#444] text-gray-300 hover:border-[#d9b35a] hover:text-[#f5d678]"
                         }`}
                       >
                         {s.date}
@@ -452,12 +488,12 @@ function TicketsContent() {
                                     setSelectedScreen(slot.screen);
                                     setSeatMap(buildSeatMap(SCREEN_CONFIGS[getScreenType(slot.screen)]));
                                   }}
-                                  className={`px-4 py-2 rounded text-sm border transition-colors ${
+                                  className={`px-4 py-2 rounded-full border text-sm font-medium transition-colors ${
                                     past
                                       ? "border-[#333] text-gray-600 cursor-not-allowed opacity-40 line-through"
                                       : selectedTime === t && selectedScreen === slot.screen
-                                      ? "border-white text-white bg-[#2a2a2a]"
-                                      : "border-[#555] text-gray-400 hover:border-white hover:text-white"
+                                      ? "border-[#d9b35a] bg-[#d9b35a]/15 text-[#f5d678]"
+                                      : "border-[#555] text-gray-300 hover:border-[#d9b35a] hover:text-[#f5d678]"
                                   }`}
                                 >
                                   {t}
@@ -498,32 +534,29 @@ function TicketsContent() {
       {/* ── STEP 3: 座席選択 ── */}
       {step === "seat" && movie && (
         <div>
-          {/* 選択内容サマリー */}
-          <div className="text-sm text-gray-400 border border-[#333] rounded p-3 bg-[#1a1a1a] mb-4 space-y-0.5">
-            <div>{movie.title}</div>
-            <div>{selectedDate}　{selectedTime}　{selectedScreen}</div>
+          <div className="mb-5 rounded-xl border border-[#2a2a2a] bg-[linear-gradient(90deg,#1b1b1b,#121212)] p-4">
+            <div className="text-[10px] font-medium tracking-[0.25em] text-[#d9b35a] uppercase">Step 03</div>
+            <div className="mt-2 text-lg font-bold text-white">{movie.title}</div>
+            <div className="mt-1 text-sm text-gray-400">{selectedDate}　{selectedTime}　{selectedScreen}</div>
           </div>
 
-          {/* 予約済み座席の読み込み中表示 */}
           {loadingSeats && (
-            <div className="text-sm text-gray-400 mb-3 animate-pulse">座席の空き状況を確認中...</div>
+            <div className="mb-3 text-sm text-gray-400 animate-pulse">座席の空き状況を確認中...</div>
           )}
 
-          {/* 座席色の凡例 */}
-          <div className="flex gap-6 text-sm text-gray-300 mb-5">
+          <div className="mb-5 flex flex-wrap gap-4 text-sm text-gray-300">
             <span className="flex items-center gap-2">
-              <span className="inline-block w-5 h-4 bg-gray-400 rounded-t-sm" />空白
+              <span className="inline-block h-4 w-5 rounded-t-sm bg-gray-400" />空白
             </span>
             <span className="flex items-center gap-2">
-              <span className="inline-block w-5 h-4 bg-red-500 rounded-t-sm" />選択した席
+              <span className="inline-block h-4 w-5 rounded-t-sm bg-red-500" />選択した席
             </span>
             <span className="flex items-center gap-2">
-              <span className="inline-block w-5 h-4 bg-blue-500 rounded-t-sm" />購入された席
+              <span className="inline-block h-4 w-5 rounded-t-sm bg-blue-500" />購入された席
             </span>
           </div>
 
-          {/* 座席マップ本体（赤枠） */}
-          <div className="border-2 border-red-700 rounded p-4 bg-[#111] mb-4 overflow-x-auto">
+          <div className="mb-4 overflow-x-auto rounded-[18px] border border-[#3a2a1f] bg-[#0d0d0d] p-4 shadow-[inset_0_0_0_1px_rgba(217,179,90,0.08)]">
             {/* スクリーンを表す白いバー */}
             <div className="flex justify-center mb-1">
               <div className="bg-white rounded h-2" style={{ width: "55%" }} />
@@ -668,16 +701,15 @@ function TicketsContent() {
       {/* 選択した座席ごとに種別（一般・学生・シニア・子供）を設定し、合計金額を算出する */}
       {step === "ticket-type" && movie && (
         <div>
-          <div className="text-sm text-gray-400 border border-[#333] rounded p-3 bg-[#1a1a1a] mb-4 space-y-0.5">
-            <div>{movie.title}</div>
-            <div>
-              {selectedDate}　{selectedTime}　{selectedScreen}
-            </div>
-            <div>座席：{selectedSeats.join(", ")}</div>
+          <div className="mb-5 rounded-xl border border-[#2a2a2a] bg-[linear-gradient(90deg,#1b1b1b,#121212)] p-4 text-sm text-gray-400">
+            <div className="text-[10px] font-medium tracking-[0.25em] text-[#d9b35a] uppercase">Step 04</div>
+            <div className="mt-2 text-lg font-bold text-white">{movie.title}</div>
+            <div className="mt-1">{selectedDate}　{selectedTime}　{selectedScreen}</div>
+            <div className="mt-1">座席：{selectedSeats.join(", ")}</div>
           </div>
 
-          <h2 className="text-base text-gray-300 mb-4">チケットの種類をお選びください</h2>
-          <div className="space-y-3 mb-5">
+          <h2 className="mb-4 text-base text-gray-300">チケットの種類をお選びください</h2>
+          <div className="mb-5 space-y-3">
             {/* 座席ごとに種別ドロップダウンを表示 */}
             {selectedSeats.map((seatId) => (
               <div key={seatId} className="flex items-center gap-3">
@@ -716,9 +748,9 @@ function TicketsContent() {
             ))}
           </div>
 
-          <div className="flex justify-between items-center border-t border-[#333] pt-4 mb-5">
-            <span className="text-sm text-gray-400">合計</span>
-            <span className="text-white font-medium">¥{totalPrice.toLocaleString()}</span>
+          <div className="mb-5 flex items-center justify-between rounded-xl border border-[#d9b35a]/30 bg-[#d9b35a]/10 px-4 py-3">
+            <span className="text-sm text-gray-300">合計</span>
+            <span className="text-lg font-bold text-[#f5d678]">¥{totalPrice.toLocaleString()}</span>
           </div>
 
           <div className="flex gap-3">
@@ -742,8 +774,12 @@ function TicketsContent() {
       {/* 氏名・性別・電話番号・メールアドレス・支払い方法を収集する */}
       {step === "customer-info" && (
         <div className="space-y-0">
+          <div className="mb-4 rounded-xl border border-[#2a2a2a] bg-[linear-gradient(90deg,#1b1b1b,#121212)] p-4">
+            <div className="text-[10px] font-medium tracking-[0.25em] text-[#d9b35a] uppercase">Step 05</div>
+            <div className="mt-2 text-lg font-bold text-white">お客様情報</div>
+          </div>
           {/* 氏名セクション（漢字・フリガナ） */}
-          <section className="bg-[#1a1a1a] rounded-t p-4 mb-px">
+          <section className="mb-px rounded-t-2xl border border-[#2a2a2a] bg-[#1a1a1a] p-4">
             <div className="flex justify-between items-center mb-3">
               <span className="text-sm text-white">氏名</span>
               <span className="text-sm text-red-400">*必須</span>
@@ -828,7 +864,7 @@ function TicketsContent() {
             </div>
           </section>
 
-          <section className="bg-[#1a1a1a] rounded-b p-4 mb-4">
+          <section className="mb-4 rounded-b-2xl border border-[#2a2a2a] bg-[#1a1a1a] p-4">
             <div className="flex justify-between items-center mb-3">
               <span className="text-sm text-white">支払い方法</span>
               <span className="text-sm text-red-400">*必須</span>
@@ -877,8 +913,11 @@ function TicketsContent() {
       {/* ── STEP 6: 購入確認 ── */}
       {step === "confirm" && movie && (
         <div>
-          <h2 className="text-sm text-white mb-4">購入内容の確認</h2>
-          <div className="border border-[#333] rounded p-4 bg-[#1a1a1a] mb-6 space-y-2 text-sm">
+          <div className="mb-5 rounded-xl border border-[#2a2a2a] bg-[linear-gradient(90deg,#1b1b1b,#121212)] p-4">
+            <div className="text-[10px] font-medium tracking-[0.25em] text-[#d9b35a] uppercase">Step 06</div>
+            <div className="mt-2 text-lg font-bold text-white">購入内容の確認</div>
+          </div>
+          <div className="mb-6 space-y-2 rounded-xl border border-[#333] bg-[#1a1a1a] p-4 text-sm">
             {[
               { label: "作品", value: movie.title },
               { label: "日時", value: `${selectedDate}　${selectedTime}` },
@@ -926,16 +965,16 @@ function TicketsContent() {
       {/* ── STEP 7: 購入完了 ── */}
       {/* 予約番号は Math.random で生成したモック値（本番では API から取得する） */}
       {step === "complete" && movie && (
-        <div className="text-center py-10">
-          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-red-600 mx-auto mb-6">
+        <div className="py-10 text-center">
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[#d9b35a] shadow-[0_10px_30px_rgba(217,179,90,0.35)]">
             <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <div className="text-white text-xl font-bold mb-1">購入完了</div>
-          <div className="text-gray-400 text-sm mb-8">ご購入ありがとうございます</div>
+          <div className="mb-1 text-xl font-bold text-white">購入完了</div>
+          <div className="mb-8 text-sm text-gray-400">ご購入ありがとうございます</div>
 
-          <div className="border border-[#333] rounded p-4 bg-[#1a1a1a] mb-6 text-left space-y-2 text-sm">
+          <div className="mb-6 space-y-2 rounded-xl border border-[#333] bg-[#1a1a1a] p-4 text-left text-sm">
             <div className="text-gray-400 text-sm mb-3">予約内容</div>
             {[
               { label: "予約番号", value: confirmedBookingNo },
@@ -959,12 +998,14 @@ function TicketsContent() {
 
           <a
             href="/"
-            className="inline-block px-8 py-2.5 bg-white text-black rounded text-sm font-medium hover:bg-gray-200 transition-colors"
+            className="inline-block rounded-full bg-white px-8 py-2.5 text-sm font-medium text-black transition-colors hover:bg-gray-200"
           >
             トップページへ
           </a>
         </div>
       )}
+        </div>
+      </div>
     </main>
   );
 }
