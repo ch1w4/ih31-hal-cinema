@@ -7,7 +7,7 @@ import { Movie } from "@/lib/mockData";
 
 export default function MovieCard({ movie }: { movie: Movie }) {
   return (
-    <div className="group block w-full max-w-[220px] overflow-hidden rounded-md border border-[#2a2a2a] bg-[#111111] shadow-[0_12px_30px_rgba(0,0,0,0.28)] transition duration-300 hover:-translate-y-1 hover:border-[#d9b35a]/80 hover:shadow-[0_18px_32px_rgba(217,179,90,0.12)]">
+    <div className="group block w-full max-w-[250px] overflow-hidden rounded-[4px] border border-[#2a2a2a] bg-[#111111] shadow-[0_12px_30px_rgba(0,0,0,0.28)] transition duration-300 hover:-translate-y-1 hover:border-[#d9b35a]/80 hover:shadow-[0_18px_32px_rgba(217,179,90,0.12)]">
       <Link href={`/movies/${movie.id}`} className="block overflow-hidden" aria-label={`${movie.title}の詳細を見る`}>
         <div className="relative w-full overflow-hidden" style={{ aspectRatio: "3 / 4.1" }}>
           {movie.poster ? (
@@ -35,7 +35,7 @@ export default function MovieCard({ movie }: { movie: Movie }) {
 
             <div className="mb-2 flex items-center justify-between text-[10px] text-gray-300">
               <span>{movie.genre[0]}</span>
-              <span className="text-[#f5d678] text-[11px]">★★★★★</span>
+              
             </div>
           </div>
         </div>

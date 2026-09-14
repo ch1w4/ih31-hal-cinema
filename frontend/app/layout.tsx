@@ -20,8 +20,13 @@ export default function RootLayout({
   return (
     // lang="ja" を指定することでスクリーンリーダーが日本語として読み上げる
     <html lang="ja" className="h-full">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho&display=swap" rel="stylesheet" />
+      </head>
       {/* bg-[#0f0f0f] をbodyに当てることで全ページ共通のダークテーマ背景を確保 */}
-      <body className="min-h-full flex flex-col bg-[#0f0f0f] text-white">
+      <body className="min-h-full flex flex-col bg-[#0f0f0f] text-white" style={{ fontFamily: '"Shippori Mincho", serif' }}>
         {children}
         <footer className="border-t border-[#2a2a2a] bg-[#0f0f0f] py-4 mt-auto">
           <p className="text-center text-xs text-gray-600">

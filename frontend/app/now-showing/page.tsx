@@ -22,11 +22,7 @@ export default function NowShowingPage() {
       <Header />
 
       <main className="mx-auto max-w-[1280px] px-4 pb-12 pt-6 md:px-8">
-        <div className="mb-4 flex items-center gap-2 text-[11px] font-medium tracking-[0.2em] text-[#d9b35a] uppercase" style={{ lineHeight: 1.3 }}>
-          <span>ホーム</span>
-          <span>/</span>
-          <span>HOME</span>
-        </div>
+
 
         <div className="max-w-6xl pt-2">
           <div className="mb-4 flex items-center justify-between border-b border-[#2a2a2a] pb-3">

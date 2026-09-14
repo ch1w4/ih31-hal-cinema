@@ -313,7 +313,7 @@ function TicketsContent() {
                 <div key={s.key} className="flex items-center gap-2">
                   {i > 0 && <span className="text-[#666]">›</span>}
                   <span
-                    className={`rounded-full border px-4 py-1.5 text-[16px] font-medium tracking-[0.14em] uppercase transition-colors ${
+                    className={`rounded-full border px-3 py-1 text-[11px] font-medium tracking-[0.12em] uppercase transition-colors ${
                       isActive
                         ? "border-[#d9b35a] bg-[#d9b35a]/15 text-[#f5d678]"
                         : isDone
@@ -334,13 +334,13 @@ function TicketsContent() {
       {/* ── STEP 1: 映画選択 ── */}
       {step === "select-movie" && (
         <div>
-          <div className="mb-5 flex items-center justify-between gap-3 border-b border-[#2a2a2a] pb-3">
+          <div className="mb-4 flex items-center justify-between gap-3 border-b border-[#2a2a2a] pb-2">
             <div>
-              <div className="text-[14px] font-medium tracking-[0.25em] text-[#d9b35a] uppercase">Step 01</div>
-              <h2 className="mt-1 text-xl font-bold text-white">映画を選択してください</h2>
+              <div className="text-[11px] font-medium tracking-[0.2em] text-[#d9b35a] uppercase">Step 01</div>
+              <h2 className="mt-1 text-lg font-bold text-white">映画を選択してください</h2>
             </div>
           </div>
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {movies.map((m) => (
               <button
                 key={m.id}
@@ -352,24 +352,21 @@ function TicketsContent() {
                   setSeatMap(buildSeatMap(SCREEN_CONFIGS.large));
                   setStep("select-time");
                 }}
-                className="group w-full overflow-hidden rounded-xl border border-[#2a2a2a] bg-[linear-gradient(180deg,#1a1a1a,#151515)] p-3 text-left transition-all duration-200 hover:border-[#d9b35a]/70 hover:bg-[#1d1d1d] hover:shadow-[0_8px_24px_rgba(217,179,90,0.08)]"
+                className="group w-full overflow-hidden rounded-[0] border-2 border-[#2a2a2a] bg-[linear-gradient(180deg,#1a1a1a,#151515)]  text-left transition-all duration-200 hover:border-[#d9b35a]/70 hover:bg-[#1d1d1d] hover:shadow-[0_8px_24px_rgba(217,179,90,0.08)]"
               >
-                <div className="flex items-center gap-3">
-                  <div className="flex-shrink-0 overflow-hidden rounded-xl border border-[#333] shadow-lg" style={{ width: "52px", aspectRatio: "2/3" }}>
+                <div className="flex flex-col gap-1.5">
+                  <div className="mx-auto w-full max-w-[100%] overflow-hidden rounded-[0] border border-[#333] shadow-lg" style={{ aspectRatio: "2/3" }}>
                     {m.poster ? (
                       <img src={m.poster} alt={m.title} className="h-full w-full object-cover" />
                     ) : (
                       <div className="h-full w-full" style={{ background: `linear-gradient(160deg, ${m.posterColor} 0%, #111 100%)` }} />
                     )}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-base font-semibold text-white">{m.title}</div>
-                    <div className="mt-1 text-sm text-gray-400">
+                  <div className="min-w-0 flex-1 pt-0.5">
+                    <div className="truncate text-[16px] p-1 font-semibold text-white">{m.title}</div>
+                    <div className="mt-0.5 text-[14px] p-1 text-gray-400">
                       {m.genre[0]} · {m.duration}分 · {m.rating}
                     </div>
-                  </div>
-                  <div className="rounded-full border border-[#3a3a3a] bg-[#111111] px-2 py-1 text-[10px] font-medium tracking-[0.2em] text-[#d9b35a] uppercase">
-                    Select
                   </div>
                 </div>
               </button>
