@@ -81,7 +81,7 @@ export default function HomePage() {
                 const rec = movie as any;
                 return (
                   <div key={movie.id} className="group relative">
-                    <div className="absolute left-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-[#d9b35a]/60 bg-[#0f0f0f]/90 text-[14px] font-bold text-[#f5d678] shadow-[0_0_18px_rgba(245,214,120,0.22)]">
+                    <div className="absolute left-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-[#d9b35a]/40 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.14),transparent_25%),linear-gradient(135deg,#171717_0%,#0f0f0f_30%,#1f1a12_100%)] text-base font-bold text-[#f5d678] shadow-[0_10px_24px_rgba(0,0,0,0.55),0_0_18px_rgba(217,179,90,0.18)] md:h-8 md:w-8 md:text-lg">
                       {i + 1}
                     </div>
 
@@ -121,29 +121,29 @@ export default function HomePage() {
             <div className="grid grid-cols-2 gap-4 p-4 md:grid-cols-5">
               {movies.slice(0, 5).map((movie, i) => (
                 <div key={movie.id} className="group relative">
-                  <div className="absolute left-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-[#d9b35a]/60 bg-[#0f0f0f]/90 text-[12px] font-bold text-[#f5d678] shadow-[0_0_18px_rgba(245,214,120,0.22)]">
+                  <div className="absolute left-1 top-1 z-8 flex h-8.5 w-8.5 items-center justify-center rounded-full border border-[#d9b35a]/40 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.14),transparent_25%),linear-gradient(135deg,#171717_0%,#0f0f0f_30%,#1f1a12_100%)] text-base font-bold text-[#f5d678] shadow-[0_10px_24px_rgba(0,0,0,0.55),0_0_18px_rgba(217,179,90,0.18)] md:h-8 md:w-8 md:text-lg">
                     {i + 1}
                   </div>
 
                   <Link
                     href={`/movies/${movie.id}`}
-                    className="block overflow-hidden rounded-[8px] border border-[#2e2a24] bg-[linear-gradient(180deg,#1b1a18,#0f0f0f)] p-2.5 shadow-[0_18px_40px_rgba(0,0,0,0.35)] transition duration-200 hover:-translate-y-0.5 hover:border-[#d9b35a]/80 hover:shadow-[0_18px_40px_rgba(217,179,90,0.12)]"
+                    className="block overflow-hidden rounded-[0px] border border-[#2e2a24] bg-[linear-gradient(180deg,#1b1a18,#0f0f0f)] p-0 shadow-[0_18px_40px_rgba(0,0,0,0.35)] transition duration-200 hover:-translate-y-0.5 hover:border-[#d9b35a]/80 hover:shadow-[0_18px_40px_rgba(217,179,90,0.12)]"
                   >
-                    <div className="relative overflow-hidden rounded-[6px] border-2 border-[#3a3120]" style={{ aspectRatio: "2/3" }}>
+                    <div className="relative overflow-hidden rounded-[0px] border-2 border-[#3a3120]" style={{ aspectRatio: "2/3" }}>
                       {movie.poster ? (
                         <img src={movie.poster} alt={movie.title} className="h-full w-full object-cover" />
                       ) : (
                         <div className="h-full w-full" style={{ background: `linear-gradient(160deg, ${movie.posterColor} 0%, #1a1a1a 100%)` }} />
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
-                      <div className="absolute bottom-2 left-2 rounded-full border border-[#d9b35a]/60 bg-[#0f0f0f]/80 px-1.5 py-0.5 text-[8px] font-medium tracking-[0.12em] text-[#f5d678] uppercase">
+                      <div className="absolute bottom-2 left-2 rounded-full border border-[#d9b35a]/60 bg-[#0f0f0f]/80 px-1.5 py-0.5 text-[10px] font-medium tracking-[0.12em] text-[#f5d678] uppercase">
                         {movie.genre[0]}
                       </div>
                     </div>
 
-                    <div className="mt-3 text-center">
+                    <div className="mt-2 text-center">
                       <div className="mb-1 text-[16px] tracking-[0.2em] text-[#f5d678] uppercase">Top {i + 1}</div>
-                      <div className="truncate text-[14px] font-semibold text-white">{movie.title}</div>
+                      <div className="truncate text-[14px] font-semibold p-1 text-white">{movie.title}</div>
                     </div>
                   </Link>
                 </div>
