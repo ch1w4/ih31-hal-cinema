@@ -27,7 +27,7 @@ export default function NowShowingPage() {
         <div className="max-w-6xl pt-2">
           <div className="mb-4 flex items-center justify-between border-b border-[#2a2a2a] pb-3">
             <div className="flex items-center gap-3">
-              <span className="text-[11px] font-bold tracking-[0.2em] text-[#f5d678] uppercase" style={{ lineHeight: 1.2 }}>
+              <span className="text-[19px] font-bold tracking-[0.2em] text-[#f5d678] uppercase" style={{ lineHeight: 1.2 }}>
                 Now
               </span>
               <h1 className="text-[19px] font-bold tracking-[0.06em] text-white" style={{ lineHeight: 1.2 }}>

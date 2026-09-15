@@ -155,7 +155,7 @@ export default function HomePage() {
         <div className="max-w-6xl pt-1">
           <div className="mb-3 flex items-center justify-between border-b border-[#2a2a2a] pb-2">
             <div className="flex items-center gap-3">
-              <span className="text-[10px] font-bold tracking-[0.2em] text-[#f5d678] uppercase" style={{ lineHeight: 1.2 }}>
+              <span className="text-[17px] font-bold tracking-[0.2em] text-[#f5d678] uppercase" style={{ lineHeight: 1.2 }}>
                 Now
               </span>
               <h2 className="text-[17px] font-bold tracking-[0.06em] text-white" style={{ lineHeight: 1.2 }}>

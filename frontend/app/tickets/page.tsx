@@ -770,135 +770,160 @@ function TicketsContent() {
       {/* ── STEP 5: お客様情報入力 ── */}
       {/* 氏名・性別・電話番号・メールアドレス・支払い方法を収集する */}
       {step === "customer-info" && (
-        <div className="space-y-0">
-          <div className="mb-4 rounded-xl border border-[#2a2a2a] bg-[linear-gradient(90deg,#1b1b1b,#121212)] p-4">
-            <div className="text-[10px] font-medium tracking-[0.25em] text-[#d9b35a] uppercase">Step 05</div>
-            <div className="mt-2 text-lg font-bold text-white">お客様情報</div>
-          </div>
-          {/* 氏名セクション（漢字・フリガナ） */}
-          <section className="mb-px rounded-t-2xl border border-[#2a2a2a] bg-[#1a1a1a] p-4">
-            <div className="flex justify-between items-center mb-3">
-              <span className="text-sm text-white">氏名</span>
-              <span className="text-sm text-red-400">*必須</span>
+        <div className="space-y-6">
+          <div className="rounded-[20px] border border-[#2a2a2a] bg-[linear-gradient(135deg,#1b1b1b,#121212)] p-5 shadow-[0_14px_32px_rgba(0,0,0,0.28)]">
+            <div className="mb-2 text-[10px] font-medium tracking-[0.28em] text-[#d9b35a] uppercase">Step 05</div>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-xl font-bold text-white">お客様情報</h2>
+              <span className="rounded-full border border-[#d9b35a]/50 bg-[#d9b35a]/10 px-2.5 py-1 text-[10px] font-medium tracking-[0.18em] text-[#f5d678]">
+                REQUIRED
+              </span>
             </div>
-            <div className="space-y-2">
-              {[
-                { label: "漢字(姓)", placeholder: "姓", value: lastName, set: setLastName },
-                { label: "漢字(名)", placeholder: "名", value: firstName, set: setFirstName },
-                { label: "フリガナ(姓)", placeholder: "姓", value: lastNameKana, set: setLastNameKana },
-                { label: "フリガナ(名)", placeholder: "名", value: firstNameKana, set: setFirstNameKana },
-              ].map(({ label, placeholder, value, set }) => (
-                <div key={label}>
-                  <label className="text-sm text-gray-400 block mb-0.5">{label}</label>
+          </div>
+
+          <div className="grid gap-5">
+            <section className="rounded-[20px] border border-[#2a2a2a] bg-[#141414] p-5">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-sm font-semibold tracking-[0.18em] text-[#f5d678]">PROFILE</h3>
+                <span className="text-xs text-red-400">*必須</span>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                {[
+                  { label: "漢字(姓)", placeholder: "例：山田", value: lastName, set: setLastName },
+                  { label: "漢字(名)", placeholder: "例：太郎", value: firstName, set: setFirstName },
+                  { label: "フリガナ(姓)", placeholder: "例：ヤマダ", value: lastNameKana, set: setLastNameKana },
+                  { label: "フリガナ(名)", placeholder: "例：タロウ", value: firstNameKana, set: setFirstNameKana },
+                ].map(({ label, placeholder, value, set }) => (
+                  <div key={label}>
+                    <label className="mb-1.5 block text-xs font-medium tracking-[0.12em] text-gray-400">{label}</label>
+                    <input
+                      type="text"
+                      placeholder={placeholder}
+                      value={value}
+                      onChange={(e) => set(e.target.value)}
+                      className="w-full rounded-xl border border-[#3a3a3a] bg-[#0f0f0f] px-3.5 py-3 text-sm text-white placeholder:text-gray-500 focus:border-[#d9b35a] focus:outline-none focus:ring-2 focus:ring-[#d9b35a]/20"
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="rounded-[20px] border border-[#2a2a2a] bg-[#141414] p-5">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-sm font-semibold tracking-[0.18em] text-[#f5d678]">GENDER</h3>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {(["男", "女", "どちらでもない"] as const).map((g) => (
+                  <label
+                    key={g}
+                    className={`flex cursor-pointer items-center gap-2 rounded-full border px-4 py-2 text-sm transition-colors ${
+                      gender === g
+                        ? "border-[#d9b35a] bg-[#d9b35a]/10 text-[#f5d678]"
+                        : "border-[#3a3a3a] bg-[#0f0f0f] text-gray-300 hover:border-[#d9b35a]/60"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="gender"
+                      checked={gender === g}
+                      onChange={() => setGender(g)}
+                      className="accent-[#d9b35a] h-4 w-4"
+                    />
+                    {g}
+                  </label>
+                ))}
+              </div>
+            </section>
+
+            <section className="rounded-[20px] border border-[#2a2a2a] bg-[#141414] p-5">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-sm font-semibold tracking-[0.18em] text-[#f5d678]">CONTACT</h3>
+                <span className="text-xs text-red-400">*必須</span>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="md:col-span-2">
+                  <label className="mb-1.5 block text-xs font-medium tracking-[0.12em] text-gray-400">電話番号</label>
                   <input
-                    type="text"
-                    placeholder={placeholder}
-                    value={value}
-                    onChange={(e) => set(e.target.value)}
-                    className="w-full bg-white text-black text-sm rounded px-3 py-2 placeholder-gray-400 focus:outline-none"
+                    type="tel"
+                    placeholder="08000000000"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full rounded-xl border border-[#3a3a3a] bg-[#0f0f0f] px-3.5 py-3 text-sm text-white placeholder:text-gray-500 focus:border-[#d9b35a] focus:outline-none focus:ring-2 focus:ring-[#d9b35a]/20"
                   />
                 </div>
-              ))}
-            </div>
-          </section>
 
-          <section className="bg-[#1a1a1a] p-4 mb-px">
-            <div className="text-sm text-white mb-3">性別</div>
-            <div className="flex gap-6 text-sm text-gray-300">
-              {(["男", "女", "どちらでもない"] as const).map((g) => (
-                <label key={g} className="flex items-center gap-2 cursor-pointer">
+                <div className="md:col-span-2">
+                  <label className="mb-1.5 block text-xs font-medium tracking-[0.12em] text-gray-400">メールアドレス</label>
                   <input
-                    type="radio"
-                    name="gender"
-                    checked={gender === g}
-                    onChange={() => setGender(g)}
-                    className="accent-white w-4 h-4"
+                    type="email"
+                    placeholder="HALCINEMA@HAL.HLA"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full rounded-xl border border-[#3a3a3a] bg-[#0f0f0f] px-3.5 py-3 text-sm text-white placeholder:text-gray-500 focus:border-[#d9b35a] focus:outline-none focus:ring-2 focus:ring-[#d9b35a]/20"
                   />
-                  {g}
-                </label>
-              ))}
-            </div>
-          </section>
+                </div>
 
-          <section className="bg-[#1a1a1a] p-4 mb-px">
-            <div className="flex justify-between items-center mb-3">
-              <span className="text-sm text-white">電話番号</span>
-              <span className="text-sm text-red-400">*必須</span>
-            </div>
-            <label className="text-sm text-gray-400 block mb-0.5">半角数字・ハイフンなし</label>
-            <input
-              type="tel"
-              placeholder="08000000000"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="w-full bg-white text-black text-sm rounded px-3 py-2 placeholder-gray-400 focus:outline-none"
-            />
-          </section>
-
-          <section className="bg-[#1a1a1a] p-4 mb-px">
-            <div className="text-sm text-white mb-3">メールアドレス</div>
-            <div className="space-y-2">
-              <div>
-                <label className="text-sm text-gray-400 block mb-0.5">メールアドレス</label>
-                <input
-                  type="email"
-                  placeholder="例）HALCINEMA@HAL.HLA"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white text-black text-sm rounded px-3 py-2 placeholder-gray-400 focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="text-sm text-gray-400 block mb-0.5">確認</label>
-                <input
-                  type="email"
-                  placeholder="例）HALCINEMA@HAL.HLA"
-                  value={emailConfirm}
-                  onChange={(e) => setEmailConfirm(e.target.value)}
-                  className="w-full bg-white text-black text-sm rounded px-3 py-2 placeholder-gray-400 focus:outline-none"
-                />
-              </div>
-            </div>
-          </section>
-
-          <section className="mb-4 rounded-b-2xl border border-[#2a2a2a] bg-[#1a1a1a] p-4">
-            <div className="flex justify-between items-center mb-3">
-              <span className="text-sm text-white">支払い方法</span>
-              <span className="text-sm text-red-400">*必須</span>
-            </div>
-            <div className="space-y-2">
-              {(["credit", "paypay"] as const).map((p) => (
-                <label key={p} className="flex items-center gap-3 cursor-pointer">
+                <div className="md:col-span-2">
+                  <label className="mb-1.5 block text-xs font-medium tracking-[0.12em] text-gray-400">確認用メールアドレス</label>
                   <input
-                    type="radio"
-                    name="payment"
-                    checked={payment === p}
-                    onChange={() => setPayment(p)}
-                    className="accent-white w-4 h-4"
+                    type="email"
+                    placeholder="HALCINEMA@HAL.HLA"
+                    value={emailConfirm}
+                    onChange={(e) => setEmailConfirm(e.target.value)}
+                    className="w-full rounded-xl border border-[#3a3a3a] bg-[#0f0f0f] px-3.5 py-3 text-sm text-white placeholder:text-gray-500 focus:border-[#d9b35a] focus:outline-none focus:ring-2 focus:ring-[#d9b35a]/20"
                   />
-                  <span className="text-sm text-gray-300">
-                    {p === "credit" ? "クレジットカード" : "PayPay"}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </section>
+                </div>
+              </div>
+            </section>
 
-          {/* 電話番号とメールアドレスの両方が入力済みの場合のみ次へ進める */}
+            <section className="rounded-[20px] border border-[#2a2a2a] bg-[#141414] p-5">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-sm font-semibold tracking-[0.18em] text-[#f5d678]">PAYMENT</h3>
+                <span className="text-xs text-red-400">*必須</span>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                {(["credit", "paypay"] as const).map((p) => (
+                  <label
+                    key={p}
+                    className={`flex cursor-pointer items-center gap-3 rounded-2xl border p-4 transition-colors ${
+                      payment === p
+                        ? "border-[#d9b35a] bg-[#d9b35a]/10 text-[#f5d678]"
+                        : "border-[#3a3a3a] bg-[#0f0f0f] text-gray-300 hover:border-[#d9b35a]/60"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="payment"
+                      checked={payment === p}
+                      onChange={() => setPayment(p)}
+                      className="accent-[#d9b35a] h-4 w-4"
+                    />
+                    <span className="text-sm font-medium">
+                      {p === "credit" ? "クレジットカード" : "PayPay"}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </section>
+          </div>
+
           <div className="flex gap-3 pt-2">
             <button
               onClick={() => setStep("ticket-type")}
-              className="px-5 py-3 border border-[#444] text-gray-400 rounded text-base hover:border-white hover:text-white transition-colors"
+              className="flex-1 rounded-xl border border-[#444] px-5 py-3 text-base font-medium text-gray-300 transition-colors hover:border-white hover:text-white"
             >
               戻る
             </button>
             <button
               onClick={() => email && phone && setStep("confirm")}
               disabled={!email || !phone}
-              className={`px-8 py-3 rounded text-base font-medium transition-colors ${
+              className={`flex-1 rounded-xl px-5 py-3 text-base font-bold transition-colors ${
                 email && phone
-                  ? "bg-white text-black hover:bg-gray-200"
-                  : "bg-[#333] text-gray-600 cursor-not-allowed"
+                  ? "bg-[#d9b35a] text-[#111111] hover:bg-[#f2d77b]"
+                  : "cursor-not-allowed bg-[#333] text-gray-600"
               }`}
             >
               次へ

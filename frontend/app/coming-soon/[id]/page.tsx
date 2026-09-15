@@ -21,20 +21,18 @@ export default function ComingSoonDetailPage() {
 
   if (notFound) {
     return (
-      <div className="min-h-screen bg-[#0f0f0f]">
+      <div className="min-h-screen bg-[#0a0a0a] text-white">
         <Header />
-        <div className="max-w-4xl mx-auto px-4 py-12 text-center text-gray-400">
-          映画が見つかりませんでした
-        </div>
+        <div className="mx-auto max-w-4xl px-4 py-12 text-center text-gray-400">映画が見つかりませんでした</div>
       </div>
     );
   }
 
   if (!movie) {
     return (
-      <div className="min-h-screen bg-[#0f0f0f]">
+      <div className="min-h-screen bg-[#0a0a0a] text-white">
         <Header />
-        <div className="max-w-4xl mx-auto px-4 py-12 text-center text-gray-500">読み込み中...</div>
+        <div className="mx-auto max-w-4xl px-4 py-12 text-center text-gray-500">読み込み中...</div>
       </div>
     );
   }
@@ -42,46 +40,107 @@ export default function ComingSoonDetailPage() {
   const releaseDateFormatted = movie.releaseDate.replace(/^(\d{4})-(\d{2})-(\d{2})$/, "$1年$2月$3日");
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f]">
+    <div className="min-h-screen bg-[#0a0a0a] text-white">
       <Header />
 
-      <main className="max-w-4xl mx-auto px-4 py-6">
-        <Link href="/coming-soon" className="inline-flex items-center gap-1 text-gray-400 hover:text-white mb-5 text-sm">
-          <span>←</span>
+      <main className="mx-auto max-w-6xl px-4 py-8 md:px-8">
+        <Link href="/coming-soon" className="mb-6 inline-flex items-center gap-2 text-sm text-gray-400 transition-colors hover:text-[#f5d678]">
+          <span aria-hidden="true">←</span>
+          <span>上映予定一覧</span>
         </Link>
 
-        <div className="flex gap-5 mb-6">
-          <div className="flex-shrink-0" style={{ width: "140px" }}>
-            {movie.poster ? (
-              <img src={movie.poster} alt={movie.title} className="w-full rounded object-cover" style={{ aspectRatio: "2/3" }} />
-            ) : (
-              <div className="w-full rounded" style={{ aspectRatio: "2/3", background: `linear-gradient(160deg, ${movie.posterColor} 0%, #111 100%)` }} />
-            )}
-          </div>
-          <div className="flex-1">
-            <div className="text-xs text-gray-500 mb-1">Coming Soon</div>
-            <h1 className="text-lg font-medium text-white mb-2">{movie.title}</h1>
-            <div className="text-sm text-red-400 font-medium mb-3">公開予定：{releaseDateFormatted}</div>
-            <p className="text-sm text-gray-400 leading-relaxed mb-3">{movie.synopsis}</p>
-            <div className="flex flex-wrap gap-1 mb-3">
-              {movie.genre.map((g) => (
-                <span key={g} className="text-sm px-1.5 py-0.5 border border-[#444] text-gray-400 rounded">{g}</span>
-              ))}
-              <span className="text-sm px-1.5 py-0.5 border border-[#444] text-gray-400 rounded">{movie.rating}</span>
+        <div className="overflow-hidden rounded-[22px] border border-[#2a2a2a] bg-[#111111]/80 shadow-[0_24px_80px_rgba(0,0,0,0.45)] backdrop-blur-[2px]">
+          <div
+            className="relative px-4 pb-8 pt-6 md:px-8"
+            style={{
+              backgroundImage: movie.poster
+                ? `linear-gradient(90deg, rgba(10,10,10,0.84), rgba(10,10,10,0.72)), url(${movie.poster})`
+                : `linear-gradient(160deg, ${movie.posterColor} 0%, #0a0a0a 100%)`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
+          >
+            <div className="flex flex-col gap-6 md:flex-row">
+              <div className="w-full max-w-[220px] shrink-0 self-end">
+                {movie.poster ? (
+                  <img
+                    src={movie.poster}
+                    alt={movie.title}
+                    className="w-full rounded-[16px] border border-[#3a3a3a] object-cover shadow-[0_18px_30px_rgba(0,0,0,0.3)]"
+                    style={{ aspectRatio: "2 / 3" }}
+                  />
+                ) : (
+                  <div
+                    className="w-full rounded-[16px] border border-[#3a3a3a]"
+                    style={{ aspectRatio: "2 / 3", background: `linear-gradient(160deg, ${movie.posterColor} 0%, #111 100%)` }}
+                  />
+                )}
+              </div>
+
+              <div className="flex-1 pt-2">
+                <div className="mb-3 flex items-center gap-2">
+                  <span className="rounded-full border border-[#d9b35a]/40 bg-[#d9b35a]/10 px-2.5 py-1 text-[10px] font-medium tracking-[0.18em] text-[#f5d678]">
+                    COMING SOON
+                  </span>
+                  <span className="text-[11px] tracking-[0.18em] text-gray-400">{movie.duration}分</span>
+                </div>
+
+                <h1 className="mb-2 text-3xl font-bold tracking-[0.08em] text-white md:text-4xl">{movie.title}</h1>
+
+                <div className="mb-4 flex flex-wrap gap-2">
+                  {movie.genre.map((g) => (
+                    <span key={g} className="rounded-full border border-[#444] bg-[#171717] px-2.5 py-1 text-[11px] text-gray-300">
+                      {g}
+                    </span>
+                  ))}
+                  <span className="rounded-full border border-[#444] bg-[#171717] px-2.5 py-1 text-[11px] text-gray-300">
+                    {movie.rating}
+                  </span>
+                </div>
+
+                <div className="mb-4 rounded-2xl border border-[#d9b35a]/30 bg-[#d9b35a]/10 px-4 py-3">
+                  <div className="text-[10px] font-medium tracking-[0.18em] text-[#f5d678] uppercase">Release</div>
+                  <div className="mt-1 text-[28px] font-bold leading-none tracking-[0.08em] text-white">
+                    {movie.releaseDate.slice(5).replace("-", "/")}
+                  </div>
+                  <div className="mt-1 text-sm text-gray-200">公開予定：{movie.releaseDate.replace(/-/g, "/")}</div>
+                </div>
+
+                <p className="max-w-2xl text-sm leading-7 text-gray-300">{movie.synopsis}</p>
+              </div>
             </div>
-            <div className="text-sm text-gray-500 mb-1">声優・キャスト</div>
-            <div className="flex flex-wrap gap-1 mb-2">
-              {movie.cast.map((name) => (
-                <span key={name} className="text-sm text-gray-400">{name}</span>
-              ))}
-            </div>
-            <div className="text-sm text-gray-500">監督：{movie.director}　{movie.duration}分</div>
           </div>
         </div>
 
-        <div className="border border-[#333] rounded p-4 bg-[#1a1a1a] text-sm text-gray-400">
-          <div className="text-white font-medium mb-1">チケット販売について</div>
-          <div>公開日({releaseDateFormatted})以降にチケット販売が開始されます。</div>
+        <div className="mt-8 grid gap-6 md:grid-cols-[1.2fr_0.8fr]">
+          <section className="rounded-[20px] border border-[#2a2a2a] bg-[#111111] p-6">
+            <h2 className="mb-4 text-lg font-bold tracking-[0.18em] text-[#f5d678]">CAST</h2>
+            <div className="flex flex-wrap gap-2">
+              {movie.cast.map((name) => (
+                <span key={name} className="rounded-full border border-[#3a3a3a] bg-[#171717] px-3 py-1.5 text-sm text-gray-300">
+                  {name}
+                </span>
+              ))}
+            </div>
+          </section>
+
+          <div className="rounded-[20px] border border-[#2a2a2a] bg-[#111111] p-6">
+            <h2 className="mb-4 text-lg font-bold tracking-[0.18em] text-[#f5d678]">INFO</h2>
+            <div className="space-y-3 text-sm text-gray-300">
+              <div>
+                <span className="mr-2 text-gray-500">監督</span>
+                {movie.director}
+              </div>
+              <div>
+                <span className="mr-2 text-gray-500">公開日</span>
+                {movie.releaseDate.replace(/-/g, "/")}
+              </div>
+              <div>
+                <span className="mr-2 text-gray-500">販売開始</span>
+                公開日以降
+              </div>
+            </div>
+          </div>
         </div>
       </main>
     </div>
