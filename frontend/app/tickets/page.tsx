@@ -4,7 +4,7 @@
 // /movies/[id] ページからURLパラメータ（movieId・date・time・screen）を受け取った場合は
 // 座席選択ステップから開始する。
 "use client";
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
 import { Movie, ScheduleDay } from "@/lib/mockData";
@@ -170,6 +170,24 @@ function TicketsContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [seatCheckError, setSeatCheckError] = useState("");
   const [isCheckingSeats, setIsCheckingSeats] = useState(false);
+  const timeSelectionRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    const main = document.querySelector("main");
+    if (!main) return;
+
+    requestAnimationFrame(() => {
+      main.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }, [step]);
+
+  useEffect(() => {
+    if (step !== "select-time" || !selectedDate) return;
+
+    requestAnimationFrame(() => {
+      timeSelectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [step, selectedDate]);
 
   // 映画一覧をAPIから取得
   useEffect(() => {
@@ -511,7 +529,7 @@ function TicketsContent() {
                 {/* 日付選択後に時間帯一覧を表示（スクリーンごとにグループ化） */}
                 {selectedDate && (
                   <>
-                    <h2 className="text-base text-gray-300 mb-3">時間帯を選択してください</h2>
+                    <h2 ref={timeSelectionRef} className="scroll-mt-4 text-base text-gray-300 mb-3">時間帯を選択してください</h2>
                     {visibleSchedules
                       .find((s) => s.date === selectedDate)
                       ?.slots.map((slot) => (
