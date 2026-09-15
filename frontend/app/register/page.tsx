@@ -7,7 +7,7 @@ import Link from "next/link";
 
 export default function RegisterPage() {
   const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:5000/login";
+    window.location.href = "/backend/login";
   };
 
   return (

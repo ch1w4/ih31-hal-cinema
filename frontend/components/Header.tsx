@@ -61,7 +61,7 @@ export default function Header() {
 
   const handleLogout = async () => {
     try {
-      await fetch("http://localhost:5000/auth/logout", { method: "POST" });
+      await fetch("/backend/auth/logout", { method: "POST" });
     } catch {
       // ignore
     }

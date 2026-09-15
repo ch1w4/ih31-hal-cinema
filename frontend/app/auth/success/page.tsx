@@ -42,7 +42,7 @@ function AuthSuccessContent() {
 
         // AI映画推薦をリクエスト（失敗しても認証自体は成功扱いにする）
         try {
-          const res = await fetch("http://localhost:5000/recommend/movies", {
+          const res = await fetch("/backend/recommend/movies", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",

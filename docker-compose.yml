@@ -37,6 +37,11 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/halcinema
       FLASK_ENV: development
       TZ: Asia/Tokyo
+      # 公開ドメインが変わる環境では .env で上書きする（例:
+      # OAUTH_REDIRECT_URI=https://your-domain/backend/auth/callback
+      # FRONTEND_URL=https://your-domain）
+      OAUTH_REDIRECT_URI: ${OAUTH_REDIRECT_URI:-http://localhost:5000/auth/callback}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
     ports:
       - "5000:5000"
     depends_on:
@@ -55,10 +60,9 @@ services:
     container_name: halcinema-frontend
     restart: unless-stopped
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:5000
       INTERNAL_API_URL: http://backend:5000
     ports:
-      - "3001:3000"
+      - "3000:3000"
     depends_on:
       - backend
 

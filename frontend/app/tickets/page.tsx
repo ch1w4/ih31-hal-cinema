@@ -168,6 +168,8 @@ function TicketsContent() {
   const [confirmedBookingNo, setConfirmedBookingNo] = useState("");
   const [bookingError, setBookingError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [seatCheckError, setSeatCheckError] = useState("");
+  const [isCheckingSeats, setIsCheckingSeats] = useState(false);
 
   // 映画一覧をAPIから取得
   useEffect(() => {
@@ -259,9 +261,47 @@ function TicketsContent() {
     setStep("complete");
   }
 
+  // 「次へ」（座席選択→チケット種別）を押したときに、他の人に先に予約されていないか再確認する。
+  // ここで弾いておけば、氏名・電話番号などの入力を終えた後になって
+  // 「実は取られていました」となる最悪のUXを避けられる。
+  // ただしこれはあくまで早期警告であり、最終的な二重予約防止は購入時のDB制約（IntegrityError）が担う。
+  async function handleProceedToTicketType() {
+    if (selectedSeats.length === 0 || isCheckingSeats) return;
+    setIsCheckingSeats(true);
+    setSeatCheckError("");
+    const result = await fetchOccupiedSeats({
+      movieId: selectedMovieId,
+      date: selectedDate,
+      screen: selectedScreen,
+      time: selectedTime,
+    });
+    setIsCheckingSeats(false);
+
+    if (!result) {
+      setSeatCheckError("座席の空き状況を確認できませんでした。もう一度お試しください。");
+      return;
+    }
+
+    const nowTaken = selectedSeats.filter((id) => result.bookedSeats.includes(id));
+    if (nowTaken.length > 0) {
+      setSeatMap((prev) => {
+        const next = { ...prev };
+        for (const id of nowTaken) next[id] = "purchased";
+        return next;
+      });
+      setSeatCheckError(
+        `選択していた ${nowTaken.join(", ")} は、他のお客様がご購入済みです。別の座席をお選びください。`
+      );
+      return;
+    }
+
+    setStep("ticket-type");
+  }
+
   // 座席ボタンをクリックしたときの状態トグル
   // 購入済み座席（blue）は変更不可
   function toggleSeat(id: string) {
+    setSeatCheckError("");
     setSeatMap((prev) => {
       const cur = prev[id];
       if (cur === "purchased") return prev;
@@ -672,6 +712,12 @@ function TicketsContent() {
             </div>
           </div>
 
+          {seatCheckError && (
+            <div className="mb-4 p-3 rounded border border-red-700 bg-[#2a1a1a] text-red-400 text-sm">
+              {seatCheckError}
+            </div>
+          )}
+
           <div className="flex gap-3 mt-2">
             <button
               onClick={() => setStep("select-time")}
@@ -680,15 +726,15 @@ function TicketsContent() {
               戻る
             </button>
             <button
-              onClick={() => selectedSeats.length > 0 && setStep("ticket-type")}
-              disabled={selectedSeats.length === 0}
+              onClick={handleProceedToTicketType}
+              disabled={selectedSeats.length === 0 || isCheckingSeats}
               className={`px-8 py-3 rounded text-base font-medium transition-colors ${
-                selectedSeats.length > 0
+                selectedSeats.length > 0 && !isCheckingSeats
                   ? "bg-white text-black hover:bg-gray-200"
                   : "bg-[#333] text-gray-600 cursor-not-allowed"
               }`}
             >
-              次へ
+              {isCheckingSeats ? "確認中..." : "次へ"}
             </button>
           </div>
         </div>
