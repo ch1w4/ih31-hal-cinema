@@ -45,6 +45,65 @@ main {
   transition: width 0.25s ease, margin 0.25s ease;
 }
 
+.purchase-actions {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 12px;
+}
+
+.purchase-action {
+  display: inline-flex;
+  min-height: 48px;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.2;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.purchase-action:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.purchase-action-secondary {
+  border: 1px solid #444;
+  color: #b5b5b5;
+}
+
+.purchase-action-secondary:hover:not(:disabled) {
+  border-color: #d9b35a;
+  color: #f5f5f0;
+}
+
+.purchase-action-primary {
+  background: #d9b35a;
+  color: #111;
+}
+
+.purchase-action-primary:hover:not(:disabled) {
+  background: #f2d77b;
+}
+
+.purchase-action-purchase {
+  background: #dc2626;
+  color: #fff;
+  font-weight: 700;
+}
+
+.purchase-action-purchase:hover:not(:disabled) {
+  background: #ef4444;
+}
+
+@media (min-width: 640px) {
+  .purchase-actions {
+    flex-direction: row;
+  }
+}
+
 .chatbot-container,
 body.sidebar-open .chatbot-container,
 body.sidebar-collapsed .chatbot-container {

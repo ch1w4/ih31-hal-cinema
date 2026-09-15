@@ -420,8 +420,8 @@ function TicketsContent() {
       {step === "select-time" && movie && (
         <div>
           <div className="mb-5 flex items-center justify-between gap-3 border-b border-[#2a2a2a] pb-3">
-            <div className="flex items-center gap-3">
-              <div className="flex-shrink-0 overflow-hidden rounded-xl border border-[#333]" style={{ width: "46px", aspectRatio: "2/3" }}>
+            <div className="flex gap-3">
+              <div className="flex-shrink-0 overflow-hidden rounded-[0] border border-[#333]" style={{ width: "150px", aspectRatio: "2/3" }}>
                 {movie.poster ? (
                   <img src={movie.poster} alt={movie.title} className="h-full w-full object-cover" />
                 ) : (
@@ -429,7 +429,7 @@ function TicketsContent() {
                 )}
               </div>
               <div>
-                <div className="text-[10px] font-medium tracking-[0.25em] text-[#d9b35a] uppercase">Step 02</div>
+                <div className="text-[12px] font-medium tracking-[0.25em] text-[#d9b35a] uppercase">Step 02</div>
                 <div className="mt-1 text-base font-semibold text-white">{movie.title}</div>
                 <div className="text-sm text-gray-400">{movie.duration}分 · {movie.rating}</div>
               </div>
@@ -490,7 +490,7 @@ function TicketsContent() {
                           setSelectedTime("");
                           setSelectedScreen("");
                         }}
-                        className={`px-5 py-3 rounded-full border text-base font-medium transition-colors ${
+                        className={`px-5 py-3 rounded-[10px] border text-base font-medium transition-colors ${
                           past
                             ? "border-[#333] text-gray-600 cursor-not-allowed opacity-40"
                             : selectedDate === s.date
@@ -525,7 +525,7 @@ function TicketsContent() {
                                     setSelectedScreen(slot.screen);
                                     setSeatMap(buildSeatMap(SCREEN_CONFIGS[getScreenType(slot.screen)]));
                                   }}
-                                  className={`px-4 py-2 rounded-full border text-sm font-medium transition-colors ${
+                                  className={`px-4 py-2 rounded-[10px] border text-sm font-medium transition-colors ${
                                     past
                                       ? "border-[#333] text-gray-600 cursor-not-allowed opacity-40 line-through"
                                       : selectedTime === t && selectedScreen === slot.screen
@@ -546,17 +546,17 @@ function TicketsContent() {
             );
           })()}
 
-          <div className="flex gap-3 mt-4">
+          <div className="purchase-actions mt-4">
             <button
               onClick={() => setStep("select-movie")}
-              className="px-5 py-3 border border-[#444] text-gray-400 rounded text-base hover:border-white hover:text-white transition-colors"
+              className="purchase-action purchase-action-secondary"
             >
               戻る
             </button>
             <button
               onClick={() => setStep("seat")}
               disabled={!selectedTime}
-              className={`px-8 py-3 rounded text-base font-medium transition-colors ${
+              className={`purchase-action purchase-action-primary ${
                 selectedTime
                   ? "bg-white text-black hover:bg-gray-200"
                   : "bg-[#333] text-gray-600 cursor-not-allowed"
@@ -718,17 +718,17 @@ function TicketsContent() {
             </div>
           )}
 
-          <div className="flex gap-3 mt-2">
+          <div className="purchase-actions mt-2">
             <button
               onClick={() => setStep("select-time")}
-              className="px-5 py-3 border border-[#444] text-gray-400 rounded text-base hover:border-white hover:text-white transition-colors"
+              className="purchase-action purchase-action-secondary"
             >
               戻る
             </button>
             <button
               onClick={handleProceedToTicketType}
               disabled={selectedSeats.length === 0 || isCheckingSeats}
-              className={`px-8 py-3 rounded text-base font-medium transition-colors ${
+              className={`purchase-action purchase-action-primary ${
                 selectedSeats.length > 0 && !isCheckingSeats
                   ? "bg-white text-black hover:bg-gray-200"
                   : "bg-[#333] text-gray-600 cursor-not-allowed"
@@ -796,16 +796,16 @@ function TicketsContent() {
             <span className="text-lg font-bold text-[#f5d678]">¥{totalPrice.toLocaleString()}</span>
           </div>
 
-          <div className="flex gap-3">
+          <div className="purchase-actions">
             <button
               onClick={() => setStep("seat")}
-              className="px-5 py-3 border border-[#444] text-gray-400 rounded text-base hover:border-white hover:text-white transition-colors"
+              className="purchase-action purchase-action-secondary"
             >
               戻る
             </button>
             <button
               onClick={() => setStep("customer-info")}
-              className="px-6 py-2 bg-white text-black rounded text-sm font-medium hover:bg-gray-200 transition-colors"
+              className="purchase-action purchase-action-primary"
             >
               次へ
             </button>
@@ -956,17 +956,17 @@ function TicketsContent() {
             </section>
           </div>
 
-          <div className="flex gap-3 pt-2">
+          <div className="purchase-actions pt-2">
             <button
               onClick={() => setStep("ticket-type")}
-              className="flex-1 rounded-xl border border-[#444] px-5 py-3 text-base font-medium text-gray-300 transition-colors hover:border-white hover:text-white"
+              className="purchase-action purchase-action-secondary"
             >
               戻る
             </button>
             <button
               onClick={() => email && phone && setStep("confirm")}
               disabled={!email || !phone}
-              className={`flex-1 rounded-xl px-5 py-3 text-base font-bold transition-colors ${
+              className={`purchase-action purchase-action-primary ${
                 email && phone
                   ? "bg-[#d9b35a] text-[#111111] hover:bg-[#f2d77b]"
                   : "cursor-not-allowed bg-[#333] text-gray-600"
@@ -1008,17 +1008,17 @@ function TicketsContent() {
               {bookingError}
             </div>
           )}
-          <div className="flex gap-3">
+          <div className="purchase-actions">
             <button
               onClick={() => setStep("customer-info")}
-              className="px-5 py-3 border border-[#444] text-gray-400 rounded text-base hover:border-white hover:text-white transition-colors"
+              className="purchase-action purchase-action-secondary"
             >
               戻る
             </button>
             <button
               onClick={handlePurchase}
               disabled={isSubmitting || !showingId}
-              className={`px-8 py-2 rounded text-sm font-medium transition-colors ${
+              className={`purchase-action purchase-action-purchase ${
                 isSubmitting || !showingId
                   ? "bg-[#444] text-gray-600 cursor-not-allowed"
                   : "bg-red-600 text-white hover:bg-red-700"
