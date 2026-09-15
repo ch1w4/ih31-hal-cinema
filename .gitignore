@@ -44,3 +44,6 @@ next-env.d.ts
 backend/venv/
 __pycache__/
 *.pyc
+
+# gguf_ollama学習教師データ
+*.gguf
