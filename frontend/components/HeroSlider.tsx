@@ -110,7 +110,7 @@ export default function HeroSlider() {
         <button
           type="button"
           onClick={showPrev}
-          className="absolute left-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-[#f5d678]/30 bg-[#0c0c0c]/70 text-2xl text-[#f5d678] shadow-lg shadow-black/30 transition hover:bg-[#141414] md:left-5"
+          className="absolute left-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2  justify-center rounded-full border border-[#f5d678]/30 bg-[#0c0c0c]/70 text-2xl text-[#f5d678] shadow-lg shadow-black/30 transition hover:bg-[#141414] md:left-5"
           aria-label="前のスライド"
         >
           ‹
@@ -119,7 +119,7 @@ export default function HeroSlider() {
         <button
           type="button"
           onClick={showNext}
-          className="absolute right-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-[#f5d678]/30 bg-[#0c0c0c]/70 text-2xl text-[#f5d678] shadow-lg shadow-black/30 transition hover:bg-[#141414] md:right-5"
+          className="absolute right-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 justify-center rounded-full border border-[#f5d678]/30 bg-[#0c0c0c]/70 text-2xl text-[#f5d678] shadow-lg shadow-black/30 transition hover:bg-[#141414] md:right-5"
           aria-label="次のスライド"
         >
           ›

@@ -45,6 +45,22 @@ main {
   transition: width 0.25s ease, margin 0.25s ease;
 }
 
+.chatbot-container,
+body.sidebar-open .chatbot-container,
+body.sidebar-collapsed .chatbot-container {
+  right: 16px;
+  bottom: 16px;
+}
+
+@media (min-width: 640px) {
+  .chatbot-container,
+  body.sidebar-open .chatbot-container,
+  body.sidebar-collapsed .chatbot-container {
+    right: 24px;
+    bottom: 56px;
+  }
+}
+
 @media (min-width: 768px) {
   body.sidebar-open main {
     width: calc(100% - 214px);
@@ -489,7 +505,7 @@ body.sidebar-collapsed .sidebar-toggle {
 .ranking-shell {
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(15, 15, 15, 0.6);
-  border-radius: 12px;
+  border-radius: 3px;
   overflow: hidden;
 }
 

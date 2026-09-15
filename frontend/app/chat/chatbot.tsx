@@ -9,7 +9,6 @@ type Message = {
 
 export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
@@ -22,18 +21,6 @@ export default function Chatbot() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const quickActions = ['座席を予約したい', '上映スケジュール', 'キャンセルについて'];
-
-  useEffect(() => {
-    const syncSidebarState = () => {
-      setIsSidebarOpen(document.body.classList.contains('sidebar-open'));
-    };
-
-    syncSidebarState();
-    const observer = new MutationObserver(syncSidebarState);
-    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
-
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -83,12 +70,9 @@ export default function Chatbot() {
     setInput(text);
   };
 
-  const panelRight = isSidebarOpen ? 232 : 16;
-
   return (
     <div
-      className="fixed bottom-4 z-50 flex flex-col items-end sm:bottom-6"
-      style={{ right: `${panelRight}px` }}
+      className="chatbot-container fixed right-4 bottom-4 z-50 flex flex-col items-end sm:right-6 sm:bottom-14"
     >
       {isOpen && (
         <div className="mb-4 flex h-[min(560px,calc(100vh-2rem))] w-[min(360px,calc(100vw-2rem))] max-h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-[22px] border border-[#d9b35a]/30 bg-[#111111]/95 shadow-[0_24px_60px_rgba(0,0,0,0.6)] backdrop-blur-sm md:w-[420px]">
