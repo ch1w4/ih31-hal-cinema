@@ -62,7 +62,9 @@ services:
     environment:
       INTERNAL_API_URL: http://backend:5000
     ports:
-      - "3000:3000"
+      # 手元のPCで3000番が別のアプリに使われている場合は、
+      # このファイルを書き換えず .env に FRONTEND_PORT=3001 のように書いて上書きする
+      - "${FRONTEND_PORT:-3000}:3000"
     depends_on:
       - backend
 
