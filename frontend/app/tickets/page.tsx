@@ -301,7 +301,11 @@ function TicketsContent() {
   // 座席ボタンをクリックしたときの状態トグル
   // 購入済み座席（blue）は変更不可
   function toggleSeat(id: string) {
+    // 座席を選び直したら、前回の購入エラー（別の席に対するもの）を消しておく。
+    // 消さないと、席を変えて購入確認画面に戻ったときに古いエラー文が
+    // まだ表示されたままになり、新しい選択でも失敗したかのように見えてしまう。
     setSeatCheckError("");
+    setBookingError("");
     setSeatMap((prev) => {
       const cur = prev[id];
       if (cur === "purchased") return prev;
