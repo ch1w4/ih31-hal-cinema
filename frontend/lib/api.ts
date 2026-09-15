@@ -1,11 +1,12 @@
 import type { Movie, Campaign, ScheduleDay } from "@/lib/mockData";
 
-// サーバー側（Docker内）は INTERNAL_API_URL（backend サービス名）、
-// ブラウザ側は NEXT_PUBLIC_API_URL（localhost）を使う
+// サーバー側（Docker内）は INTERNAL_API_URL で backend コンテナに直接アクセスする。
+// ブラウザ側は同一オリジンの /backend を経由させ、next.config.ts の rewrites で
+// backend コンテナへプロキシする（公開ドメインが何であっても、どこからアクセスしても動く）。
 const API =
   typeof window === "undefined"
     ? (process.env.INTERNAL_API_URL ?? "http://localhost:5000")
-    : (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000");
+    : "/backend";
 
 async function get<T>(path: string): Promise<T | null> {
   try {

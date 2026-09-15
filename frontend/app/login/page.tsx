@@ -3,7 +3,7 @@
 // 実際に機能するのは「Googleでログイン」ボタンのみ
 //
 // Google OAuth フロー:
-//   1. ユーザーがボタンをクリック → FastAPI localhost:5000/login へリダイレクト
+//   1. ユーザーがボタンをクリック → /backend/login（Next.jsが内部でFlaskへ転送）へリダイレクト
 //   2. FastAPI が Google の OAuth 認可画面へリダイレクト
 //   3. ユーザーが許可 → Google が FastAPI コールバックURLへリダイレクト
 //   4. FastAPI がトークンとユーザー情報を生成 → /auth/success?token=...&user=... へリダイレクト
@@ -19,7 +19,7 @@ export default function LoginPage() {
   // Next.js の router.push ではなく location.href を使う理由:
   // FastAPI が 302リダイレクトを返すため、fetchでは処理できないから
   const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:5000/login";
+    window.location.href = "/backend/login";
   };
 
   return (

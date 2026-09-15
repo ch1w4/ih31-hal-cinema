@@ -1,3 +1,4 @@
+import os
 from flask import Flask, redirect, request, session, jsonify
 from flask_cors import CORS
 import requests
@@ -63,9 +64,12 @@ def _refresh_showings_daily():
 
 
 # Google OAuth 設定
+# OAUTH_REDIRECT_URI・FRONTEND_URL は公開ドメインに応じて .env で上書きする
+# （デプロイ先ごとに異なるため、docker-compose.yml には直接書かない）
 CLIENT_ID = "757540546817-41rbdtbel91le8956kri1nqpno7qmqq0.apps.googleusercontent.com"
 CLIENT_SECRET = "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"
-REDIRECT_URI = "http://localhost:5000/auth/callback"
+REDIRECT_URI = os.getenv("OAUTH_REDIRECT_URI", "http://localhost:5000/auth/callback")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
 AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 TOKEN_URL = "https://oauth2.googleapis.com/token"
@@ -129,7 +133,7 @@ def callback():
     user_encoded = base64.b64encode(json.dumps(userinfo).encode()).decode()
 
     return redirect(
-        f"http://localhost:3000/auth/success?token={access_token}&user={user_encoded}"
+        f"{FRONTEND_URL}/auth/success?token={access_token}&user={user_encoded}"
     )
 
 
