@@ -1,11 +1,83 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
+
+type MovieRef = {
+  id: string | number;
+  title: string;
+  poster?: string;
+  posterColor?: string;
+};
 
 type Message = {
   role: 'user' | 'assistant';
   content: string;
+  movies?: MovieRef[];
 };
+
+function escapeRegExp(str: string) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// 返信本文中の映画タイトルをリンク化する
+function renderReplyText(content: string, movies?: MovieRef[]) {
+  if (!movies?.length) return content;
+
+  const sorted = [...movies].sort((a, b) => b.title.length - a.title.length);
+  const pattern = new RegExp(`(${sorted.map((m) => escapeRegExp(m.title)).join('|')})`, 'g');
+  const parts = content.split(pattern);
+
+  return parts.map((part, i) => {
+    const movie = sorted.find((m) => m.title === part);
+    if (!movie) return <span key={i}>{part}</span>;
+
+    return (
+      <Link
+        key={i}
+        href={`/movies/${movie.id}`}
+        className="text-[#f5d678] underline underline-offset-2 hover:text-[#ffe9a8]"
+      >
+        {movie.title}
+      </Link>
+    );
+  });
+}
+
+// 返信の下に表示する映画カード
+function MovieCards({ movies }: { movies?: MovieRef[] }) {
+  if (!movies?.length) return null;
+
+  return (
+    <div className="mt-2 flex flex-col gap-2">
+      {movies.map((movie) => (
+        <Link
+          key={movie.id}
+          href={`/movies/${movie.id}`}
+          className="flex gap-3 rounded-lg border border-[#2a2a2a] bg-[#0f0f0f] p-2 transition-colors hover:border-[#d9b35a]/60"
+        >
+          {movie.poster ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={movie.poster}
+              alt={movie.title}
+              className="h-24 w-16 flex-shrink-0 rounded object-cover"
+            />
+          ) : (
+            <div
+              className="h-24 w-16 flex-shrink-0 rounded"
+              style={{ backgroundColor: movie.posterColor || '#333' }}
+            />
+          )}
+          <div className="flex flex-col justify-center">
+            <span className="text-sm font-semibold text-white">{movie.title}</span>
+            <span className="mt-1 text-xs text-[#f5d678]">詳細を見る →</span>
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
+}
 
 export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -53,6 +125,7 @@ export default function Chatbot() {
       const assistantReply: Message = {
         role: 'assistant',
         content: typeof replyText === 'string' ? replyText : JSON.stringify(replyText),
+        movies: data.movies || [],
       };
 
       setMessages((prev) => [...prev, assistantReply]);
@@ -121,7 +194,16 @@ export default function Chatbot() {
                       : 'mr-auto rounded-bl-md border border-[#2a2a2a] bg-[#1a1a1a] text-[#f3f3f3]'
                   }`}
                 >
-                  {msg.content}
+                  {msg.role === 'assistant' ? (
+                    <>
+                      <span className="whitespace-pre-wrap">
+                        {renderReplyText(msg.content, msg.movies)}
+                      </span>
+                      <MovieCards movies={msg.movies} />
+                    </>
+                  ) : (
+                    msg.content
+                  )}
                 </div>
               ))}
 
