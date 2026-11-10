@@ -94,13 +94,12 @@ def get_now_showing_movies():
 
         movies = []
         for m in rows:
-            movies.append(f"・『{m.title}』({m.rating or 'G'} / {m.duration or 0}分)")
+            genres = "・".join(mg.genre.name for mg in m.genres)
+            movies.append(f"・『{m.title}』({m.rating or 'G'} / {m.duration or 0}分 / ジャンル: {genres or '未設定'})")
         return "\n".join(movies)
     except Exception as e:
         print(f"[chatbot db error] 映画取得失敗: {e}")
         return "映画情報の取得に失敗しました。"
-    finally:
-        db.close()
 
 
 def get_ticket_prices():
@@ -123,6 +122,19 @@ def get_ticket_prices():
         return "料金情報の取得に失敗しました。"
     finally:
         db.close()
+        
+        
+        
+def summarize_history(messages):
+    """直近の会話をテキスト化してシステムプロンプトに埋め込む用"""
+    if len(messages) <= 1:
+        return "（これまでの会話なし）"
+    history = messages[:-1]  # 最新の1件は今回の質問なので除外
+    lines = []
+    for m in history[-10:]:
+        speaker = "お客様" if m["role"] == "user" else "アシスタント"
+        lines.append(f"{speaker}: {m['content']}")
+    return "\n".join(lines)
 
 @chatbot_bp.route('/api/chat', methods=['POST'])
 def chat():
